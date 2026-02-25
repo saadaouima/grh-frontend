@@ -1,0 +1,286 @@
+<!-- ================================================ -->
+<!-- 👤 Mon Profil - Employé                         -->
+<!-- ================================================ -->
+
+<div class="profil-page">
+
+  <!-- ── Page Header ── -->
+  <div class="page-header mb-4">
+    <div class="header-left">
+      <h2 class="page-title">Mon profil</h2>
+      <p class="page-subtitle">Gérez vos informations personnelles et documents</p>
+    </div>
+    <button class="btn-edit" (click)="toggleEditMode()">
+      <i class="ti" [class.ti-edit]="!editMode" [class.ti-x]="editMode"></i>
+      {{ editMode ? 'Annuler' : 'Modifier' }}
+    </button>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── Left Column ── -->
+    <div class="col-lg-4">
+
+      <!-- Profile Card -->
+      <app-card class="profile-card mb-4">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <img [src]="userInfo.photo" [alt]="userInfo.nom">
+            <div class="avatar-badge">
+              <i class="ti ti-check"></i>
+            </div>
+            @if (editMode) {
+              <button class="btn-change-photo">
+                <i class="ti ti-camera"></i>
+              </button>
+            }
+          </div>
+          <h3 class="profile-name">{{ userInfo.nom }} {{ userInfo.prenom }}</h3>
+          <p class="profile-role">{{ userInfo.poste }}</p>
+          <span class="profile-badge">
+            <i class="ti ti-briefcase"></i>
+            {{ userInfo.departement }}
+          </span>
+        </div>
+
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ userInfo.anciennete }}</span>
+            <span class="stat-label">Ancienneté</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">{{ userInfo.congesRestants }}</span>
+            <span class="stat-label">Congés</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">{{ userInfo.tachesCompletes }}</span>
+            <span class="stat-label">Tâches</span>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Quick Stats Card -->
+      <app-card class="stats-card">
+        <h4 class="card-section-title">
+          <i class="ti ti-chart-bar"></i>
+          Mes statistiques
+        </h4>
+
+        <div class="stat-row">
+          <div class="stat-info">
+            <i class="ti ti-calendar-check text-success"></i>
+            <span>Présence ce mois</span>
+          </div>
+          <div class="stat-progress">
+            <div class="progress-bar-stat">
+              <div class="progress-fill-stat" [style.width.%]="95"></div>
+            </div>
+            <span class="progress-value">95%</span>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-info">
+            <i class="ti ti-target text-primary"></i>
+            <span>Objectifs atteints</span>
+          </div>
+          <div class="stat-progress">
+            <div class="progress-bar-stat">
+              <div class="progress-fill-stat" [style.width.%]="78"></div>
+            </div>
+            <span class="progress-value">78%</span>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-info">
+            <i class="ti ti-award text-warning"></i>
+            <span>Formations suivies</span>
+          </div>
+          <div class="stat-progress">
+            <div class="progress-bar-stat">
+              <div class="progress-fill-stat" [style.width.%]="60"></div>
+            </div>
+            <span class="progress-value">3/5</span>
+          </div>
+        </div>
+      </app-card>
+
+    </div>
+
+    <!-- ── Right Column ── -->
+    <div class="col-lg-8">
+
+      <!-- Personal Info Card -->
+      <app-card class="mb-4">
+        <h4 class="card-section-title">
+          <i class="ti ti-user"></i>
+          Informations personnelles
+        </h4>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Email professionnel</label>
+            @if (!editMode) {
+              <p>{{ userInfo.email }}</p>
+            } @else {
+              <input type="email" [(ngModel)]="userInfo.email" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item">
+            <label>Téléphone</label>
+            @if (!editMode) {
+              <p>{{ userInfo.telephone }}</p>
+            } @else {
+              <input type="tel" [(ngModel)]="userInfo.telephone" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item">
+            <label>Date de naissance</label>
+            @if (!editMode) {
+              <p>{{ userInfo.dateNaissance | date:'dd/MM/yyyy' }}</p>
+            } @else {
+              <input type="date" [(ngModel)]="userInfo.dateNaissance" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item">
+            <label>Lieu de naissance</label>
+            @if (!editMode) {
+              <p>{{ userInfo.lieuNaissance }}</p>
+            } @else {
+              <input type="text" [(ngModel)]="userInfo.lieuNaissance" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item full-width">
+            <label>Adresse</label>
+            @if (!editMode) {
+              <p>{{ userInfo.adresse }}</p>
+            } @else {
+              <input type="text" [(ngModel)]="userInfo.adresse" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item">
+            <label>Ville</label>
+            @if (!editMode) {
+              <p>{{ userInfo.ville }}</p>
+            } @else {
+              <input type="text" [(ngModel)]="userInfo.ville" class="form-control" />
+            }
+          </div>
+
+          <div class="info-item">
+            <label>Code postal</label>
+            @if (!editMode) {
+              <p>{{ userInfo.codePostal }}</p>
+            } @else {
+              <input type="text" [(ngModel)]="userInfo.codePostal" class="form-control" />
+            }
+          </div>
+        </div>
+
+        @if (editMode) {
+          <div class="action-buttons">
+            <button class="btn-save" (click)="saveProfile()">
+              <i class="ti ti-check"></i>
+              Enregistrer
+            </button>
+            <button class="btn-cancel" (click)="toggleEditMode()">
+              <i class="ti ti-x"></i>
+              Annuler
+            </button>
+          </div>
+        }
+      </app-card>
+
+      <!-- Documents Card -->
+      <app-card class="mb-4">
+        <div class="card-header-actions">
+          <h4 class="card-section-title">
+            <i class="ti ti-folder"></i>
+            Mes documents
+          </h4>
+          <button class="btn-upload" (click)="uploadDocument()">
+            <i class="ti ti-upload"></i>
+            Ajouter
+          </button>
+        </div>
+
+        <div class="documents-list">
+          @for (doc of documents; track doc.id) {
+            <div class="document-item">
+              <div class="doc-icon" [ngClass]="'doc-' + doc.type">
+                <i class="ti" [class.ti-file-text]="doc.type === 'pdf'" 
+                              [class.ti-file-spreadsheet]="doc.type === 'excel'"
+                              [class.ti-file-word]="doc.type === 'word'"></i>
+              </div>
+              <div class="doc-info">
+                <h5>{{ doc.nom }}</h5>
+                <p>{{ doc.taille }} • Ajouté le {{ doc.dateAjout | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <div class="doc-actions">
+                <button class="btn-action" (click)="viewDocument(doc.id)" title="Voir">
+                  <i class="ti ti-eye"></i>
+                </button>
+                <button class="btn-action" (click)="downloadDocument(doc.id)" title="Télécharger">
+                  <i class="ti ti-download"></i>
+                </button>
+                <button class="btn-action btn-delete" (click)="deleteDocument(doc.id)" title="Supprimer">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (documents.length === 0) {
+            <div class="empty-state">
+              <i class="ti ti-folder-off"></i>
+              <p>Aucun document ajouté</p>
+              <button class="btn-upload-empty" (click)="uploadDocument()">
+                <i class="ti ti-upload"></i>
+                Ajouter mon premier document
+              </button>
+            </div>
+          }
+        </div>
+      </app-card>
+
+      <!-- Activity Timeline Card -->
+      <app-card>
+        <h4 class="card-section-title">
+          <i class="ti ti-clock"></i>
+          Activité récente
+        </h4>
+
+        <div class="timeline">
+          @for (activity of activities; track activity.id) {
+            <div class="timeline-item">
+              <div class="timeline-dot" [ngClass]="'dot-' + activity.type"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h5>{{ activity.titre }}</h5>
+                  <span class="timeline-date">{{ activity.date | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <p>{{ activity.description }}</p>
+                @if (activity.badge) {
+                  <span class="activity-badge badge-{{ activity.type }}">
+                    {{ activity.badge }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </app-card>
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,96 @@
+<!-- [ breadcrumb ] -->
+<app-breadcrumb></app-breadcrumb>
+
+<div class="row">
+  <div class="col-xl-8 col-lg-10 col-12 mx-auto">
+
+    <!-- ── Header ──────────────────────────────────────── -->
+    <div class="notif-header">
+      <div>
+        <h4 class="notif-title">
+          <i class="ti ti-bell"></i> Notifications
+          @if (totalNonLues > 0) {
+            <span class="badge-count">{{ totalNonLues }}</span>
+          }
+        </h4>
+        <p class="notif-sub">{{ notifications.length }} notification(s) au total</p>
+      </div>
+      <div class="header-actions">
+        @if (totalNonLues > 0) {
+          <button class="btn-action btn-lire" (click)="marquerToutesLues()">
+            <i class="ti ti-checks"></i> Tout marquer comme lu
+          </button>
+        }
+        @if (notifications.length > 0) {
+          <button class="btn-action btn-supprimer" (click)="supprimerToutes()">
+            <i class="ti ti-trash"></i> Tout supprimer
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Filtres ─────────────────────────────────────── -->
+    <div class="filtres-bar">
+      @for (f of filtres; track f.value) {
+        <button class="filtre-btn" [class.active]="filtreActif === f.value"
+          (click)="setFiltre(f.value)">
+          <i [class]="f.icone"></i>
+          {{ f.label }}
+          @if (f.value === 'non-lues' && totalNonLues > 0) {
+            <span class="filtre-count">{{ totalNonLues }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- ── Liste notifications ─────────────────────────── -->
+    <div class="notif-list">
+      @for (notif of notificationsFiltrees; track notif.id) {
+        <div class="notif-card" [class.non-lue]="!notif.lue"
+          [class]="'notif-card notif-' + notif.type + (!notif.lue ? ' non-lue' : '')"
+          (click)="marquerLue(notif)">
+
+          <!-- Icone type -->
+          <div class="notif-icon-wrap" [ngClass]="'icon-' + notif.type">
+            <i [class]="notif.icone"></i>
+          </div>
+
+          <!-- Contenu -->
+          <div class="notif-body">
+            <div class="notif-top">
+              <span class="notif-titre" [class.fw-bold]="!notif.lue">{{ notif.titre }}</span>
+              <span class="notif-temps">{{ tempsRelatif(notif.heure) }}</span>
+            </div>
+            <p class="notif-message">{{ notif.message }}</p>
+            <div class="notif-footer">
+              @if (!notif.lue) {
+                <span class="dot-nonlue"></span>
+              }
+              @if (notif.lien) {
+                <span class="notif-lien"><i class="ti ti-arrow-right"></i> Voir détails</span>
+              }
+            </div>
+          </div>
+
+          <!-- Supprimer -->
+          <button class="btn-suppr" (click)="supprimerNotif(notif, $event)" title="Supprimer">
+            <i class="ti ti-x"></i>
+          </button>
+        </div>
+      }
+
+      <!-- Empty state -->
+      @if (notificationsFiltrees.length === 0) {
+        <div class="empty-notif">
+          <div class="empty-icon"><i class="ti ti-bell-off"></i></div>
+          <h6>Aucune notification</h6>
+          <p>
+            @if (filtreActif === 'non-lues') { Toutes vos notifications ont été lues. }
+            @else { Vous n'avez aucune notification dans cette catégorie. }
+          </p>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

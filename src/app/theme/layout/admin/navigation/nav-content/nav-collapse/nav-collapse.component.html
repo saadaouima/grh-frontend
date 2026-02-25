@@ -1,21 +1,22 @@
-<li data-username="Berry Dashboard" class="nav-item coded-hasmenu" [routerLinkActive]="['active']">
-  <a [routerLinkActive]="['active']" href="javascript:" class="nav-link" (click)="navCollapse($event)">
+<li class="pc-item pc-hasmenu" [class.pc-trigger]="isOpen">
+  <!-- HEADER DU COLLAPSE -->
+  <a class="pc-link" role="button" (click)="toggle()">
     @if (item().icon) {
-      <span class="coded-micon">
+      <span class="pc-micon">
         <i class="{{ item().icon }}"></i>
       </span>
     }
-    <span class="coded-mtext">
-      {{ item().title }}
-    </span>
+    <span class="pc-mtext">{{ item().title }}</span>
+    <span class="pc-arrow"></span>
   </a>
-  <ul class="coded-submenu" [routerLinkActive]="['active']" [ngClass]="item().classes!">
-    @for (items of item().children; track items) {
-      @if (items.type === 'item') {
-        <app-nav-item [item]="items" />
-      } @else if (items.type === 'collapse') {
-        <app-nav-collapse [item]="items" />
-      }
-    }
-  </ul>
+
+  <!-- SOUS-MENU -->
+  @if (isOpen) {
+    <ul class="coded-submenu">
+  @for (child of item().children; track child) {
+    <app-nav-item [item]="child"></app-nav-item>
+  }
+</ul>
+
+  }
 </li>

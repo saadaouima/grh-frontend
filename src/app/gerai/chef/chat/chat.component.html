@@ -1,0 +1,126 @@
+<!-- [ breadcrumb ] -->
+<app-breadcrumb></app-breadcrumb>
+
+<div class="chat-wrapper">
+
+  <!-- ══ Sidebar contacts ══════════════════════════════ -->
+  <div class="chat-sidebar">
+
+    <!-- Header sidebar -->
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <h5>Messages</h5>
+        @if (totalNonLus > 0) {
+          <span class="badge-nonlus">{{ totalNonLus }}</span>
+        }
+      </div>
+      <div class="search-box">
+        <i class="ti ti-search"></i>
+        <input type="text" [(ngModel)]="recherche" placeholder="Rechercher..." />
+      </div>
+    </div>
+
+    <!-- Liste contacts -->
+    <div class="contacts-list">
+      @for (contact of contactsFiltres; track contact.id) {
+        <div class="contact-item"
+          [class.active]="contactActif?.id === contact.id"
+          (click)="selectContact(contact)">
+          <div class="contact-avatar">
+            {{ contact.initiales }}
+            <span class="statut-dot" [ngClass]="'dot-' + contact.statut"></span>
+          </div>
+          <div class="contact-info">
+            <div class="contact-name">{{ contact.nom }}</div>
+            <div class="contact-last">{{ contact.dernierMessage }}</div>
+          </div>
+          @if (contact.nonLus > 0) {
+            <span class="nonlus-badge">{{ contact.nonLus }}</span>
+          }
+        </div>
+      }
+      @if (contactsFiltres.length === 0) {
+        <div class="no-contact">
+          <i class="ti ti-search-off"></i>
+          <p>Aucun contact trouvé</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ══ Zone de conversation ════════════════════════════ -->
+  <div class="chat-main">
+
+    @if (contactActif) {
+      <!-- Header conversation -->
+      <div class="chat-header">
+        <div class="d-flex align-items-center gap-3">
+          <div class="contact-avatar-lg">{{ contactActif.initiales }}</div>
+          <div>
+            <h6 class="mb-0">{{ contactActif.nom }}</h6>
+            <small class="statut-text" [ngClass]="'text-' + contactActif.statut">
+              <span class="statut-dot-sm" [ngClass]="'dot-' + contactActif.statut"></span>
+              @if (contactActif.statut === 'en-ligne')   { En ligne }
+              @if (contactActif.statut === 'absent')     { Absent }
+              @if (contactActif.statut === 'hors-ligne') { Hors ligne }
+            </small>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="chat-action-btn" title="Appel vidéo"><i class="ti ti-video"></i></button>
+          <button class="chat-action-btn" title="Appel audio"><i class="ti ti-phone"></i></button>
+          <button class="chat-action-btn" title="Infos"><i class="ti ti-info-circle"></i></button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages-container" #messagesContainer>
+        @for (msg of messages; track msg.id) {
+          <div class="message-row" [class.moi]="msg.estMoi">
+            @if (!msg.estMoi) {
+              <div class="msg-avatar">{{ msg.initiales }}</div>
+            }
+            <div class="message-bubble" [class.bubble-moi]="msg.estMoi" [class.bubble-autre]="!msg.estMoi">
+              @if (!msg.estMoi) {
+                <div class="msg-auteur">{{ msg.auteur }}</div>
+              }
+              <div class="msg-contenu">{{ msg.contenu }}</div>
+              <div class="msg-heure">{{ msg.heure | date:'HH:mm' }}</div>
+            </div>
+          </div>
+        }
+        @if (messages.length === 0) {
+          <div class="no-messages">
+            <i class="ti ti-message-off"></i>
+            <p>Aucun message. Commencez la conversation !</p>
+          </div>
+        }
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-zone">
+        <button class="input-action-btn" title="Joindre un fichier"><i class="ti ti-paperclip"></i></button>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            [(ngModel)]="newMessage"
+            (keydown)="onKeyDown($event)"
+            placeholder="Écrire un message... (Entrée pour envoyer)"
+            class="message-input" />
+        </div>
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+          <i class="ti ti-send"></i>
+        </button>
+      </div>
+    }
+
+    @if (!contactActif) {
+      <div class="empty-chat">
+        <div class="empty-chat-icon"><i class="ti ti-message-circle"></i></div>
+        <h5>Sélectionnez une conversation</h5>
+        <p>Choisissez un contact dans la liste pour commencer à discuter</p>
+      </div>
+    }
+
+  </div>
+</div>

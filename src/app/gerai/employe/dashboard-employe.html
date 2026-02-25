@@ -1,0 +1,278 @@
+<div class="gerai-dashboard">
+
+  <!-- ── Welcome Banner ── -->
+  <div class="welcome-banner mb-4">
+    <div class="welcome-left">
+      <p class="welcome-greeting">Bonjour 👋</p>
+      @if (userName) {
+        <h2 class="welcome-name">{{ userName }}</h2>
+        <p class="welcome-email">{{ userEmail }}</p>
+      } @else {
+        <div class="welcome-skeleton">
+          <div class="skel-name"></div>
+          <div class="skel-email"></div>
+        </div>
+      }
+    </div>
+    <div class="welcome-right">
+      <div class="date-chip">
+        <i class="ti ti-calendar-event"></i>
+        <span>Tableau de bord employé</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Row 1 : KPIs ── -->
+  <div class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card cursor-pointer"
+           style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);"
+           (click)="naviguerVers('/employe/demandes/conge')">
+        <div class="kpi-glow"></div>
+        <div class="kpi-icon-wrap">
+          <i class="ti ti-beach"></i>
+        </div>
+        <div class="kpi-menu" ngbDropdown>
+          <a ngbDropdownToggle class="kpi-menu-btn"><i class="ti ti-dots-vertical"></i></a>
+          <ul class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
+            <li><button class="dropdown-item" (click)="naviguerVers('/employe/demandes/conge')">Déposer congé</button></li>
+            <li><button class="dropdown-item" (click)="naviguerVers('/employe/demandes')">Voir historique</button></li>
+          </ul>
+        </div>
+        <div class="kpi-value">{{ congesRestants }}</div>
+        <div class="kpi-label">Jours de congé restants</div>
+        <div class="kpi-tag"><i class="ti ti-trending-up"></i> Solde disponible</div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card cursor-pointer"
+           style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);"
+           (click)="naviguerVers('/employe/demandes')">
+        <div class="kpi-glow"></div>
+        <div class="kpi-icon-wrap"><i class="ti ti-file-description"></i></div>
+        <div class="kpi-value">{{ demandesEnCours }}</div>
+        <div class="kpi-label">Demandes en cours</div>
+        <div class="kpi-tag"><i class="ti ti-clock"></i> En attente de validation</div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card cursor-pointer"
+           style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);"
+           (click)="naviguerVers('/employe/taches')">
+        <div class="kpi-glow"></div>
+        <div class="kpi-icon-wrap"><i class="ti ti-checklist"></i></div>
+        <div class="kpi-value">{{ tachesActives }}</div>
+        <div class="kpi-label">Tâches actives</div>
+        <div class="kpi-tag"><i class="ti ti-point-filled"></i> En cours</div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card cursor-pointer"
+           style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);"
+           (click)="naviguerVers('/employe/statistiques')">
+        <div class="kpi-glow"></div>
+        <div class="kpi-icon-wrap"><i class="ti ti-chart-arcs"></i></div>
+        <div class="kpi-value">{{ tauxPresence }}<span class="kpi-unit">%</span></div>
+        <div class="kpi-label">Taux de présence</div>
+        <div class="kpi-tag"><i class="ti ti-circle-check"></i> Excellent score</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Row 2 : Profil + Demandes + Tâches + Accès ── -->
+  <div class="row g-3 mb-4">
+
+    <!-- Profil utilisateur -->
+    <div class="col-xl-3 col-lg-6">
+      <div class="dash-card profile-card h-100">
+        <div class="profile-top">
+          <div class="avatar-ring">
+            <img src="assets/images/user/avatar-2.jpg" alt="avatar" class="profile-avatar" />
+            <span class="online-dot"></span>
+          </div>
+        @if (userName) {
+          <h5 class="profile-name">{{ userName }}</h5>
+          <p class="profile-email">{{ userEmail }}</p>
+        } @else {
+          <div class="skel-name mb-2"></div>
+          <div class="skel-email mb-3"></div>
+        }
+        </div>
+        @if (userRoles.length > 0) {
+          <div class="roles-wrap">
+            @for (role of userRoles; track role) {
+              <span class="role-badge">{{ getRoleLabel(role) }}</span>
+            }
+          </div>
+        }
+        <button class="logout-btn" (click)="logout()">
+          <i class="ti ti-logout me-2"></i>Déconnexion
+        </button>
+      </div>
+    </div>
+
+    <!-- Demandes récentes -->
+    <div class="col-xl-3 col-lg-6">
+      <div class="dash-card h-100">
+        <div class="card-head">
+          <h6 class="card-title-custom">Demandes récentes</h6>
+          <button class="add-btn" (click)="naviguerVers('/employe/demandes/deposer')">
+            <i class="ti ti-plus"></i>
+          </button>
+        </div>
+
+        <div class="chart-block mb-3">
+          <div class="chart-meta">
+            <span class="chart-label">Évolution</span>
+            <small>Tendance mensuelle</small>
+          </div>
+          <app-bajaj-chart />
+        </div>
+
+        <ul class="item-list">
+          @for (demande of demandesRecentes; track demande.id) {
+            <li class="item-row cursor-pointer" (click)="voirDemande(demande.id)">
+              <span class="status-dot {{ demande.bgColor }}">
+                <i class="{{ demande.icon }} {{ demande.statusColor }}"></i>
+              </span>
+              <div class="item-info">
+                <p class="item-name">{{ demande.type }}</p>
+                <small class="item-date">{{ demande.date }}</small>
+              </div>
+              <i class="ti ti-chevron-right row-arrow"></i>
+            </li>
+          }
+        </ul>
+
+        <a class="see-all cursor-pointer" (click)="naviguerVers('/employe/demandes')">
+          Voir tout <i class="ti ti-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Tâches récentes -->
+    <div class="col-xl-3 col-lg-6">
+      <div class="dash-card h-100">
+        <div class="card-head">
+          <h6 class="card-title-custom">Tâches récentes</h6>
+        </div>
+
+        <ul class="item-list">
+          @for (tache of tachesRecentes; track tache.id) {
+            <li class="item-row cursor-pointer" (click)="voirTache(tache.id)">
+              <div class="priority-stripe {{ tache.prioriteColor }}"></div>
+              <div class="item-info">
+                <p class="item-name">{{ tache.titre }}</p>
+                <small class="item-date">
+                  <i class="ti ti-briefcase me-1"></i>{{ tache.projet }}
+                  <span class="ms-2"><i class="ti ti-clock me-1"></i>{{ tache.echeance }}</span>
+                </small>
+              </div>
+              <span class="prio-tag {{ tache.prioriteColor }}">{{ tache.priorite }}</span>
+            </li>
+          }
+        </ul>
+
+        <a class="see-all cursor-pointer" (click)="naviguerVers('/employe/taches')">
+          Voir tout <i class="ti ti-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Accès rapides -->
+    <div class="col-xl-3 col-lg-6">
+      <div class="dash-card h-100">
+        <div class="card-head">
+          <h6 class="card-title-custom">Accès rapides</h6>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-tile cursor-pointer"
+               style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);"
+               (click)="naviguerVers('/employe/profil')">
+            <i class="ti ti-user"></i>
+            <span>Mon Profil</span>
+          </div>
+          <div class="quick-tile cursor-pointer"
+               style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);"
+               (click)="naviguerVers('/employe/demandes/deposer')">
+            <i class="ti ti-file-plus"></i>
+            <span>Nouvelle demande</span>
+          </div>
+          <div class="quick-tile cursor-pointer"
+               style="background: linear-gradient(135deg, #F59E0B, #D97706);"
+               (click)="naviguerVers('/employe/projets')">
+            <i class="ti ti-briefcase"></i>
+            <span>Mes Projets</span>
+          </div>
+          <div class="quick-tile cursor-pointer"
+               style="background: linear-gradient(135deg, #10B981, #059669);"
+               (click)="naviguerVers('/chat')">
+            <i class="ti ti-message-circle-2"></i>
+            <span>Chat RH</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Row 3 : Projets + Notifications ── -->
+  <div class="row g-3">
+
+    <div class="col-xl-6 col-md-12">
+      <div class="dash-card">
+        <div class="card-head mb-3">
+          <h6 class="card-title-custom">Avancement des projets</h6>
+          <span class="count-badge">{{ projets.length }} projets</span>
+        </div>
+        @for (projet of projets; track projet.nom) {
+          <div class="proj-row mb-4">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="proj-name">{{ projet.nom }}</span>
+              <span class="proj-pct">{{ projet.avancement }}%</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" [style.width.%]="projet.avancement"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-xl-6 col-md-12">
+      <div class="dash-card">
+        <div class="card-head mb-3">
+          <h6 class="card-title-custom">Notifications récentes</h6>
+          <span class="notif-badge">{{ notifications.length }}</span>
+        </div>
+        <ul class="notif-list">
+          @for (notif of notifications; track notif.titre) {
+            <li class="notif-item">
+              <div class="notif-ring {{ notif.color }}">
+                <i class="ti ti-bell"></i>
+              </div>
+              <div class="notif-body">
+                <p class="notif-title">{{ notif.titre }}</p>
+                <small class="notif-when">{{ notif.date }}</small>
+              </div>
+            </li>
+          }
+        </ul>
+        <a class="see-all cursor-pointer" (click)="naviguerVers('/notifications')">
+          Voir tout <i class="ti ti-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  @if (loading) {
+    <div class="skel-wrap mt-3"><div class="skel-bar"></div></div>
+  }
+
+</div>

@@ -1,0 +1,71 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Mon Équipe">
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Membre</th>
+              <th>Poste</th>
+              <th>Email</th>
+              <th>Statut</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (m of membres; track m.id) {
+              <tr>
+                <!-- Membre -->
+                <td>
+                  <div class="membre-cell">
+                    <div class="avatar">
+                      {{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}
+                    </div>
+                    <div>
+                      <div class="nom">{{ m.prenom }} {{ m.nom }}</div>
+                      <div class="text-muted small">ID #{{ m.id }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Poste -->
+                <td>{{ m.poste }}</td>
+
+                <!-- Email -->
+                <td class="text-muted">{{ m.email }}</td>
+
+                <!-- Statut -->
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-success]="m.statut === 'ACTIF'"
+                    [class.badge-warning]="m.statut === 'CONGE'">
+                    {{ m.statut === 'ACTIF' ? 'Actif' : 'En congé' }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-end">
+                  <button
+                    class="btn btn-outline-primary btn-sm me-2"
+                    (click)="voirProfil(m)">
+                    Profil
+                  </button>
+
+                  <button
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="voirDemandes(m)">
+                    Demandes
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </app-card>
+  </div>
+</div>

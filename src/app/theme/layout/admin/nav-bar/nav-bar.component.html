@@ -1,7 +1,16 @@
-<header class="pc-header coded-header">
-  <app-nav-logo [navCollapsed]="navCollapsed" (NavCollapse)="navCollapse()" />
+<header class="pc-header coded-header gerai-header">
   <div class="header-wrapper">
+
+    <!-- Logo uniquement (sans texte) -->
+    <div class="gerai-logo-container">
+      <img src="assets/images/GerAI.png" alt="GerAI" class="gerai-logo" />
+    </div>
+
+    <!-- Mobile menu toggle -->
     <app-nav-left (NavCollapsedMob)="navCollapseMob()" />
+
+    <!-- Notifications + Profil -->
     <app-nav-right />
+
   </div>
 </header>

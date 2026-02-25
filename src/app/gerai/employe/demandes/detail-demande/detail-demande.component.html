@@ -1,0 +1,43 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Détail de la demande #{{ demande?.id }}</h5>
+  </div>
+  <div class="card-body">
+    <p><strong>Type :</strong> {{ demande?.type }}</p>
+    <p><strong>Description :</strong> {{ demande?.description }}</p>
+    <p><strong>Période :</strong> {{ demande?.dateDebut | date:'dd/MM/yyyy' }} - {{ demande?.dateFin | date:'dd/MM/yyyy' }}</p>
+    <p><strong>Statut :</strong> {{ demande?.statutLabel }}</p>
+
+    <!-- Timeline -->
+    <div class="timeline">
+      @for (step of timeline; track step) {
+        <div class="timeline-step">
+          <i class="{{ step.icon }}"></i>
+          <span>{{ step.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Documents joints -->
+    @if (demande?.documents?.length > 0) {
+      <div>
+        <h6>Documents joints</h6>
+        <ul>
+          @for (doc of demande.documents; track doc) {
+            <li>
+              <a [href]="doc.url" target="_blank">{{ doc.nom }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- Commentaire RH -->
+    @if (demande?.statut === 'REFUSEE') {
+      <div>
+        <h6>Commentaire RH</h6>
+        <p class="text-danger">{{ demande?.commentaireRh }}</p>
+      </div>
+    }
+  </div>
+</div>

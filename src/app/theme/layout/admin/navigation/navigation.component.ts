@@ -1,33 +1,46 @@
-// Angular import
-import { Component, output } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { KeycloakService } from 'keycloak-angular';
 
-// project import
+import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from './navigation';
 
-import { NavContentComponent } from './nav-content/nav-content.component';
+// Rôles système Keycloak à ignorer
+const ROLES_SYSTEME = [
+  'offline_access', 'uma_authorization', 'manage-account',
+  'manage-account-links', 'view-profile', 'default-roles-gerai',
+  'default-roles-master', 'create-realm', 'broker'
+];
 
 @Component({
   selector: 'app-navigation',
-  imports: [NavContentComponent, RouterModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './navigation.component.html',
-  styleUrl: './navigation.component.scss'
+  styleUrls: ['./navigation.component.scss']
 })
-export class NavigationComponent {
-  // public props
-  NavCollapsedMob = output();
-  SubmenuCollapse = output();
-  navCollapsedMob = false;
-  windowWidth = window.innerWidth;
-  themeMode!: string;
+export class NavigationComponent implements OnInit {
 
-  // public method
-  navCollapseMob() {
-    if (this.windowWidth < 1025) {
-      this.NavCollapsedMob.emit();
-    }
+  private keycloakService = inject(KeycloakService);
+
+  navItems: NavigationItem[] = [];
+  userRole: string = '';
+
+  ngOnInit(): void {
+    this.loadNavigation();
   }
 
-  navSubmenuCollapse() {
-    document.querySelector('app-navigation.coded-navbar')?.classList.add('coded-trigger');
+  private loadNavigation(): void {
+    const allRoles  = this.keycloakService.getUserRoles();
+    const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
+
+    if      (metaRoles.includes('chef'))    this.userRole = 'chef';
+    else if (metaRoles.includes('employe')) this.userRole = 'employe';
+    else                                    this.userRole = 'employe'; // fallback
+
+    // ✅ Un seul menu selon le rôle — plus de NavigationItems combiné
+    this.navItems = this.userRole === 'chef' ? NAV_CHEF : NAV_EMPLOYE;
+
+    console.log('🧭 Navigation chargée pour le rôle:', this.userRole);
   }
 }

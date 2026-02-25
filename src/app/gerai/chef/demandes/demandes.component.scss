@@ -1,0 +1,234 @@
+// ── Tabs ──────────────────────────────────────────
+.tabs-container {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all .2s;
+  i { font-size: 15px; pointer-events: none; }
+
+  &:hover:not(.active) { border-color: #4680FF; color: #4680FF; }
+
+  &.active {
+    background: #4680FF;
+    border-color: #4680FF;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(70,128,255,.3);
+  }
+}
+
+.tab-badge {
+  background: #ff5370;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  .active & { background: rgba(255,255,255,.3); }
+}
+
+// ── Table ─────────────────────────────────────────
+.table {
+  th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 12px 16px;
+    border-top: none;
+    background: #f8fafc;
+    white-space: nowrap;
+  }
+  td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #374151;
+    border-color: #f1f5f9;
+  }
+  tbody tr {
+    transition: background .15s;
+    &:hover { background: rgba(70,128,255,.03); }
+  }
+}
+
+// ── Employé cell ──────────────────────────────────
+.employe-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.employe-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4680FF, #2952CC);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+// ── Type cell ─────────────────────────────────────
+.type-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  i { font-size: 16px; pointer-events: none; }
+}
+
+// Bootstrap light colors (si non définis dans SharedModule)
+.bg-light-warning { background: rgba(255,182,77,.15) !important; }
+.bg-light-success { background: rgba(46,216,182,.15) !important; }
+.bg-light-danger  { background: rgba(255,83,112,.15) !important; }
+.bg-light-info    { background: rgba(62,201,214,.15) !important; }
+
+// ── Status pill ───────────────────────────────────
+.status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+// ── Buttons ───────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  i { font-size: 15px; pointer-events: none; }
+
+  &-success {
+    background: linear-gradient(135deg, #2ed8b6, #059e80);
+    border: none;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(46,216,182,.35);
+    &:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(46,216,182,.45); color: #fff; }
+  }
+  &-outline-danger {
+    border: 1.5px solid #ff5370;
+    color: #ff5370;
+    background: transparent;
+    &:hover { background: rgba(255,83,112,.08); }
+  }
+}
+
+// ── Empty state ───────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 40px 20px !important;
+  color: #94a3b8;
+  i { font-size: 42px; display: block; margin-bottom: 10px; }
+  p { font-size: 14px; margin: 0; }
+}
+// ══════════════════════════════════════════════════
+// MODE DARK - Gestion des Demandes
+// ══════════════════════════════════════════════════
+
+:host-context(.dark) {
+  // Onglets (Tabs)
+  .tab-btn {
+    background: #1e2536;
+    border-color: #334155;
+    color: #94a3b8;
+
+    &:hover:not(.active) {
+      background: rgba(70, 128, 255, .1);
+      border-color: #4680FF;
+      color: #f8fafc;
+    }
+
+    &.active {
+      background: #4680FF;
+      border-color: #4680FF;
+      color: #fff;
+    }
+  }
+
+  // Tableaux
+  .table {
+    th {
+      background: #141824; // En-tête plus sombre pour structurer
+      color: #64748b;
+    }
+    td {
+      color: #e2e8f0;
+      border-color: #2e3648;
+    }
+    tbody tr {
+      &:hover {
+        background: rgba(70, 128, 255, .06); // Effet de survol très subtil
+      }
+    }
+  }
+
+  // Couleurs "Light" adaptées au Dark Mode
+  // On augmente légèrement l'opacité pour que la couleur "pop" sur le fond sombre
+  .bg-light-warning { background: rgba(255, 182, 77, .2) !important; color: #ffba57 !important; }
+  .bg-light-success { background: rgba(46, 216, 182, .2) !important; color: #2ed8b6 !important; }
+  .bg-light-danger  { background: rgba(255, 83, 112, .2) !important; color: #ff5370 !important; }
+  .bg-light-info    { background: rgba(62, 201, 214, .2) !important; color: #3ec9d6 !important; }
+
+  // Cellules spécifiques
+  .employe-avatar {
+    box-shadow: 0 0 0 2px #1a1f2e; // Cercle autour de l'avatar pour le détacher du fond
+  }
+
+  .icon-box {
+    // Les icônes gardent leur couleur mais le conteneur s'adapte
+    &.bg-light-warning i { color: #ffba57; }
+    &.bg-light-success i { color: #2ed8b6; }
+    &.bg-light-danger  i { color: #ff5370; }
+  }
+
+  // Bouton Outline
+  .btn-outline-danger {
+    border-color: #ff5370;
+    color: #ff5370;
+    &:hover {
+      background: rgba(255, 83, 112, .15);
+    }
+  }
+
+  // État vide
+  .empty-state {
+    color: #64748b;
+    i { color: #334155; }
+  }
+}

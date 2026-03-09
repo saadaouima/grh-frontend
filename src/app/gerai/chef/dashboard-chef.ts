@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Tache } from 'src/app/theme/shared/interfaces/tache';
 
-// ✅ Nouveau import
+
 import Keycloak from 'keycloak-js';
 
 export interface DemandeAValider {
@@ -47,7 +47,6 @@ const ROLES_SYSTEME_KEYCLOAK = [
 })
 export class DashboardChefComponent implements OnInit {
 
-  // ✅ Nouveau inject
   private keycloak = inject(Keycloak);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -107,7 +106,6 @@ export class DashboardChefComponent implements OnInit {
     }, 600);
   }
 
-  // ✅ Corrigé — plus de deprecated
   async loadUserProfile() {
     try {
       if (!this.keycloak.authenticated) {
@@ -160,7 +158,6 @@ export class DashboardChefComponent implements OnInit {
   voirTache(id: number) { this.router.navigate(['/chef/taches', id]); }
   naviguerVers(route: string) { this.router.navigate([route]); }
 
-  // ✅ Corrigé
   logout() {
     this.keycloak.logout({ redirectUri: window.location.origin });
   }

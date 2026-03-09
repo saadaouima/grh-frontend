@@ -6,7 +6,6 @@ import { BajajChartComponent } from 'src/app/theme/shared/components/apexchart/b
 import { Demande } from 'src/app/theme/shared/interfaces/demande';
 import { Tache } from 'src/app/theme/shared/interfaces/tache';
 
-// ✅ Nouveau import
 import Keycloak from 'keycloak-js';
 
 const ROLES_SYSTEME_KEYCLOAK = [
@@ -31,7 +30,6 @@ const ROLE_LABELS: Record<string, string> = {
 })
 export class DashboardEmployeComponent implements OnInit {
 
-  // ✅ Nouveau inject
   private keycloak = inject(Keycloak);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -80,7 +78,6 @@ export class DashboardEmployeComponent implements OnInit {
     }, 800);
   }
 
-  // ✅ Corrigé — plus de deprecated
   async loadUserProfile() {
     try {
       if (!this.keycloak.authenticated) {

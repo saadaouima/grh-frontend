@@ -248,7 +248,7 @@ http://localhost:4200
 
 ## 👩‍💻 Développé par
 
-**Nour El Houda Boussaidi** 
+**Nour El Houda Boussaidi/** 
 **Mariem Saadaoui**
 
 *Projet GerAI — Application de Gestion RH Intelligente*

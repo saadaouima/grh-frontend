@@ -1,11 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import Keycloak from 'keycloak-js';
 
 import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from './navigation';
 
-// Rôles système Keycloak à ignorer
 const ROLES_SYSTEME = [
   'offline_access', 'uma_authorization', 'manage-account',
   'manage-account-links', 'view-profile', 'default-roles-gerai',
@@ -21,7 +20,7 @@ const ROLES_SYSTEME = [
 })
 export class NavigationComponent implements OnInit {
 
-  private keycloakService = inject(KeycloakService);
+  private keycloak = inject(Keycloak);
 
   navItems: NavigationItem[] = [];
   userRole: string = '';
@@ -31,16 +30,14 @@ export class NavigationComponent implements OnInit {
   }
 
   private loadNavigation(): void {
-    const allRoles  = this.keycloakService.getUserRoles();
+    const allRoles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
     const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
 
-    if      (metaRoles.includes('chef'))    this.userRole = 'chef';
+    if (metaRoles.includes('chef')) this.userRole = 'chef';
     else if (metaRoles.includes('employe')) this.userRole = 'employe';
-    else                                    this.userRole = 'employe'; // fallback
+    else this.userRole = 'employe';
 
-    // ✅ Un seul menu selon le rôle — plus de NavigationItems combiné
     this.navItems = this.userRole === 'chef' ? NAV_CHEF : NAV_EMPLOYE;
-
     console.log('🧭 Navigation chargée pour le rôle:', this.userRole);
   }
 }

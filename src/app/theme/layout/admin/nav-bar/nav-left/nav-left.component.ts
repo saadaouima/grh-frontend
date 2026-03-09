@@ -1,7 +1,7 @@
 import { Component, OnInit, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import Keycloak from 'keycloak-js';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from '../../navigation/navigation';
@@ -15,12 +15,9 @@ import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from '../../navigation/navigati
 })
 export class NavLeftComponent implements OnInit {
 
-  private keycloakService = inject(KeycloakService);
+  private keycloak = inject(Keycloak);
 
-  // Output vers nav-bar pour fermer le menu mobile
   NavCollapsedMob = output();
-
-  // Menu chargé selon le rôle
   navigationItems: NavigationItem[] = [];
   userRole: 'chef' | 'employe' | null = null;
 
@@ -29,7 +26,7 @@ export class NavLeftComponent implements OnInit {
   }
 
   loadMenuByRole(): void {
-    const roles = this.keycloakService.getUserRoles();
+    const roles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
 
     if (roles.includes('chef') || roles.includes('CHEF')) {
       this.userRole = 'chef';
@@ -38,7 +35,6 @@ export class NavLeftComponent implements OnInit {
       this.userRole = 'employe';
       this.navigationItems = NAV_EMPLOYE;
     } else {
-      // Fallback : employé par défaut
       this.userRole = 'employe';
       this.navigationItems = NAV_EMPLOYE;
     }
@@ -49,6 +45,6 @@ export class NavLeftComponent implements OnInit {
   }
 
   logout(): void {
-    this.keycloakService.logout(window.location.origin);
+    this.keycloak.logout({ redirectUri: window.location.origin });
   }
 }

@@ -1,33 +1,29 @@
-import { enableProdMode, importProvidersFrom, APP_INITIALIZER } from '@angular/core';
-import { environment } from './environments/environment';
-import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
+import { enableProdMode } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
+import { environment } from './environments/environment';
 
-// 🔐 Keycloak imports
-import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
-import { initializeKeycloak } from './app/app.init'; // ✅ Import de votre fichier
+import { provideKeycloak } from 'keycloak-angular';
 
-if (environment.production) {
-  enableProdMode();
-}
+if (environment.production) enableProdMode();
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(
-      BrowserModule,
-      KeycloakAngularModule
-    ),
     provideRouter(routes),
     provideHttpClient(),
-    KeycloakService,
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeKeycloak,  // ✅ Utilise votre fonction
-      multi: true,
-      deps: [KeycloakService]
-    }
+    provideKeycloak({
+      config: {
+        url: environment.keycloak.url,
+        realm: environment.keycloak.realm,
+        clientId: environment.keycloak.clientId
+      },
+      initOptions: {
+        onLoad: 'login-required',
+        checkLoginIframe: false
+      }
+    })
   ]
-}).catch((err) => console.error(err));
+}).catch(err => console.error(err));

@@ -1,87 +1,87 @@
-// src/app/guards/auth.guard.ts
-
 import { inject } from '@angular/core';
-import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import { Router, CanActivateFn, ActivatedRouteSnapshot, UrlTree } from '@angular/router';
+import Keycloak from 'keycloak-js';
 
-// ─── Rôles système Keycloak à ignorer ───────────────────────────────────────
 const ROLES_SYSTEME = [
   'offline_access', 'uma_authorization', 'manage-account',
   'manage-account-links', 'view-profile', 'default-roles-gerai',
   'default-roles-master', 'create-realm', 'broker'
 ];
 
-// ─── Guard de redirection selon le rôle (sur la route racine '') ─────────────
-// Redirige l'utilisateur vers son dashboard selon son rôle Keycloak
-export const roleRedirectGuard: CanActivateFn = async () => {
-  const keycloak = inject(KeycloakService);
-  const router   = inject(Router);
+// ✅ Normalise un rôle : minuscules + supprime les accents
+function normaliserRole(role: string): string {
+  return role
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
 
-  const isLogged = await keycloak.isLoggedIn();
+// ✅ Variantes acceptées pour chaque rôle métier
+const ROLE_CHEF = ['chef', 'CHEF', 'Chef'];
+const ROLE_EMPLOYE = ['employe', 'EMPLOYE', 'Employe', 'employé', 'EMPLOYÉ', 'Employé'];
+const ROLE_ADMIN = ['admin', 'ADMIN', 'Admin', 'admin_rh', 'ADMIN_RH'];
 
-  // Pas connecté → login Keycloak
-  if (!isLogged) {
-    await keycloak.login({ redirectUri: window.location.origin });
-    return false;
-  }
-
-  const roles = keycloak.getUserRoles()
+function getRoles(keycloak: Keycloak): string[] {
+  return ((keycloak.tokenParsed?.['roles'] as string[]) ?? [])
     .filter(r => !ROLES_SYSTEME.includes(r));
+}
 
-  console.log('🔐 Rôles métier détectés:', roles);
+function hasRole(userRoles: string[], variants: string[]): boolean {
+  // ✅ Compare en normalisant les deux côtés
+  return userRoles.some(userRole =>
+    variants.some(variant =>
+      normaliserRole(userRole) === normaliserRole(variant)
+    )
+  );
+}
 
-  // Redirection selon le rôle
-  if (roles.includes('chef')) {
-    router.navigate(['/chef/dashboard']);
+// ── Guard de redirection selon le rôle ──────────────
+export const roleRedirectGuard: CanActivateFn = (): UrlTree | boolean => {
+  const keycloak = inject(Keycloak);
+  const router = inject(Router);
+
+  if (!keycloak.authenticated) {
+    keycloak.login({ redirectUri: window.location.origin });
     return false;
   }
 
-  if (roles.includes('employe')) {
-    router.navigate(['/employe/dashboard']);
-    return false;
-  }
+  const roles = getRoles(keycloak);
+  console.log('🔐 Rôles détectés:', roles);
+  console.log('🔐 Rôles normalisés:', roles.map(normaliserRole));
 
-  if (roles.includes('rh')) {
-    router.navigate(['/rh/dashboard']);
-    return false;
-  }
+  if (hasRole(roles, ROLE_CHEF)) return router.createUrlTree(['/chef/dashboard']);
+  if (hasRole(roles, ROLE_EMPLOYE)) return router.createUrlTree(['/employe/dashboard']);
+  if (hasRole(roles, ROLE_ADMIN)) return router.createUrlTree(['/admin/dashboard']);
 
-  if (roles.includes('admin')) {
-    router.navigate(['/admin/dashboard']);
-    return false;
-  }
-
-  // Aucun rôle connu
-  router.navigate(['/access-denied']);
-  return false;
+  console.warn('⚠️ Aucun rôle métier reconnu !', roles);
+  return router.createUrlTree(['/access-denied']);
 };
 
-// ─── Guard de protection par rôle (sur les routes enfants) ──────────────────
-// Bloque l'accès si l'utilisateur n'a pas le rôle requis
-export const requireRoleGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
-  const keycloak = inject(KeycloakService);
-  const router   = inject(Router);
+// ── Guard de protection par rôle ────────────────────
+export const requireRoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): UrlTree | boolean => {
+  const keycloak = inject(Keycloak);
+  const router = inject(Router);
 
-  const isLogged = await keycloak.isLoggedIn();
-
-  if (!isLogged) {
-    await keycloak.login({ redirectUri: window.location.origin });
+  if (!keycloak.authenticated) {
+    keycloak.login({ redirectUri: window.location.origin });
     return false;
   }
 
-  // Lire les rôles requis depuis data: { roles: ['chef'] }
   const requiredRoles: string[] = route.data?.['roles'] ?? [];
-
-  // Pas de restriction → accès libre
   if (requiredRoles.length === 0) return true;
 
-  const userRoles = keycloak.getUserRoles();
-  const hasRole   = requiredRoles.some(role => userRoles.includes(role));
+  const userRoles = (keycloak.tokenParsed?.['roles'] as string[]) ?? [];
 
-  if (!hasRole) {
-    console.warn(`⛔ Accès refusé. Rôle requis: ${requiredRoles}, rôles user: ${userRoles}`);
-    router.navigate(['/access-denied']);
-    return false;
+  // ✅ Compare en normalisant les deux côtés
+  const hasAccess = requiredRoles.some(required =>
+    userRoles.some(userRole =>
+      normaliserRole(userRole) === normaliserRole(required)
+    )
+  );
+
+  if (!hasAccess) {
+    console.warn(`⛔ Accès refusé. Rôles requis: ${requiredRoles}, rôles user: ${userRoles}`);
+    return router.createUrlTree(['/access-denied']);
   }
 
   return true;

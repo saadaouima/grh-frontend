@@ -1,20 +1,15 @@
-// Angular import
 import { Component, OnInit, output, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import Keycloak from 'keycloak-js';
 
-// theme version
 import { environment } from 'src/environments/environment';
-
-// project import
 import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from '../navigation';
 import { NavCollapseComponent } from './nav-collapse/nav-collapse.component';
 import { NavGroupComponent } from './nav-group/nav-group.component';
 import { NavItemComponent } from './nav-item/nav-item.component';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
-// Rôles système Keycloak à ignorer
 const ROLES_SYSTEME = [
   'offline_access', 'uma_authorization', 'manage-account',
   'manage-account-links', 'view-profile', 'default-roles-gerai',
@@ -29,15 +24,13 @@ const ROLES_SYSTEME = [
 })
 export class NavContentComponent implements OnInit {
 
-  private location        = inject(Location);
-  private keycloakService = inject(KeycloakService);
+  private location = inject(Location);
+  private keycloak = inject(Keycloak);
 
-  // public props
   NavCollapsedMob = output();
   SubmenuCollapse = output();
 
   currentApplicationVersion = environment.appVersion;
-
   navigations: NavigationItem[] = [];
   windowWidth: number;
 
@@ -56,9 +49,8 @@ export class NavContentComponent implements OnInit {
     }
   }
 
-  // ── Chargement du menu selon le rôle Keycloak ────────
   private loadNavigationByRole(): void {
-    const allRoles  = this.keycloakService.getUserRoles();
+    const allRoles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
     const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
 
     if (metaRoles.includes('chef') || metaRoles.includes('CHEF')) {
@@ -72,19 +64,18 @@ export class NavContentComponent implements OnInit {
 
   fireOutClick(): void {
     let current_url = this.location.path();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (this.location['_baseHref']) {
       current_url = this.location['_baseHref'] + this.location.path();
     }
     const link = "a.nav-link[ href='" + current_url + "' ]";
-    const ele  = document.querySelector(link);
+    const ele = document.querySelector(link);
     if (ele !== null && ele !== undefined) {
-      const parent      = ele.parentElement;
-      const up_parent   = parent?.parentElement?.parentElement;
+      const parent = ele.parentElement;
+      const up_parent = parent?.parentElement?.parentElement;
       const last_parent = up_parent?.parentElement;
-      if      (parent?.classList.contains('coded-hasmenu'))      { parent.classList.add('coded-trigger', 'active'); }
-      else if (up_parent?.classList.contains('coded-hasmenu'))   { up_parent.classList.add('coded-trigger', 'active'); }
+      if (parent?.classList.contains('coded-hasmenu')) { parent.classList.add('coded-trigger', 'active'); }
+      else if (up_parent?.classList.contains('coded-hasmenu')) { up_parent.classList.add('coded-trigger', 'active'); }
       else if (last_parent?.classList.contains('coded-hasmenu')) { last_parent.classList.add('coded-trigger', 'active'); }
     }
   }

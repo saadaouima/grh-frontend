@@ -1,0 +1,197 @@
+// =====================================================
+// 👥 Mon Équipe - Dashboard Chef
+// =====================================================
+
+// =====================================================
+// 👥 Mon Équipe - Dashboard Chef
+// =====================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+// ── STYLE GLOBAL (LIGHT MODE) ────────────────────────
+:host ::ng-deep {
+
+  .equipe-page {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    padding: 8px 0 24px !important;
+  }
+
+  .table-responsive {
+    background: white !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+  }
+
+  .table {
+    margin: 0 !important;
+    border-collapse: collapse !important;
+
+    thead {
+      background: #F8FAFC !important;
+      border-bottom: 2px solid #E2E8F0 !important;
+
+      th {
+        padding: 16px 20px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        color: #475569 !important;
+        border: none !important;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid #F1F5F9 !important;
+        transition: all 0.2s !important;
+
+        &:hover {
+          background: #F8FAFC !important;
+          transform: scale(1.001) !important;
+        }
+
+        &:last-child {
+          border-bottom: none !important;
+        }
+
+        td {
+          padding: 18px 20px !important;
+          font-size: 14px !important;
+          color: #475569 !important;
+          vertical-align: middle !important;
+          border: none !important;
+        }
+      }
+    }
+  }
+
+  .membre-cell {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+
+  .avatar {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s !important;
+
+    &:hover {
+      transform: scale(1.1) !important;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important;
+    }
+  }
+
+  .nom {
+    font-weight: 600 !important;
+    color: #1E293B !important;
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .text-muted {
+    color: #94A3B8 !important;
+    font-size: 12px !important;
+    &.small { font-size: 11px !important; }
+  }
+
+  .badge {
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border-radius: 100px !important;
+    text-transform: uppercase !important;
+
+    &.badge-success { background: #D1FAE5 !important; color: #059669 !important; }
+    &.badge-warning { background: #FEF3C7 !important; color: #D97706 !important; }
+  }
+
+  .btn {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
+  }
+
+  .btn-outline-primary {
+    border: 1.5px solid #3B82F6 !important;
+    color: #3B82F6 !important;
+    background: transparent !important;
+    &:hover {
+      background: #3B82F6 !important;
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important;
+    }
+  }
+
+  .btn-outline-secondary {
+    border: 1.5px solid #E2E8F0 !important;
+    color: #64748B !important;
+    &:hover { background: #F1F5F9 !important; color: #475569 !important; }
+  }
+}
+
+// ── STYLE MODE DARK ──────────────────────────────────
+// On utilise :host-context(.dark) sans le "&" au début
+:host-context(.dark) ::ng-deep {
+    
+    .table-responsive {
+      background: #1a1f2e !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .table {
+      thead {
+        background: #141824 !important;
+        border-bottom-color: #2e3648 !important;
+        th { color: #64748b !important; }
+      }
+
+      tbody tr {
+        border-bottom-color: #2e3648 !important;
+        &:hover { background: rgba(59, 130, 246, 0.05) !important; }
+        td { color: #94a3b8 !important; }
+      }
+    }
+
+    .nom { color: #f8fafc !important; }
+
+    .badge {
+      &.badge-success {
+        background: rgba(16, 185, 129, 0.15) !important;
+        color: #34d399 !important;
+        border: 1px solid rgba(16, 185, 129, 0.2) !important;
+      }
+      &.badge-warning {
+        background: rgba(245, 158, 11, 0.15) !important;
+        color: #fbbf24 !important;
+        border: 1px solid rgba(245, 158, 11, 0.2) !important;
+      }
+    }
+
+    .btn-outline-secondary {
+      border-color: #2e3648 !important;
+      color: #94a3b8 !important;
+      &:hover {
+        background: #2e3648 !important;
+        color: #f8fafc !important;
+      }
+    }
+
+    .avatar {
+      border: 2px solid #1a1f2e !important;
+      box-shadow: 0 0 0 1px #2e3648 !important;
+    }
+}

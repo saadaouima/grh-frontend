@@ -1,185 +1,254 @@
-# Berry Free Angular Bootstrap Admin Template [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Get%20Berry%20Angular%20-%20The%20Most%20Beautiful%20Bootstrap%20Designed%20Admin%20Dashboard%20Template%20&url=https://berrydashboard.com/angular/default&via=codedthemes&hashtags=angular,webdev,developers,typescript)
+# 🚀 GerAI — Frontend Angular
+> Application de Gestion des Ressources Humaines Intelligente
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Price](https://img.shields.io/badge/price-FREE-0098f7.svg)](https://github.com/codedthemes/berry-free-angular-admin-template/blob/master/LICENSE)
-[![GitHub package version](https://img.shields.io/github/package-json/v/codedthemes/berry-free-angular-admin-template)](https://github.com/codedthemes/berry-free-angular-admin-template/)
-[![Download ZIP](https://img.shields.io/badge/Download-ZIP-blue?style=flat-square&logo=github)](https://codedthemes.com/item/berry-angular-free-admin-template/)
-[![Join Discord](https://img.shields.io/badge/Join-Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.com/invite/p2E2WhCb6s)
+---
 
-Berry is a free angular admin dashboard template built with Angular and latest Bootstrap 5. It is meant to provide the best possible User Experience with highly customizable feature-rich pages. It is a complete Dashboard Template that has easy and intuitive responsive design whether it is viewed on retina screens or laptops..
+## 📋 Table des matières
 
-✨ Support us! If you like this theme, click the ⭐ (Top right) and let it shine
+- [Prérequis](#-prérequis)
+- [Technologies utilisées](#-technologies-utilisées)
+- [Installation](#-installation)
+- [Configuration Keycloak](#-configuration-keycloak)
+- [Lancement](#-lancement)
+- [Structure du projet](#-structure-du-projet)
+- [Comptes de test](#-comptes-de-test)
 
-![IMG_8566.jpg](https://org-public-assets.s3.us-west-2.amazonaws.com/Free-Version-Banners/GITHUB-FREE-ANGULAR-REPO-Berry.jpg)
+---
 
-## Table of contents
+## ✅ Prérequis
 
-- [Getting Started](#getting-started)
-- [Download](#download)
-- [Why Berry?](#why-berry)
-- [What's included in Premium Version?](#whats-included-in-premium-version)
-- [Documentation](#documentation)
-- [Browser support](#browser-support)
-- [Technology Stack](#technology-stack)
-- [Berry Figma UI Kit](#berry-figma-ui-kit)
-- [Other Technologies](#other-technologies)
-- 💰[Save more with Big Bundle](#save-more-with-big-bundle)💰
-- [More Angular Dashboard Templates](#more-angular-dashboard-templates)
-- [Issues?](#issues)
-- [License](#license)
-- [Contributor](#contributor)
-- [Useful Resources](#useful-resources)
-- [Community](#community)
-- [Follow us](#follow-us)
+Avant de commencer, assurez-vous d'avoir installé :
 
-## Getting Started
+| Outil | Version recommandée | Lien |
+|-------|-------------------|------|
+| **Node.js** | v22 | https://nodejs.org |
+| **Yarn** | v1.22+ | `npm install -g yarn` |
+| **Angular CLI** | v21.0.3 | `npm install -g @angular/cli@21` |
+| **Docker Desktop** | v28.5.2+ | https://www.docker.com/products/docker-desktop |
 
-1. Clone from Github
+> ⚠️ **Important** : Ce projet utilise **Yarn** et non npm. N'utilisez pas `npm install`.
+
+---
+
+## 🛠️ Technologies utilisées
 
 ```
-git clone https://github.com/codedthemes/berry-free-angular-admin-template.git
+Angular CLI       21.0.3
+Angular           21.0.5
+Node.js           22.20.0
+keycloak-angular  21.0.0    (authentification)
+keycloak-js       26.2.3   (client Keycloak)
+Bootstrap         5.3.8
+TypeScript        5.9.3
+SCSS
 ```
 
-2. Install packages
+---
 
-```
-yarn
+## 📦 Installation
+
+### 1. Cloner le projet
+
+```bash
+git clone https://github.com/saadaouima/GerAI-Application-GRH-
+cd GerAI-Application-GRH-
+git checkout frontend
 ```
 
-3. Run project
+### 2. Installer les dépendances
 
+```bash
+yarn install
 ```
+
+> ⏳ Cette étape peut prendre quelques minutes la première fois.
+
+---
+
+## 🔐 Configuration Keycloak
+
+L'application nécessite un serveur **Keycloak** en cours d'exécution.
+
+### 1. Lancer Keycloak via Docker
+
+```bash
+docker run -d \
+  --name keycloak \
+  -p 8080:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+  --restart always \
+  quay.io/keycloak/keycloak:26.0.5 start-dev
+```
+
+> Si le container existe déjà : `docker start keycloak`
+
+### 2. Configurer le Realm
+
+Accédez à http://localhost:8080 → connectez-vous avec `admin / admin`
+
+#### Créer le Realm
+1. Cliquez sur le menu déroulant en haut à gauche → **Create Realm**
+2. Nom du realm : `gerai` → **Create**
+
+#### Configurer le Client
+1. **Clients** → **Create client**
+2. Client ID : `gerai`
+3. Client type : `OpenID Connect`
+4. **Next** → activer **Standard flow** + **Direct access grants** → **Save**
+5. Dans l'onglet **Settings** :
+   - Valid redirect URIs : `http://localhost:4200/*`
+   - Web origins : `http://localhost:4200`
+   - **Save**
+
+#### Créer les Rôles
+1. **Realm roles** → **Create role**
+2. Créer les 3 rôles suivants (en minuscules) :
+   ```
+   employe
+   chef
+   admin_rh
+   ```
+
+#### Créer les Utilisateurs de test
+1. **Users** → **Create new user**
+
+**Utilisateur Employé :**
+```
+Username  : nour
+Email     : nour@gerai.tn
+Last name : Boussaidi
+First name: Nour El Houda
+```
+→ Onglet **Credentials** → Set password : `nour` → désactiver **Temporary**
+→ Onglet **Role mapping** → Assign role → `employe`
+
+**Utilisateur Chef :**
+```
+Username  : mariem
+Email     : mariem@gerai.tn
+Last name : Saadaoui
+First name: Mariem
+```
+→ Onglet **Credentials** → Set password : `mariem` → désactiver **Temporary**
+→ Onglet **Role mapping** → Assign role → `chef`
+
+#### Augmenter la durée du token *(optionnel mais recommandé)*
+**Realm Settings** → **Tokens** → **Access Token Lifespan** : `30 minutes` → **Save**
+
+### 3. Vérifier la configuration Angular
+
+Ouvrez `src/environments/environment.ts` et vérifiez :
+
+```typescript
+export const environment = {
+  production: false,
+  keycloak: {
+    url:      'http://localhost:8080',
+    realm:    'gerai',
+    clientId: 'gerai'
+  }
+};
+```
+
+---
+
+## ▶️ Lancement
+
+```bash
 yarn start
 ```
 
-## Download
+L'application sera disponible sur : **http://localhost:4200**
 
-- Berry Free
-  - [Live Preview](https://berrydashboard.com/angular/free/)
-  - [Download](https://github.com/codedthemes/berry-free-angular-admin-template)
-- Berry
-  - [Live Preview](https://berrydashboard.com/angular/default)
-  - [Download](https://codedthemes.com/item/berry-angular-admin-dashboard-template/)
+> Angular redirige automatiquement vers la page de connexion Keycloak.
 
-## Why Berry?
+---
 
-Berry offers everything you need to create dashboards. We have included the following high-end features in our initial release:
+## 🗂️ Structure du projet
 
-- Modern aesthetics UI design
-- Bootstrap components
-- Fully Responsive, all modern browser supported
-- Easy to use code structure
-- Flexible & High-Performance code
-- Easy Documentation Guide
+```
+src/
+├── app/
+│   ├── guards/
+│   │   └── auth.guard.ts          # Guards d'authentification et de rôles
+│   ├── gerai/
+│   │   ├── employe/               # Module Employé
+│   │   │   ├── dashboard-employe.ts
+│   │   │   ├── profil/
+│   │   │   ├── demandes/
+│   │   │   ├── taches/
+│   │   │   └── projets/
+│   │   └── chef/                  # Module Chef
+│   │       ├── dashboard-chef.ts
+│   │       ├── equipe/
+│   │       ├── demandes/
+│   │       ├── taches/
+│   │       ├── projets/
+│   │       ├── rapports/
+│   │       ├── chat/              
+│   │       └── notifications/
+│   └── theme/
+│       └── layout/
+│           └── admin/             # Layout principal
+│               ├── nav-bar/
+│               └── navigation/
+├── environments/
+│   ├── environment.ts             # Config développement
+│   └── environment.prod.ts        # Config production
+└── main.ts                        # Bootstrap + provideKeycloak
+```
 
-## What's included in Premium Version?
+---
 
-[Pro version](https://berrydashboard.com/angular/default) of Berry Angular Dashboard template contains features like TypeScript, Apps, Authentication Methods (i.e. JWT), Advance Components, Form Plugins, Layouts, Widgets, and many more.
+## 👤 Comptes de test
 
-| [Berry Free](https://berrydashboard.com/angular/free/) | [Berry](https://codedthemes.com/item/berry-angular-admin-dashboard-template/) |
-| ----------------------------------------------------- | :---------------------------------------------------------------------------- |
-| **9** Demo pages                                      | **45+** demo pages                                                            |
-| -                                                     | ✓ Multi-language                                                              |
-| -                                                     | ✓ Dark/Light Mode 🌓                                                          |
-| -                                                     | ✓ TypeScript version                                                          |
-| -                                                     | ✓ Design files (Figma)                                                        |
-| -                                                     | ✓ 6+ color Options                                                            |
-| -                                                     | ✓ RTL                                                                         |
-| -                                                     | ✓ JWT authentications                                                         |
-| -                                                     | ✓ [More components](https://berrydashboard.com/angular/default/basic/alert)    |
+| Utilisateur | Mot de passe | Rôle | Dashboard |
+|-------------|-------------|------|-----------|
+| `nour` | `nour` | Employé | `/employe/dashboard` |
+| `mariem` | `mariem` | Chef | `/chef/dashboard` |
 
-## Documentation
+---
 
-[Berry Angular Documentation](https://codedthemes.gitbook.io/berry-angular/) helps you with installation, deployment, and troubleshooting.
+## 🔄 Flux d'authentification
 
-## Browser support
+```
+http://localhost:4200
+        ↓
+  roleRedirectGuard
+        ↓
+  Keycloak Login Page
+        ↓
+  Token JWT reçu
+        ↓
+  Lecture du rôle dans tokenParsed
+        ↓
+  ┌─────────────────────────┐
+  │  employe → /employe/dashboard  │
+  │  chef    → /chef/dashboard     │
+  │  admin   → /admin/dashboard    │
+  └─────────────────────────┘
+```
 
-<img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/chrome.png" width="45" height="45" > <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/edge.png" width="45" height="45" > <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/safari.png" width="45" height="45" > <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/firefox.png" width="45" height="45" > <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/opera.png" width="45" height="45" >
+---
 
-## Technology Stack
+## 📝 Notes importantes
 
-- Angular 21
-- Bootstrap 5
-- TypeScript
-- JWT (i.e. Pro version)
-- Role Base Authentication (i.e. Pro version)
-- Apex Charts
-- npm package installer
+> 🔑 **Keycloak doit être lancé AVANT** de démarrer Angular.
 
-## Berry Figma UI Kit
+> 🚫 **Ne pas utiliser `npm install`** — ce projet utilise Yarn exclusivement.
 
-<div>
-  <a href="https://codedthemes.com/item/berry-free-figma-ui-kit/">
-    <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/Banners/Figma_Free_Berry.png" width="450" alt="Figma Free">
-  </a>&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://codedthemes.com/item/berry-figma-ui-kit/">
-    <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/Banners/Figma-Pro-Berry.png" width="450" alt="Figma Pro">
-  </a>
-</div>
+> 🗑️ **En cas de problème bizarre**, videz le cache Angular :
+> ```bash
+> rmdir /s /q .angular
+> yarn start
+> ```
 
-## Other Technologies
+---
 
-| Technology                                                                                                                        | Free                                                                              | Pro                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| <p align="center"><img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/React.png" width="25" height="25"></p>     | [**Free**](https://codedthemes.com/item/berry-mui-free-react-admin-template/)     | [**Pro**](https://material-ui.com/store/items/berry-react-material-admin/) |
-| <p align="center"><img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/Bootstrap.png" width="30" height="30"></p> | [**Free**](https://codedthemes.com/item/berry-bootstrap-free-admin-template/)     | [**Pro**](https://codedthemes.com/item/berry-bootstrap-5-admin-template/)  |
-| <p align="center"><img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/Vue.png" width="25" height="25"></p>       | [**Free**](https://codedthemes.com/item/berry-free-vuetify-vuejs-admin-template/) | [**Pro**](https://codedthemes.com/item/berry-vue-admin-dashboard/)         |
+## 👩‍💻 Développé par
 
-## Save more with Big Bundle
+**Nour El Houda Boussaidi/** 
+**Mariem Saadaoui**
 
-[![bundle-image](https://org-public-assets.s3.us-west-2.amazonaws.com/Banners/Bundle+banner.png)](https://links.codedthemes.com/jhFBJ)
-
-## More Angular Dashboard Templates
-
-| Dashboard                                                                                                                                                          | FREE                                                                                | PRO                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/Mantis%20with%20name.png"  height="30" style="display:inline-block; vertical-align:middle;">  | [**Free**](https://codedthemes.com/item/mantis-angular-free-admin-template/)        | [**Pro**](https://codedthemes.com/item/mantis-angular-admin-template/)</span>        |
-| <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/Datta%20with%20name.png" height="30" style="display:inline-block; vertical-align:middle;">    | [**Free**](https://codedthemes.com/item/datta-able-react-free-admin-template/)      | [**Pro**](https://codedthemes.com/item/datta-able-angular/)</span>                   |
-| <img src="https://org-public-assets.s3.us-west-2.amazonaws.com/logos/Gradient%20with%20name.png" height="30" style="display:inline-block; vertical-align:middle;"> | [**Free**](https://codedthemes.com/item/gradient-able-angular-free-admin-template/) | [**Pro**](https://codedthemes.com/item/gradient-able-angular-admin-template/)</span> |
-
-## Issues
-
-To report a bug, please submit an [issue](https://github.com/codedthemes/berry-free-angular-admin-template/issues) on Github. We will respond as soon as possible to resolve the issue.
-
-## License
-
-- Licensed cover under [MIT](https://github.com/codedthemes/berry-free-angular-admin-template/blob/master/LICENSE)
-
-## Contributor
-
-**CodedThemes Team**
-
-- https://x.com/codedthemes
-- https://github.com/codedthemes
-
-**Rakesh Nakrani**
-
-- https://x.com/rakesh_nakrani
-
-**Brijesh Dobariya**
-
-- https://x.com/dobaria_brijesh
-
-## Useful Resources
-
-- [More Admin Templates From CodedThemes](https://codedthemes.com/item/category/admin-templates/)
-- [Freebies From CodedThemes](https://codedthemes.com/item/category/free-templates/)
-- [Big Bundles](https://codedthemes.com/item/big-bundle/)
-- [Figma UI Kits](https://codedthemes.com/item/category/templates/figma/)
-- [Affiliate Program](https://codedthemes.com/affiliate/)
-- [Blogs](https://blog.codedthemes.com/)
-
-## Community
-
-- 👥Follow [@codedthemes](https://x.com/codedthemes)
-- 🔗Join [Discord](https://discord.com/invite/p2E2WhCb6s)
-- 🔔Subscribe to [Codedtheme Blogs](https://blog.codedthemes.com/)
-
-## Follow us
-
-- [Twitter](https://twitter.com/codedthemes) 🐦
-- [Dribbble](https://dribbble.com/codedthemes) 🏀
-- [Github](https://github.com/codedthemes) 🐙
-- [LinkedIn](https://www.linkedin.com/company/codedthemes/) 💼
-- [Instagram](https://www.instagram.com/codedthemes/) 📷
-- [Facebook](https://www.facebook.com/codedthemes) 🟦
+*Projet GerAI — Application de Gestion RH Intelligente*

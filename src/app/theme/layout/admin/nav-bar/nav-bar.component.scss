@@ -1,1 +1,137 @@
-// This file is intentionally left empty to allow customers to add custom CSS if needed.
+// =====================================================
+// 🎨 Nav Bar (Header) - GerAI — Sticky & Dark Mode
+// ======================================================
+
+:host ::ng-deep {
+
+  // ── Header (Fixed) ──────────────────────────────────
+  .pc-header {
+    // Fixation au scroll
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1050 !important; // Passe au-dessus du contenu et de la sidebar
+    
+    background: linear-gradient(90deg, #0c4a6e, #0369a1) !important;
+    box-shadow: 0 4px 20px rgba(3, 105, 161, 0.3) !important;
+    border-bottom: none !important;
+    height: 70px !important;
+
+    // Ligne lumineuse en bas
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9, #38bdf8);
+      opacity: 0.6;
+    }
+  }
+
+  // ── Ajustement du contenu (Padding-top) ──────────────
+  // Pour éviter que le haut des pages soit caché derrière le header
+  .pc-container, 
+  .gerai-dashboard, 
+  .projets-page,
+  .profil-page,
+  .demandes-page {
+    padding-top: 70px !important; 
+  }
+
+  // ── Header wrapper ────────────────────────────────
+  .header-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  // ── Logo container ────────────────────────────────
+  .gerai-logo-container {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 20px !important;
+    height: 70px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .gerai-logo {
+    height: 52px !important;
+    width: auto !important;
+    transition: transform 0.2s ease !important;
+
+    &:hover {
+      transform: scale(1.05) !important;
+    }
+  }
+
+  // ── Nav left (mobile) ─────────────────────────────
+  app-nav-left {
+    display: none !important;
+
+    @media (max-width: 1024px) {
+      display: block !important;
+      margin-right: auto !important;
+    }
+  }
+
+  // ── Nav right ─────────────────────────────────────
+  app-nav-right {
+    margin-left: auto !important;
+  }
+
+  // ── Mobile button ─────────────────────────────────
+  .mobile-menu,
+  .pc-mob-header {
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+    width: 42px !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    transition: all 0.2s !important;
+
+    i {
+      font-size: 22px !important;
+      color: white !important;
+    }
+
+    &:hover {
+      background: rgba(255,255,255,0.12) !important;
+    }
+  }
+
+  // ── Responsive ─────────────────────────────────────
+  @media (max-width: 768px) {
+    .gerai-logo-container { padding: 0 12px !important; }
+    .gerai-logo { height: 42px !important; }
+  }
+
+  @media (max-width: 480px) {
+    .gerai-logo-container { padding: 0 8px !important; }
+    .gerai-logo { height: 36px !important; }
+  }
+
+  // ══════════════════════════════════════════════════
+  // 🌙 DARK MODE 
+  // ══════════════════════════════════════════════════
+  body.dark & {
+    .pc-header {
+      background: linear-gradient(90deg, #0f172a, #1e293b) !important;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5) !important;
+      
+      &::after {
+        opacity: 0.3; // Plus discret en dark mode
+      }
+    }
+  }
+}

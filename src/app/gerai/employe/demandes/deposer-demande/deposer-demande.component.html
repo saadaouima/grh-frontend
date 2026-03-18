@@ -1,0 +1,76 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Déposer une nouvelle demande</h5>
+  </div>
+  <div class="card-body">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+
+      <!-- Type -->
+      <div class="mb-3">
+        <label class="form-label">Type de demande</label>
+        <select class="form-select" formControlName="type">
+          <option value="conge">Congé</option>
+          <option value="formation">Formation</option>
+          <option value="document">Document administratif</option>
+          <option value="pret">Prêt</option>
+          <option value="autre">Autre</option>
+        </select>
+        @if (form.get('type')?.invalid && form.get('type')?.touched) {
+          <small class="text-danger">
+            Veuillez sélectionner un type
+          </small>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" rows="3" formControlName="description"></textarea>
+        @if (form.get('description')?.invalid && form.get('description')?.touched) {
+          <small class="text-danger">
+            La description est obligatoire
+          </small>
+        }
+      </div>
+
+      <!-- Dates -->
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Date début</label>
+          <input type="date" class="form-control" formControlName="dateDebut" />
+          @if (form.get('dateDebut')?.invalid && form.get('dateDebut')?.touched) {
+            <small class="text-danger">
+              Date début requise
+            </small>
+          }
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Date fin</label>
+          <input type="date" class="form-control" formControlName="dateFin" />
+          @if (form.get('dateFin')?.invalid && form.get('dateFin')?.touched) {
+            <small class="text-danger">
+              Date fin requise
+            </small>
+          }
+        </div>
+      </div>
+
+      <!-- Upload pièces jointes -->
+      <div class="mb-3">
+        <label class="form-label">Pièces jointes</label>
+        <input type="file" class="form-control" (change)="onFileSelected($event)" multiple />
+        @if (files.length > 0) {
+          <div class="mt-2">
+            <ul>
+              @for (file of files; track file.name) {
+                <li>{{ file.name }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary">Envoyer</button>
+    </form>
+  </div>
+</div>

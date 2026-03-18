@@ -1,8 +1,5 @@
-// Angular import
-import { Component, OnDestroy, ViewEncapsulation, input, inject } from '@angular/core';
+import { Component, OnDestroy, ViewEncapsulation, input, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
-
-// project import
 import { Spinkit } from './spinkits';
 
 @Component({
@@ -13,30 +10,43 @@ import { Spinkit } from './spinkits';
 })
 export class SpinnerComponent implements OnDestroy {
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
-  // public props
   isSpinnerVisible = true;
   Spinkit = Spinkit;
   backgroundColor = input('#2689E2');
   spinner = input(Spinkit.skLine);
 
-  // Constructor
   constructor() {
     this.router.events.subscribe(
       (event) => {
         if (event instanceof NavigationStart) {
-          this.isSpinnerVisible = true;
-        } else if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
-          this.isSpinnerVisible = false;
+          // ✅ setTimeout évite NG0100
+          setTimeout(() => {
+            this.isSpinnerVisible = true;
+            this.cdr.detectChanges();
+          });
+        } else if (
+          event instanceof NavigationEnd ||
+          event instanceof NavigationCancel ||
+          event instanceof NavigationError
+        ) {
+          // ✅ setTimeout évite NG0100
+          setTimeout(() => {
+            this.isSpinnerVisible = false;
+            this.cdr.detectChanges();
+          });
         }
       },
       () => {
-        this.isSpinnerVisible = false;
+        setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.cdr.detectChanges();
+        });
       }
     );
   }
 
-  // life cycle event
   ngOnDestroy(): void {
     this.isSpinnerVisible = false;
   }

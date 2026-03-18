@@ -5,12 +5,11 @@ import { Component, output } from '@angular/core';
 import { BerryConfig } from 'src/app/app-config';
 
 import { NavLeftComponent } from './nav-left/nav-left.component';
-import { NavLogoComponent } from './nav-logo/nav-logo.component';
 import { NavRightComponent } from './nav-right/nav-right.component';
 
 @Component({
   selector: 'app-nav-bar',
-  imports: [NavLogoComponent, NavLeftComponent, NavRightComponent],
+  imports: [NavLeftComponent, NavRightComponent],
   templateUrl: './nav-bar.component.html',
   styleUrls: ['./nav-bar.component.scss']
 })

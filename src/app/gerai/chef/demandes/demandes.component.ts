@@ -1,118 +1,78 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { SharedModule }        from 'src/app/theme/shared/shared.module';
-import { CardComponent }       from 'src/app/theme/shared/components/card/card.component';
-import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-import { Demande }             from 'src/app/theme/shared/interfaces/demande';
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
+
+export interface DemandeChef {
+  id: number;
+  employeId: number;
+  employeNom: string;
+  type: string;
+  dateDemande: Date;
+  statut: 'EN_ATTENTE' | 'VALIDEE' | 'REFUSEE';
+  statutLabel: string;
+}
 
 @Component({
   selector: 'app-demandes-chef',
   standalone: true,
-  imports: [CommonModule, SharedModule, DatePipe, CardComponent, BreadcrumbComponent],
+  imports: [CommonModule, FormsModule, SharedModule, CardComponent],
   templateUrl: './demandes.component.html',
   styleUrls: ['./demandes.component.scss']
 })
 export class DemandesChefComponent implements OnInit {
 
-  activeTab: 'A_VALIDER' | 'HISTORIQUE' = 'A_VALIDER';
-  demandes: Demande[] = [];
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
+  employeIdFiltre: number | null = null;
+  employeNomFiltre: string = '';
+
+  toutesLesDemandes: DemandeChef[] = [
+    { id: 1, employeId: 1, employeNom: 'Sami Ben Ali', type: 'Congé', dateDemande: new Date('2024-02-15'), statut: 'EN_ATTENTE', statutLabel: 'En attente' },
+    { id: 2, employeId: 1, employeNom: 'Sami Ben Ali', type: 'Formation', dateDemande: new Date('2024-02-10'), statut: 'VALIDEE', statutLabel: 'Validée' },
+    { id: 3, employeId: 2, employeNom: 'Ines Trabelsi', type: 'Document', dateDemande: new Date('2024-02-05'), statut: 'REFUSEE', statutLabel: 'Refusée' },
+    { id: 4, employeId: 2, employeNom: 'Ines Trabelsi', type: 'Congé', dateDemande: new Date('2024-01-28'), statut: 'VALIDEE', statutLabel: 'Validée' },
+    { id: 5, employeId: 3, employeNom: 'Youssef Karray', type: 'Congé', dateDemande: new Date('2024-01-15'), statut: 'EN_ATTENTE', statutLabel: 'En attente' },
+  ];
+
+  demandesFiltrees: DemandeChef[] = [];
 
   ngOnInit(): void {
-    this.loadDemandes();
+    // ✅ Récupère l'employeId depuis les queryParams
+    this.route.queryParams.subscribe(params => {
+      this.employeIdFiltre = params['employeId'] ? Number(params['employeId']) : null;
+      this.appliquerFiltre();
+    });
   }
 
-  // Toutes les demandes de l'équipe — plus de filtre par employeId
-  loadDemandes(): void {
-    this.demandes = [
-      {
-        id: 1, employeId: 1,
-        type: 'Congé',
-        statut: 'EN_ATTENTE', statutLabel: 'EN ATTENTE',
-        statusColor: 'text-warning', bgColor: 'bg-light-warning',
-        icon: 'ti ti-calendar-off',
-        date: '2025-02-15',
-        dateDemande: new Date('2025-02-15'),
-        dateDebut: new Date('2025-03-01'),
-        dateFin: new Date('2025-03-05'),
-        employe: 'Sami Ben Ali'
-      },
-      {
-        id: 2, employeId: 2,
-        type: 'Formation',
-        statut: 'EN_ATTENTE', statutLabel: 'À VALIDER',
-        statusColor: 'text-warning', bgColor: 'bg-light-warning',
-        icon: 'ti ti-school',
-        date: '2025-02-10',
-        dateDemande: new Date('2025-02-10'),
-        dateDebut: new Date('2025-04-04'),
-        dateFin: new Date('2025-04-08'),
-        employe: 'Ines Trabelsi'
-      },
-      {
-        id: 3, employeId: 3,
-        type: 'Congé',
-        statut: 'EN_ATTENTE', statutLabel: 'EN ATTENTE',
-        statusColor: 'text-warning', bgColor: 'bg-light-warning',
-        icon: 'ti ti-calendar-off',
-        date: '2025-02-18',
-        dateDemande: new Date('2025-02-18'),
-        dateDebut: new Date('2025-03-10'),
-        dateFin: new Date('2025-03-14'),
-        employe: 'Mohamed Gharbi'
-      },
-      {
-        id: 4, employeId: 1,
-        type: 'Document',
-        statut: 'VALIDEE', statutLabel: 'APPROUVÉ',
-        statusColor: 'text-success', bgColor: 'bg-light-success',
-        icon: 'ti ti-file-check',
-        date: '2025-01-20',
-        dateDemande: new Date('2025-01-20'),
-        dateDebut: null, dateFin: null,
-        validePar: 'Ahmed Mansour',
-        employe: 'Sami Ben Ali'
-      },
-      {
-        id: 5, employeId: 4,
-        type: 'Formation',
-        statut: 'REFUSEE', statutLabel: 'REFUSÉ',
-        statusColor: 'text-danger', bgColor: 'bg-light-danger',
-        icon: 'ti ti-school',
-        date: '2025-01-15',
-        dateDemande: new Date('2025-01-15'),
-        dateDebut: new Date('2025-02-01'),
-        dateFin: new Date('2025-02-05'),
-        validePar: 'Ahmed Mansour',
-        employe: 'Leila Sassi'
-      }
-    ];
+  appliquerFiltre(): void {
+    if (this.employeIdFiltre !== null) {
+      this.demandesFiltrees = this.toutesLesDemandes
+        .filter(d => d.employeId === this.employeIdFiltre);
+      const premier = this.demandesFiltrees[0];
+      this.employeNomFiltre = premier ? premier.employeNom : '';
+    } else {
+      this.demandesFiltrees = [...this.toutesLesDemandes];
+      this.employeNomFiltre = '';
+    }
   }
 
-  switchTab(tab: 'A_VALIDER' | 'HISTORIQUE'): void {
-    this.activeTab = tab;
+  voirToutesDemandes(): void {
+    this.router.navigate(['/chef/demandes']);
   }
 
-  get demandesATraiter(): Demande[] {
-    return this.demandes.filter(d => d.statut === 'EN_ATTENTE');
+  valider(id: number): void {
+    const d = this.toutesLesDemandes.find(d => d.id === id);
+    if (d) { d.statut = 'VALIDEE'; d.statutLabel = 'Validée'; }
+    this.appliquerFiltre();
   }
 
-  get historique(): Demande[] {
-    return this.demandes.filter(d => d.statut !== 'EN_ATTENTE');
-  }
-
-  valider(d: Demande): void {
-    d.statut      = 'VALIDEE';
-    d.statutLabel = 'APPROUVÉ';
-    d.statusColor = 'text-success';
-    d.bgColor     = 'bg-light-success';
-    d.validePar   = 'Ahmed Mansour';
-  }
-
-  refuser(d: Demande): void {
-    d.statut      = 'REFUSEE';
-    d.statutLabel = 'REFUSÉ';
-    d.statusColor = 'text-danger';
-    d.bgColor     = 'bg-light-danger';
-    d.validePar   = 'Ahmed Mansour';
+  refuser(id: number): void {
+    const d = this.toutesLesDemandes.find(d => d.id === id);
+    if (d) { d.statut = 'REFUSEE'; d.statutLabel = 'Refusée'; }
+    this.appliquerFiltre();
   }
 }

@@ -1,146 +1,72 @@
-<!-- [ breadcrumb ] -->
-<app-breadcrumb></app-breadcrumb>
-
 <div class="row">
   <div class="col-sm-12">
-    <app-card cardTitle="Validation des Demandes Équipe">
+    <app-card cardTitle="Demandes">
 
-      <!-- Onglets -->
-      <div class="tabs-container mb-4">
-        <button class="tab-btn" [class.active]="activeTab === 'A_VALIDER'"
-          (click)="switchTab('A_VALIDER')">
-          <i class="ti ti-clock me-1"></i>
-          À valider
-          @if (demandesATraiter.length > 0) {
-            <span class="tab-badge">{{ demandesATraiter.length }}</span>
-          }
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'HISTORIQUE'"
-          (click)="switchTab('HISTORIQUE')">
-          <i class="ti ti-history me-1"></i>
-          Historique
+      <!-- Filtre actif -->
+      @if (employeIdFiltre) {
+      <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+        <span>
+          <i class="ti ti-filter me-2"></i>
+          Demandes de <strong>{{ employeNomFiltre }}</strong>
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="voirToutesDemandes()">
+          <i class="ti ti-x me-1"></i>Voir toutes
         </button>
       </div>
-
-      <!-- ── À VALIDER ───────────────────────────────── -->
-      @if (activeTab === 'A_VALIDER') {
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Employé</th>
-                <th>Type</th>
-                <th>Dates prévues</th>
-                <th>Soumis le</th>
-                <th>Statut</th>
-                <th class="text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (d of demandesATraiter; track d.id) {
-                <tr>
-                  <td>
-                    <div class="employe-cell">
-                      <div class="employe-avatar">{{ d.employe | slice:0:2 }}</div>
-                      <span class="fw-semibold">{{ d.employe }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="type-cell">
-                      <div class="icon-box" [ngClass]="d.bgColor">
-                        <i [class]="d.icon + ' ' + d.statusColor"></i>
-                      </div>
-                      <span>{{ d.type }}</span>
-                    </div>
-                  </td>
-                  <td class="text-muted">
-                    @if (d.dateDebut) {
-                      Du {{ d.dateDebut | date:'dd/MM' }}
-                      au {{ d.dateFin | date:'dd/MM/yyyy' }}
-                    } @else {
-                      —
-                    }
-                  </td>
-                  <td>{{ d.date | date:'dd MMM yyyy' }}</td>
-                  <td>
-                    <span class="status-pill" [ngClass]="d.bgColor + ' ' + d.statusColor">
-                      {{ d.statutLabel }}
-                    </span>
-                  </td>
-                  <td class="text-end">
-                    <button class="btn btn-sm btn-success me-2" (click)="valider(d)">
-                      <i class="ti ti-check"></i> Valider
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" (click)="refuser(d)">
-                      <i class="ti ti-x"></i> Refuser
-                    </button>
-                  </td>
-                </tr>
-              }
-              @if (demandesATraiter.length === 0) {
-                <tr>
-                  <td colspan="6" class="empty-state">
-                    <i class="ti ti-circle-check"></i>
-                    <p>Aucune demande en attente de validation</p>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
       }
 
-      <!-- ── HISTORIQUE ──────────────────────────────── -->
-      @if (activeTab === 'HISTORIQUE') {
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Employé</th>
-                <th>Type</th>
-                <th>Soumis le</th>
-                <th>Statut final</th>
-                <th>Décision par</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (h of historique; track h.id) {
-                <tr>
-                  <td>
-                    <div class="employe-cell">
-                      <div class="employe-avatar">{{ h.employe | slice:0:2 }}</div>
-                      <span class="fw-semibold">{{ h.employe }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="type-cell">
-                      <div class="icon-box" [ngClass]="h.bgColor">
-                        <i [class]="h.icon + ' ' + h.statusColor"></i>
-                      </div>
-                      <span>{{ h.type }}</span>
-                    </div>
-                  </td>
-                  <td>{{ h.date | date:'dd MMM yyyy' }}</td>
-                  <td>
-                    <span class="status-pill" [ngClass]="h.bgColor + ' ' + h.statusColor">
-                      {{ h.statutLabel }}
-                    </span>
-                  </td>
-                  <td class="text-muted">{{ h.validePar || '—' }}</td>
-                </tr>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              @if (!employeIdFiltre) { <th>Employé</th> }
+              <th>Type</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (demandesFiltrees.length === 0) {
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                Aucune demande trouvée
+              </td>
+            </tr>
+            } @else {
+            @for (d of demandesFiltrees; track d.id) {
+            <tr>
+              <td class="fw-bold">#{{ d.id }}</td>
+              @if (!employeIdFiltre) {
+              <td>{{ d.employeNom }}</td>
               }
-              @if (historique.length === 0) {
-                <tr>
-                  <td colspan="5" class="empty-state">
-                    <i class="ti ti-history"></i>
-                    <p>Aucun historique disponible</p>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
+              <td>{{ d.type }}</td>
+              <td>{{ d.dateDemande | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [class.bg-warning]="d.statut === 'EN_ATTENTE'"
+                  [class.bg-success]="d.statut === 'VALIDEE'" [class.bg-danger]="d.statut === 'REFUSEE'">
+                  {{ d.statutLabel }}
+                </span>
+              </td>
+              <td class="text-end">
+                @if (d.statut === 'EN_ATTENTE') {
+                <button class="btn btn-success btn-sm me-1" (click)="valider(d.id)">
+                  <i class="ti ti-check"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="refuser(d.id)">
+                  <i class="ti ti-x"></i>
+                </button>
+                } @else {
+                <span class="text-muted small">Traité</span>
+                }
+              </td>
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+      </div>
 
     </app-card>
   </div>

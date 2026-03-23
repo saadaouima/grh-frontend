@@ -1,14 +1,14 @@
-import {Injectable, inject} from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Notification } from '../interfaces/notification';
+import { Notification } from '../../theme/shared/interfaces/notification';
 
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationService {
-    private http = inject(HttpClient); 
+    private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/notifications`;
 
     getNotifications(): Observable<Notification[]> {
@@ -16,4 +16,5 @@ export class NotificationService {
     }
     marquerCommeLue(id: number): Observable<void> {
         return this.http.put<void>(`${this.apiUrl}/${id}/marquer-comme-lue`, {});
-    }}
+    }
+}

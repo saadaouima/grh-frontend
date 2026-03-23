@@ -13,7 +13,8 @@
       </h2>
       <p class="banner-sub">
         @if (userEmail) { {{ userEmail }} }
-        @else { <div class="skel-email"></div> }
+        @else {
+      <div class="skel-email"></div> }
       </p>
     </div>
     <div class="banner-stats">
@@ -39,9 +40,8 @@
 
     <!-- KPI 1 : Membres équipe -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #0F4C8A 0%, #1565C0 100%);"
-           (click)="naviguerVers('/chef/equipe')">
+      <div class="kpi-card cursor-pointer" style="background: linear-gradient(135deg, #0F4C8A 0%, #1565C0 100%);"
+        (click)="naviguerVers('/chef/equipe')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-users"></i></div>
         <div class="kpi-value">{{ totalEmployes }}</div>
@@ -52,9 +52,8 @@
 
     <!-- KPI 2 : Demandes en attente -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #B45309 0%, #D97706 100%);"
-           (click)="naviguerVers('/chef/demandes')">
+      <div class="kpi-card cursor-pointer" style="background: linear-gradient(135deg, #B45309 0%, #D97706 100%);"
+        (click)="naviguerVers('/chef/demandes')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-hourglass"></i></div>
         <div class="kpi-value">{{ demandesEnAttente }}</div>
@@ -65,9 +64,8 @@
 
     <!-- KPI 3 : Projets actifs -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #065F46 0%, #059669 100%);"
-           (click)="naviguerVers('/chef/projets')">
+      <div class="kpi-card cursor-pointer" style="background: linear-gradient(135deg, #065F46 0%, #059669 100%);"
+        (click)="naviguerVers('/chef/projets')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-layout-kanban"></i></div>
         <div class="kpi-value">{{ projetsActifs }}</div>
@@ -78,9 +76,8 @@
 
     <!-- KPI 4 : Taux de présence équipe -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);"
-           (click)="naviguerVers('/chef/rapports')">
+      <div class="kpi-card cursor-pointer" style="background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);"
+        (click)="naviguerVers('/chef/rapports')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-chart-bar"></i></div>
         <div class="kpi-value">{{ tauxPresenceEquipe }}<span class="kpi-unit">%</span></div>
@@ -107,28 +104,26 @@
 
         <ul class="item-list">
           @for (demande of demandesAValider; track demande.id) {
-            <li class="item-row">
-              <div class="employe-avatar-sm">
-                {{ demande.employeInitiales }}
-              </div>
-              <div class="item-info">
-                <p class="item-name">{{ demande.employeNom }}</p>
-                <small class="item-date">
-                  <span class="type-tag">{{ demande.type }}</span>
-                  · {{ demande.date }}
-                </small>
-              </div>
-              <div class="action-btns">
-                <button class="btn-approve" (click)="validerDemande(demande.id)"
-                        title="Approuver">
-                  <i class="ti ti-check"></i>
-                </button>
-                <button class="btn-reject" (click)="refuserDemande(demande.id)"
-                        title="Refuser">
-                  <i class="ti ti-x"></i>
-                </button>
-              </div>
-            </li>
+          <li class="item-row">
+            <div class="employe-avatar-sm">
+              {{ demande.employeInitiales }}
+            </div>
+            <div class="item-info">
+              <p class="item-name">{{ demande.employeNom }}</p>
+              <small class="item-date">
+                <span class="type-tag">{{ demande.type }}</span>
+                · {{ demande.date }}
+              </small>
+            </div>
+            <div class="action-btns">
+              <button class="btn-approve" (click)="validerDemande(demande.id)" title="Approuver">
+                <i class="ti ti-check"></i>
+              </button>
+              <button class="btn-reject" (click)="refuserDemande(demande.id)" title="Refuser">
+                <i class="ti ti-x"></i>
+              </button>
+            </div>
+          </li>
           }
         </ul>
 
@@ -146,27 +141,24 @@
             <i class="ti ti-users me-2 text-primary"></i>
             Mon équipe
           </h6>
-          <button class="add-btn" (click)="naviguerVers('/chef/equipe')"
-                  title="Voir tout">
+          <button class="add-btn" (click)="naviguerVers('/chef/equipe')" title="Voir tout">
             <i class="ti ti-arrow-right"></i>
           </button>
         </div>
 
         <ul class="team-list">
           @for (membre of equipe; track membre.id) {
-            <li class="team-row cursor-pointer" (click)="voirProfil(membre.id)">
-              <div class="team-avatar" [style.background]="membre.couleur">
-                {{ membre.initiales }}
-              </div>
-              <div class="item-info">
-                <p class="item-name">{{ membre.nom }}</p>
-                <small class="item-date">{{ membre.poste }}</small>
-              </div>
-              <div class="presence-dot"
-                   [class.present]="membre.present"
-                   [title]="membre.present ? 'Présent' : 'Absent'">
-              </div>
-            </li>
+          <li class="team-row cursor-pointer" (click)="voirProfil(membre.id)">
+            <div class="team-avatar" [style.background]="membre.couleur">
+              {{ membre.initiales }}
+            </div>
+            <div class="item-info">
+              <p class="item-name">{{ membre.nom }}</p>
+              <small class="item-date">{{ membre.poste }}</small>
+            </div>
+            <div class="presence-dot" [class.present]="membre.present" [title]="membre.present ? 'Présent' : 'Absent'">
+            </div>
+          </li>
           }
         </ul>
 
@@ -191,17 +183,17 @@
 
         <ul class="item-list">
           @for (tache of tachesEquipe; track tache.id) {
-            <li class="item-row cursor-pointer" (click)="voirTache(tache.id)">
-              <div class="priority-stripe {{ tache.prioriteColor }}"></div>
-              <div class="item-info">
-                <p class="item-name">{{ tache.titre }}</p>
-                <small class="item-date">
-                  <i class="ti ti-user me-1"></i>{{ tache.assigneA }}
-                  <span class="ms-2"><i class="ti ti-clock me-1"></i>{{ tache.echeance }}</span>
-                </small>
-              </div>
-              <span class="prio-tag {{ tache.prioriteColor }}">{{ tache.priorite }}</span>
-            </li>
+          <li class="item-row cursor-pointer" (click)="voirTache(tache.id)">
+            <div class="priority-stripe {{ tache.prioriteColor }}"></div>
+            <div class="item-info">
+              <p class="item-name">{{ tache.titre }}</p>
+              <small class="item-date">
+                <i class="ti ti-user me-1"></i>{{ tache.assigneA }}
+                <span class="ms-2"><i class="ti ti-clock me-1"></i>{{ tache.echeance }}</span>
+              </small>
+            </div>
+            <span class="prio-tag {{ tache.prioriteColor }}">{{ tache.priorite }}</span>
+          </li>
           }
         </ul>
 
@@ -229,21 +221,20 @@
           </button>
         </div>
         @for (projet of projets; track projet.nom) {
-          <div class="proj-row mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <span class="proj-name">{{ projet.nom }}</span>
-                <small class="proj-team ms-2">
-                  <i class="ti ti-users f-10"></i> {{ projet.membres }} membres
-                </small>
-              </div>
-              <span class="proj-pct">{{ projet.avancement }}%</span>
+        <div class="proj-row mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <span class="proj-name">{{ projet.nom }}</span>
+              <small class="proj-team ms-2">
+                <i class="ti ti-users f-10"></i> {{ projet.membres }} membres
+              </small>
             </div>
-            <div class="prog-track">
-              <div class="prog-fill" [style.width.%]="projet.avancement"
-                   [style.background]="projet.couleur"></div>
-            </div>
+            <span class="proj-pct">{{ projet.avancement }}%</span>
           </div>
+          <div class="prog-track">
+            <div class="prog-fill" [style.width.%]="projet.avancement" [style.background]="projet.couleur"></div>
+          </div>
+        </div>
         }
       </div>
     </div>
@@ -255,40 +246,33 @@
           <h6 class="card-title-custom">Accès rapides</h6>
         </div>
         <div class="quick-grid">
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #0F4C8A, #1565C0);"
-               (click)="naviguerVers('/chef/equipe')">
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #0F4C8A, #1565C0);"
+            (click)="naviguerVers('/chef/equipe')">
             <i class="ti ti-users"></i>
             <span>Mon Équipe</span>
           </div>
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #B45309, #D97706);"
-               (click)="naviguerVers('/chef/demandes')">
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #B45309, #D97706);"
+            (click)="naviguerVers('/chef/demandes')">
             <i class="ti ti-clipboard-list"></i>
             <span>Demandes</span>
           </div>
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #065F46, #059669);"
-               (click)="naviguerVers('/chef/projets')">
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #065F46, #059669);"
+            (click)="naviguerVers('/chef/projets')">
             <i class="ti ti-briefcase"></i>
             <span>Projets</span>
           </div>
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #4C1D95, #7C3AED);"
-               (click)="naviguerVers('/chef/rapports')">
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #4C1D95, #7C3AED);"
+            (click)="naviguerVers('/chef/rapports')">
             <i class="ti ti-chart-dots"></i>
             <span>Rapports</span>
           </div>
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #0E7490, #06B6D4);"
-               (click)="naviguerVers('/chat')">
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #0E7490, #06B6D4);"
+            (click)="naviguerVers('/chat')">
             <i class="ti ti-message-circle-2"></i>
             <span>Chat équipe</span>
           </div>
-          <div class="quick-tile cursor-pointer"
-               style="background: linear-gradient(135deg, #9D174D, #EC4899);"
-               (click)="naviguerVers('/chef/taches/affecter')">
-            <i class="ti ti-user-plus"></i>
+          <div class="quick-tile cursor-pointer" style="background: linear-gradient(135deg, #9D174D, #EC4899);"
+            (click)="naviguerVers('/chef/taches')"> <i class="ti ti-user-plus"></i>
             <span>Affecter tâche</span>
           </div>
         </div>
@@ -306,15 +290,15 @@
         </div>
         <ul class="notif-list">
           @for (notif of notifications; track notif.titre) {
-            <li class="notif-item">
-              <div class="notif-ring {{ notif.color }}">
-                <i class="{{ notif.icon }}"></i>
-              </div>
-              <div class="notif-body">
-                <p class="notif-title">{{ notif.titre }}</p>
-                <small class="notif-when">{{ notif.date }}</small>
-              </div>
-            </li>
+          <li class="notif-item">
+            <div class="notif-ring {{ notif.color }}">
+              <i class="{{ notif.icon }}"></i>
+            </div>
+            <div class="notif-body">
+              <p class="notif-title">{{ notif.titre }}</p>
+              <small class="notif-when">{{ notif.date }}</small>
+            </div>
+          </li>
           }
         </ul>
         <a class="see-all cursor-pointer" (click)="naviguerVers('/notifications')">
@@ -326,7 +310,9 @@
   </div>
 
   @if (loading) {
-    <div class="skel-wrap mt-3"><div class="skel-bar"></div></div>
+  <div class="skel-wrap mt-3">
+    <div class="skel-bar"></div>
+  </div>
   }
 
 </div>

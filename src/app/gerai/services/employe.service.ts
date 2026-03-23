@@ -3,9 +3,9 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { environment } from "src/environments/environment";
-import { Employe } from "../interfaces/employe";
-import { StatistiquesEmploye } from "../interfaces/StatistiquesEmploye";
-import { CreateEmployeDTO } from "../interfaces/CreateEmployeDTO";
+import { Employe } from "../../theme/shared/interfaces/employe";
+import { StatistiquesEmploye } from "../../theme/shared/interfaces/StatistiquesEmploye";
+import { CreateEmployeDTO } from "../../theme/shared/interfaces/CreateEmployeDTO";
 //SERVICE
 
 @Injectable({
@@ -40,45 +40,45 @@ export class EmployeService {
 
     getStatistiques(employeId?: number): Observable<StatistiquesEmploye> {
         const url = employeId
-        ? `${this.apiUrl}/${employeId}/stats`
-        : `${this.apiUrl}/stats`;
+            ? `${this.apiUrl}/${employeId}/stats`
+            : `${this.apiUrl}/stats`;
 
         return this.http.get<StatistiquesEmploye>(url)
-        .pipe(
-            catchError(this.handleError)
-        );
-}
+            .pipe(
+                catchError(this.handleError)
+            );
+    }
 
-//Creer un nouvel employe
+    //Creer un nouvel employe
     createEmploye(employe: CreateEmployeDTO): Observable<Employe> {
         return this.http.post<Employe>(this.apiUrl, employe).pipe(
             catchError(this.handleError)
         );
     }
 
-//Mettre a jour un employe
-    upadteEmploye(id: number , employe: Partial<Employe>): Observable<Employe> {
+    //Mettre a jour un employe
+    upadteEmploye(id: number, employe: Partial<Employe>): Observable<Employe> {
         return this.http.put<Employe>(`${this.apiUrl}/${id}`, employe).pipe(
             catchError(this.handleError)
         );
     }
 
-//Supprimer un employe
+    //Supprimer un employe
     deleteEmploye(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
             catchError(this.handleError)
         );
     }
 
-//Recuperer les employes d'une equipe
+    //Recuperer les employes d'une equipe
     getEmployesByChef(chefId: number): Observable<Employe[]> {
         return this.http.get<Employe[]>(`${this.apiUrl}/chef/${chefId}`)
-        .pipe(
-            catchError(this.handleError)
-        );
+            .pipe(
+                catchError(this.handleError)
+            );
     }
 
-//Rechercher des employes par nom ou email
+    //Rechercher des employes par nom ou email
     searchEmployes(query: string): Observable<Employe[]> {
         return this.http.get<Employe[]>(`${this.apiUrl}/search?q=${query}`).pipe(
             catchError(this.handleError)
@@ -94,9 +94,9 @@ export class EmployeService {
             errorMessage = `Erreur client: ${error.error.message}`;
         } else {
             // Erreur côté serveur
-           switch (error.status) {
+            switch (error.status) {
                 case 400:
-                    errorMessage ='Demande invalide. Veuillez vérifier les données saisies.';
+                    errorMessage = 'Demande invalide. Veuillez vérifier les données saisies.';
                     break;
                 case 401:
                     errorMessage = 'Non autorise. Veuillez vous reconnecter.';
@@ -112,9 +112,10 @@ export class EmployeService {
                     break;
                 default:
                     errorMessage = `Erreur ${error.status}: ${error.message}`;
-           }
+            }
         }
 
-        console.error('Erreur EmployeService:',errorMessage, error);
+        console.error('Erreur EmployeService:', errorMessage, error);
         return throwError(() => new Error(errorMessage));
-    }}
+    }
+}

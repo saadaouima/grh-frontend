@@ -20,7 +20,7 @@
     background: white !important;
     border-radius: 12px !important;
     overflow: hidden !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
   }
 
   .table {
@@ -89,7 +89,7 @@
 
     &:hover {
       transform: scale(1.1) !important;
-      box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     }
   }
 
@@ -103,7 +103,10 @@
   .text-muted {
     color: #94A3B8 !important;
     font-size: 12px !important;
-    &.small { font-size: 11px !important; }
+
+    &.small {
+      font-size: 11px !important;
+    }
   }
 
   .badge {
@@ -113,8 +116,15 @@
     border-radius: 100px !important;
     text-transform: uppercase !important;
 
-    &.badge-success { background: #D1FAE5 !important; color: #059669 !important; }
-    &.badge-warning { background: #FEF3C7 !important; color: #D97706 !important; }
+    &.badge-success {
+      background: #D1FAE5 !important;
+      color: #059669 !important;
+    }
+
+    &.badge-warning {
+      background: #FEF3C7 !important;
+      color: #D97706 !important;
+    }
   }
 
   .btn {
@@ -129,69 +139,174 @@
     border: 1.5px solid #3B82F6 !important;
     color: #3B82F6 !important;
     background: transparent !important;
+
     &:hover {
       background: #3B82F6 !important;
       color: white !important;
-      box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     }
   }
 
   .btn-outline-secondary {
     border: 1.5px solid #E2E8F0 !important;
     color: #64748B !important;
-    &:hover { background: #F1F5F9 !important; color: #475569 !important; }
+
+    &:hover {
+      background: #F1F5F9 !important;
+      color: #475569 !important;
+    }
+  }
+
+  .modal-backdrop-custom {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+  }
+
+  .modal-custom {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 12px;
+    width: 560px;
+    max-width: 95vw;
+    z-index: 1050;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    &-body {
+      padding: 24px;
+    }
+  }
+
+  .btn-close-modal {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #6c757d;
+
+    &:hover {
+      color: #333;
+    }
   }
 }
 
-// ── STYLE MODE DARK ──────────────────────────────────
-// On utilise :host-context(.dark) sans le "&" au début
+// ── STYLE MODE DARK COMPLÉTÉ ──────────────────────────
 :host-context(.dark) ::ng-deep {
-    
-    .table-responsive {
-      background: #1a1f2e !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-    }
 
-    .table {
-      thead {
-        background: #141824 !important;
-        border-bottom-color: #2e3648 !important;
-        th { color: #64748b !important; }
-      }
+  .table-responsive {
+    background: #1e293b !important; // Bleu nuit profond
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid #334155 !important;
+  }
 
-      tbody tr {
-        border-bottom-color: #2e3648 !important;
-        &:hover { background: rgba(59, 130, 246, 0.05) !important; }
-        td { color: #94a3b8 !important; }
+  .table {
+    thead {
+      background: #0f172a !important; // Plus sombre pour le header
+      border-bottom: 2px solid #334155 !important;
+
+      th {
+        color: #94a3b8 !important; // Texte gris clair
       }
     }
 
-    .nom { color: #f8fafc !important; }
+    tbody {
+      tr {
+        border-bottom-color: #334155 !important;
 
-    .badge {
-      &.badge-success {
-        background: rgba(16, 185, 129, 0.15) !important;
-        color: #34d399 !important;
-        border: 1px solid rgba(16, 185, 129, 0.2) !important;
-      }
-      &.badge-warning {
-        background: rgba(245, 158, 11, 0.15) !important;
-        color: #fbbf24 !important;
-        border: 1px solid rgba(245, 158, 11, 0.2) !important;
-      }
-    }
+        &:hover {
+          background: rgba(59, 130, 246, 0.08) !important; // Effet hover bleuté subtil
+          transform: scale(1.001) !important;
+        }
 
-    .btn-outline-secondary {
-      border-color: #2e3648 !important;
-      color: #94a3b8 !important;
-      &:hover {
-        background: #2e3648 !important;
-        color: #f8fafc !important;
+        td {
+          color: #cbd5e1 !important;
+        }
       }
     }
+  }
 
-    .avatar {
-      border: 2px solid #1a1f2e !important;
-      box-shadow: 0 0 0 1px #2e3648 !important;
+  .nom {
+    color: #f8fafc !important;
+  }
+
+  .text-muted {
+    color: #64748b !important; // Gris moyen pour le contraste
+  }
+
+  .avatar {
+    border: 2px solid #1e293b !important;
+    box-shadow: 0 0 0 1px #334155 !important;
+  }
+
+  .badge {
+    &.badge-success {
+      background: rgba(16, 185, 129, 0.2) !important;
+      color: #34d399 !important;
+      border: 1px solid rgba(16, 185, 129, 0.3) !important;
     }
+
+    &.badge-warning {
+      background: rgba(245, 158, 11, 0.2) !important;
+      color: #fbbf24 !important;
+      border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    }
+  }
+
+  // --- Amélioration des Boutons ---
+  .btn-outline-secondary {
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+
+    &:hover {
+      background: #334155 !important;
+      color: #f8fafc !important;
+    }
+  }
+
+  .btn-outline-primary {
+    border-color: #60a5fa !important;
+    color: #60a5fa !important;
+
+    &:hover {
+      background: #3b82f6 !important;
+      color: white !important;
+    }
+  }
+
+  // --- Modales en Mode Dark ---
+  .modal-custom {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid #334155 !important;
+
+    &-header {
+      border-bottom-color: #334155 !important;
+      background: #1a2232 !important;
+    }
+  }
+
+  .btn-close-modal {
+    color: #94a3b8 !important;
+
+    &:hover {
+      color: #f8fafc !important;
+    }
+  }
+
+  .modal-backdrop-custom {
+    background: rgba(0, 0, 0, 0.8) !important; // Plus opaque en dark mode
+  }
 }

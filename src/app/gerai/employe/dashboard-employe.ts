@@ -5,7 +5,6 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { BajajChartComponent } from 'src/app/theme/shared/components/apexchart/bajaj-chart/bajaj-chart.component';
 import { Demande } from 'src/app/theme/shared/interfaces/demande';
 import { Tache } from 'src/app/theme/shared/interfaces/tache';
-
 import Keycloak from 'keycloak-js';
 
 const ROLES_SYSTEME_KEYCLOAK = [
@@ -69,7 +68,10 @@ export class DashboardEmployeComponent implements OnInit {
 
   loading = true;
 
-  async ngOnInit() {
+  // ─────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────
+  async ngOnInit(): Promise<void> {
     await this.loadUserProfile();
     this.loadStatistiques();
     setTimeout(() => {
@@ -78,7 +80,10 @@ export class DashboardEmployeComponent implements OnInit {
     }, 800);
   }
 
-  async loadUserProfile() {
+  // ─────────────────────────────────────────────
+  // Profil utilisateur
+  // ─────────────────────────────────────────────
+  async loadUserProfile(): Promise<void> {
     try {
       if (!this.keycloak.authenticated) {
         await this.keycloak.login();
@@ -89,10 +94,12 @@ export class DashboardEmployeComponent implements OnInit {
       this.userName = token?.['name'] || token?.['preferred_username'] || 'Utilisateur';
       this.userEmail = token?.['email'] || '';
 
-      const tousLesRoles = (token?.['roles'] as string[]) || [];
-      this.userRoles = tousLesRoles.filter(
-        role => !ROLES_SYSTEME_KEYCLOAK.includes(role)
-      );
+      const realmRoles: string[] = token?.['realm_access']?.['roles'] ?? [];
+      const clientRoles: string[] = Object.values(token?.['resource_access'] ?? {})
+        .flatMap((r: any) => r?.roles ?? []);
+
+      this.userRoles = [...new Set([...realmRoles, ...clientRoles])]
+        .filter(r => !ROLES_SYSTEME_KEYCLOAK.includes(r));
 
       this.cdr.detectChanges();
       console.log('✅ Profil chargé:', token);
@@ -106,11 +113,10 @@ export class DashboardEmployeComponent implements OnInit {
     }
   }
 
-  getRoleLabel(role: string): string {
-    return ROLE_LABELS[role] ?? role;
-  }
-
-  loadStatistiques() {
+  // ─────────────────────────────────────────────
+  // Statistiques
+  // ─────────────────────────────────────────────
+  loadStatistiques(): void {
     this.congesRestants = 15;
     this.demandesEnCours = 2;
     this.tachesActives = 5;
@@ -118,12 +124,24 @@ export class DashboardEmployeComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  naviguerVers(route: string) { this.router.navigate([route]); }
-  voirDemande(id: number) { this.router.navigate(['/employe/demandes', id]); }
-  voirTache(id: number) { this.router.navigate(['/employe/taches', id]); }
+  // ─────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────
+  getRoleLabel(role: string): string {
+    return ROLE_LABELS[role] ?? role;
+  }
 
-  // ✅ Corrigé
-  logout() {
+  // ─────────────────────────────────────────────
+  // Navigation
+  // ─────────────────────────────────────────────
+  naviguerVers(route: string): void { this.router.navigate([route]); }
+  voirDemande(id: number): void { this.router.navigate(['/employe/demandes', id]); }
+  voirTache(id: number): void { this.router.navigate(['/employe/taches', id]); }
+
+  // ─────────────────────────────────────────────
+  // Auth
+  // ─────────────────────────────────────────────
+  logout(): void {
     this.keycloak.logout({ redirectUri: window.location.origin });
   }
 }

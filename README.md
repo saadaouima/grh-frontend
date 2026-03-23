@@ -1,61 +1,74 @@
-# 🚀 GerAI — Frontend Angular
-> Application de Gestion des Ressources Humaines Intelligente
+# 🚀 GerAI — Application de Gestion des Ressources Humaines Intelligente
+
+> Application Frontend Angular connectée à un backend Spring Boot, avec authentification Keycloak, chat en temps réel via WebSocket, et tableau de bord par rôle.
 
 ---
 
 ## 📋 Table des matières
 
 - [Prérequis](#-prérequis)
-- [Technologies utilisées](#-technologies-utilisées)
+- [Technologies utilisées](#️-technologies-utilisées)
 - [Installation](#-installation)
 - [Configuration Keycloak](#-configuration-keycloak)
-- [Lancement](#-lancement)
-- [Structure du projet](#-structure-du-projet)
+- [Lancement](#️-lancement)
+- [Structure du projet](#️-structure-du-projet)
+- [Variables d'environnement](#-variables-denvironnement)
+- [Flux d'authentification](#-flux-dauthentification)
 - [Comptes de test](#-comptes-de-test)
+- [Résolution de problèmes fréquents](#-résolution-de-problèmes-fréquents)
+- [Développé par](#-développé-par)
 
 ---
 
 ## ✅ Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+Avant de commencer, assure-toi d'avoir installé les outils suivants **dans l'ordre** :
 
-| Outil | Version recommandée | Lien |
-|-------|-------------------|------|
-| **Node.js** | v22 | https://nodejs.org |
-| **Yarn** | v1.22+ | `npm install -g yarn` |
-| **Angular CLI** | v21.0.3 | `npm install -g @angular/cli@21` |
-| **Docker Desktop** | v28.5.2+ | https://www.docker.com/products/docker-desktop |
+| Outil | Version requise | Lien de téléchargement |
+|---|---|---|
+| **Node.js** | v22.x (LTS) | [nodejs.org](https://nodejs.org) |
+| **Yarn** | v1.22.x | `npm install -g yarn` |
+| **Angular CLI** | v21.x | `npm install -g @angular/cli@21` |
+| **Docker Desktop** | v28.x (ou plus récent) | [docker.com](https://www.docker.com/products/docker-desktop) |
+| **Git** | Dernière version | [git-scm.com](https://git-scm.com) |
 
-> ⚠️ **Important** : Ce projet utilise **Yarn** et non npm. N'utilisez pas `npm install`.
+> ⚠️ **Important** : Ce projet utilise **Yarn** comme gestionnaire de paquets. N'utilise **pas** `npm install`, sinon des conflits de dépendances peuvent survenir.
 
 ---
 
 ## 🛠️ Technologies utilisées
 
-```
-Angular CLI       21.0.3
-Angular           21.0.5
-Node.js           22.20.0
-keycloak-angular  21.0.0    (authentification)
-keycloak-js       26.2.3   (client Keycloak)
-Bootstrap         5.3.8
-TypeScript        5.9.3
-SCSS
-```
+| Technologie | Version | Rôle |
+|---|---|---|
+| Angular | 21.0.5 | Framework frontend |
+| Angular CLI | 21.0.2 | Outils de développement |
+| Node.js | 22.x | Environnement d'exécution |
+| TypeScript | 5.9.3 | Langage typé |
+| keycloak-angular | 21.0.0 | Intégration Keycloak dans Angular |
+| keycloak-js | 26.2.3 | Client JavaScript Keycloak |
+| Bootstrap | 5.3.8 | Framework CSS |
+| SCSS | — | Styles personnalisés |
+| STOMP / SockJS | 7.x / 1.6.x | WebSocket (chat temps réel) |
+| ng-apexcharts / apexcharts | — | Graphiques et analytics |
 
 ---
 
 ## 📦 Installation
 
-### 1. Cloner le projet
+### Étape 1 — Cloner le dépôt
 
 ```bash
 git clone https://github.com/saadaouima/GerAI-Application-GRH-
 cd GerAI-Application-GRH-
-git checkout frontend
 ```
 
-### 2. Installer les dépendances
+> Si la branche principale ne contient pas les dernières fonctionnalités, passe sur la bonne branche :
+
+```bash
+git checkout dashboard-employe-chef
+```
+
+### Étape 2 — Installer les dépendances
 
 ```bash
 yarn install
@@ -67,9 +80,11 @@ yarn install
 
 ## 🔐 Configuration Keycloak
 
-L'application nécessite un serveur **Keycloak** en cours d'exécution.
+L'application **ne peut pas fonctionner** sans un serveur Keycloak en cours d'exécution. Suis ces étapes attentivement.
 
-### 1. Lancer Keycloak via Docker
+### Étape 1 — Lancer Keycloak via Docker
+
+Assure-toi que **Docker Desktop est ouvert et en cours d'exécution**, puis lance cette commande :
 
 ```bash
 docker run -d \
@@ -78,135 +93,145 @@ docker run -d \
   -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
   -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
   --restart always \
-  quay.io/keycloak/keycloak:26.0.5 start-dev
+  quay.io/keycloak/keycloak:26.5.5 start-dev
 ```
 
-> Si le container existe déjà : `docker start keycloak`
+> 💡 **Si le container existe déjà** (au prochain démarrage) :
+> ```bash
+> docker start keycloak
+> ```
 
-### 2. Configurer le Realm
+> 💡 **Pour vérifier que Keycloak tourne** : rends-toi sur [http://localhost:8080](http://localhost:8080)
 
-Accédez à http://localhost:8080 → connectez-vous avec `admin / admin`
+---
 
-#### Créer le Realm
-1. Cliquez sur le menu déroulant en haut à gauche → **Create Realm**
-2. Nom du realm : `gerai` → **Create**
+### Étape 2 — Créer le Realm
 
-#### Configurer le Client
-1. **Clients** → **Create client**
-2. Client ID : `gerai`
-3. Client type : `OpenID Connect`
-4. **Next** → activer **Standard flow** + **Direct access grants** → **Save**
-5. Dans l'onglet **Settings** :
-   - Valid redirect URIs : `http://localhost:4200/*`
-   - Web origins : `http://localhost:4200`
-   - **Save**
+1. Va sur [http://localhost:8080](http://localhost:8080)
+2. Connecte-toi avec : `admin` / `admin`
+3. En haut à gauche, clique sur **"Create Realm"**
+4. Nom du realm : **`gerai`** → clique sur **Create**
 
-#### Créer les Rôles
-1. **Realm roles** → **Create role**
-2. Créer les 3 rôles suivants (en minuscules) :
-   ```
-   employe
-   chef
-   admin_rh
-   ```
+---
 
-#### Créer les Utilisateurs de test
-1. **Users** → **Create new user**
+### Étape 3 — Configurer le Client
 
-**Utilisateur Employé :**
-```
-Username  : nour
-Email     : nour@gerai.tn
-Last name : Boussaidi
-First name: Nour El Houda
-```
-→ Onglet **Credentials** → Set password : `nour` → désactiver **Temporary**
-→ Onglet **Role mapping** → Assign role → `employe`
+1. Dans le realm `gerai`, va dans **Clients** → **Create client**
+2. Remplis comme suit :
+   - **Client type** : `OpenID Connect`
+   - **Client ID** : `gerai`
+3. Clique **Next**
+4. Active les options :
+   - ✅ **Standard flow**
+   - ✅ **Direct access grants**
+5. Clique **Next** puis **Save**
+6. Dans l'onglet **Settings** du client, configure :
+   - **Valid redirect URIs** : `http://localhost:4200/*`
+   - **Web origins** : `http://localhost:4200`
+7. Clique **Save**
 
-**Utilisateur Chef :**
-```
-Username  : mariem
-Email     : mariem@gerai.tn
-Last name : Saadaoui
-First name: Mariem
-```
-→ Onglet **Credentials** → Set password : `mariem` → désactiver **Temporary**
-→ Onglet **Role mapping** → Assign role → `chef`
+---
 
-#### Augmenter la durée du token *(optionnel mais recommandé)*
-**Realm Settings** → **Tokens** → **Access Token Lifespan** : `30 minutes` → **Save**
+### Étape 4 — Créer les Rôles
 
-### 3. Vérifier la configuration Angular
+1. Va dans **Realm roles** → **Create role**
+2. Crée les trois rôles suivants (un par un) :
 
-Ouvrez `src/environments/environment.ts` et vérifiez :
+| Nom du rôle |
+|---|
+| `employe` |
+| `chef` |
+| `admin_rh` |
 
-```typescript
-export const environment = {
-  production: false,
-  keycloak: {
-    url:      'http://localhost:8080',
-    realm:    'gerai',
-    clientId: 'gerai'
-  }
-};
-```
+---
+
+### Étape 5 — Créer les Utilisateurs de test
+
+#### Utilisateur Employé
+
+1. Va dans **Users** → **Add user**
+2. **Username** : `nour`
+3. Clique **Create**
+4. Onglet **Credentials** → **Set password** → désactive "Temporary" → **Save**
+5. Onglet **Role mapping** → **Assign role** → sélectionne `employe` → **Assign**
+
+#### Utilisateur Chef
+
+1. Va dans **Users** → **Add user**
+2. **Username** : `mariem`
+3. Clique **Create**
+4. Onglet **Credentials** → **Set password** → désactive "Temporary" → **Save**
+5. Onglet **Role mapping** → **Assign role** → sélectionne `chef` → **Assign**
 
 ---
 
 ## ▶️ Lancement
 
+Une fois Keycloak en cours d'exécution, lance le projet Angular :
+
 ```bash
 yarn start
 ```
 
-L'application sera disponible sur : **http://localhost:4200**
+L'application sera disponible sur : **[http://localhost:4200](http://localhost:4200)**
 
-> Angular redirige automatiquement vers la page de connexion Keycloak.
+> ⚠️ **L'ordre de démarrage est important** :
+> 1. Lance Docker Desktop
+> 2. Démarre le container Keycloak (`docker start keycloak`)
+> 3. Lance Angular (`yarn start`)
 
 ---
 
 ## 🗂️ Structure du projet
 
 ```
-src/
-├── app/
-│   ├── guards/
-│   │   └── auth.guard.ts          # Guards d'authentification et de rôles
-│   ├── gerai/
-│   │   ├── employe/               # Module Employé
-│   │   │   ├── dashboard-employe.ts
-│   │   │   ├── profil/
-│   │   │   ├── demandes/
-│   │   │   ├── taches/
-│   │   │   └── projets/
-│   │   └── chef/                  # Module Chef
-│   │       ├── dashboard-chef.ts
-│   │       ├── equipe/
-│   │       ├── demandes/
-│   │       ├── taches/
-│   │       ├── projets/
-│   │       ├── rapports/
-│   │       ├── chat/              
-│   │       └── notifications/
-│   └── theme/
-│       └── layout/
-│           └── admin/             # Layout principal
-│               ├── nav-bar/
-│               └── navigation/
-├── environments/
-│   ├── environment.ts             # Config développement
-│   └── environment.prod.ts        # Config production
-└── main.ts                        # Bootstrap + provideKeycloak
+GerAI-Application-GRH-/
+├── src/
+│   ├── app/
+│   │   ├── guards/              # Protection des routes par rôle (roleRedirectGuard)
+│   │   ├── gerai/
+│   │   │   ├── employe/         # Dashboard, Profil, Demandes de congé
+│   │   │   ├── chef/            # Dashboard, Équipe, Tâches, Rapports
+│   │   │   ├── models/          # Interfaces et types TypeScript
+│   │   │   └── services/        # Services HTTP (API Spring Boot)
+│   │   └── theme/
+│   │       └── layout/          # Navigation, Sidebar, Layout général
+│   ├── environments/
+│   │   ├── environment.ts       # Config développement (localhost)
+│   │   └── environment.prod.ts  # Config production
+│   ├── assets/                  # Images, icônes
+│   └── scss/                    # Styles globaux SCSS
+├── package.json                 # Dépendances du projet
+├── angular.json                 # Configuration Angular
+└── yarn.lock                    # Versions exactes des dépendances
 ```
 
 ---
 
-## 👤 Comptes de test
+## 🌐 Variables d'environnement
 
-| Utilisateur | Mot de passe | Rôle | Dashboard |
-|-------------|-------------|------|-----------|
-| `nour` | `nour` | Employé | `/employe/dashboard` |
-| `mariem` | `mariem` | Chef | `/chef/dashboard` |
+Le fichier `src/environments/environment.ts` contient toute la configuration. **Tu n'as rien à modifier** si tu exécutes en local avec les valeurs par défaut :
+
+```typescript
+export const environment = {
+  production: false,
+
+  // Keycloak (doit tourner sur le port 8080)
+  keycloak: {
+    url: 'http://localhost:8080',
+    realm: 'gerai',
+    clientId: 'gerai'
+  },
+
+  // API Backend Spring Boot
+  apiUrl: 'http://localhost:8085/api',
+
+  // WebSocket (chat temps réel)
+  websocketUrl: 'ws://localhost:8085/ws',
+};
+```
+
+> 💡 Si ton backend Spring Boot tourne sur un autre port, modifie `apiUrl` et `websocketUrl` en conséquence.
 
 ---
 
@@ -216,39 +241,140 @@ src/
 http://localhost:4200
         ↓
   roleRedirectGuard
+  (vérifie si l'utilisateur est connecté)
         ↓
   Keycloak Login Page
+  (http://localhost:8080)
         ↓
   Token JWT reçu
         ↓
-  Lecture du rôle dans tokenParsed
-        ↓
-  ┌─────────────────────────┐
-  │  employe → /employe/dashboard  │
-  │  chef    → /chef/dashboard     │
-  │  admin   → /admin/dashboard    │
-  └─────────────────────────┘
+  ┌──────────────────────────────────────┐
+  │  Rôle employe  →  /employe/dashboard  │
+  │  Rôle chef     →  /chef/dashboard     │
+  │  Rôle admin_rh →  /admin/dashboard    │
+  └──────────────────────────────────────┘
 ```
 
 ---
 
-## 📝 Notes importantes
+## 👤 Comptes de test
 
-> 🔑 **Keycloak doit être lancé AVANT** de démarrer Angular.
+| Rôle | Nom d'utilisateur | Accès |
+|---|---|---|
+| Employé | `nour` | Dashboard Employé, Profil, Demandes |
+| Chef | `mariem` | Dashboard Chef, Équipe, Tâches |
 
-> 🚫 **Ne pas utiliser `npm install`** — ce projet utilise Yarn exclusivement.
+---
 
-> 🗑️ **En cas de problème bizarre**, videz le cache Angular :
-> ```bash
-> rmdir /s /q .angular
-> yarn start
-> ```
+## 🐛 Résolution de problèmes fréquents
+
+### ❌ La page reste blanche ou redirige en boucle
+
+**Cause** : Keycloak n'est pas démarré.
+
+**Solution** :
+```bash
+docker start keycloak
+# Attends 30 secondes que Keycloak soit prêt, puis relance yarn start
+yarn start
+```
+
+---
+
+### ❌ Erreur `Cannot GET /` ou `404` sur localhost:4200
+
+**Cause** : Le serveur Angular n'est pas lancé.
+
+**Solution** :
+```bash
+yarn start
+```
+
+---
+
+### ❌ Erreur de compilation Angular / cache corrompu
+
+**Solution** (Windows) :
+```bash
+rmdir /s /q .angular
+yarn start
+```
+
+**Solution** (Mac / Linux) :
+```bash
+rm -rf .angular
+yarn start
+```
+
+---
+
+### ❌ Erreur `ENOENT` ou modules introuvables après `git pull`
+
+**Cause** : Des nouvelles dépendances ont été ajoutées.
+
+**Solution** :
+```bash
+yarn install
+```
+
+---
+
+### ❌ Le port 8080 est déjà utilisé
+
+**Cause** : Un autre service tourne sur le port 8080.
+
+**Solution** : Arrête le service en conflit, ou change le port de Keycloak :
+```bash
+docker run -d \
+  --name keycloak \
+  -p 8180:8080 \
+  ...
+```
+Puis mets à jour `environment.ts` :
+```typescript
+keycloak: {
+  url: 'http://localhost:8180',
+  ...
+}
+```
+
+---
+
+### ❌ `yarn` n'est pas reconnu comme commande
+
+**Solution** :
+```bash
+npm install -g yarn
+```
+Puis ferme et réouvre ton terminal.
+
+---
+
+### ❌ `ng` n'est pas reconnu comme commande
+
+**Solution** :
+```bash
+npm install -g @angular/cli@21
+```
+
+---
+
+### ❌ Docker Desktop n'est pas lancé
+
+**Symptôme** : `docker: command not found` ou `Cannot connect to the Docker daemon`
+
+**Solution** : Ouvre **Docker Desktop** depuis le menu démarrer et attends qu'il soit complètement démarré (icône de baleine fixe dans la barre système), puis relance ta commande Docker.
 
 ---
 
 ## 👩‍💻 Développé par
 
-**Nour El Houda Boussaidi/** 
-**Mariem Saadaoui**
+| Développeuse |
+|---|
+| **Nour El Houda Boussaidi** |           
+| **Mariem Saadaoui** |     
 
-*Projet GerAI — Application de Gestion RH Intelligente*
+---
+
+> 📌 *Projet GerAI — Application de Gestion des Ressources Humaines Intelligente*
+> Licence : MIT

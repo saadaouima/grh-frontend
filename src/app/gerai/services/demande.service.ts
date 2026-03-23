@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Demande } from '../interfaces/demande';
+import { Demande } from '../../theme/shared/interfaces/demande';
 @Injectable({
   providedIn: 'root'
 })
@@ -14,7 +14,7 @@ export class DemandeService {
     return this.http.get<Demande[]>(this.apiUrl);
   }
 
-  getDemandesRecentes(limit: number =5): Observable<Demande[]> {
+  getDemandesRecentes(limit: number = 5): Observable<Demande[]> {
     return this.http.get<Demande[]>(`${this.apiUrl}/recentes?limit=${limit}`);
   }
 
@@ -26,4 +26,5 @@ export class DemandeService {
   }
   refuserDemande(id: number, motif: string): Observable<Demande> {
     return this.http.put<Demande>(`${this.apiUrl}/${id}/refuser`, { motif });
-  }}
+  }
+}

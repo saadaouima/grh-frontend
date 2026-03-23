@@ -1,88 +1,97 @@
+import {
+  ActivatedRouteSnapshot,
+  CanActivateFn,
+  CanActivateChildFn,
+  Router,
+  RouterStateSnapshot,
+  UrlTree
+} from '@angular/router';
 import { inject } from '@angular/core';
-import { Router, CanActivateFn, ActivatedRouteSnapshot, UrlTree } from '@angular/router';
-import Keycloak from 'keycloak-js';
+import { AuthGuardData, createAuthGuard } from 'keycloak-angular';
 
-const ROLES_SYSTEME = [
+const ROLE_CHEF = ['chef'];
+const ROLE_EMPLOYE = ['employe', 'employé'];
+const ROLE_ADMIN = ['admin', 'admin_rh'];
+
+const ROLES_SYSTEME = new Set([
   'offline_access', 'uma_authorization', 'manage-account',
   'manage-account-links', 'view-profile', 'default-roles-gerai',
   'default-roles-master', 'create-realm', 'broker'
-];
+]);
 
-// ✅ Normalise un rôle : minuscules + supprime les accents
 function normaliserRole(role: string): string {
-  return role
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  return role.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// ✅ Variantes acceptées pour chaque rôle métier
-const ROLE_CHEF = ['chef', 'CHEF', 'Chef'];
-const ROLE_EMPLOYE = ['employe', 'EMPLOYE', 'Employe', 'employé', 'EMPLOYÉ', 'Employé'];
-const ROLE_ADMIN = ['admin', 'ADMIN', 'Admin', 'admin_rh', 'ADMIN_RH'];
-
-function getRoles(keycloak: Keycloak): string[] {
-  return ((keycloak.tokenParsed?.['roles'] as string[]) ?? [])
-    .filter(r => !ROLES_SYSTEME.includes(r));
+function getTousLesRoles(grantedRoles: AuthGuardData['grantedRoles']): string[] {
+  const realmRoles = grantedRoles.realmRoles ?? [];
+  const clientRoles = Object.values(grantedRoles.resourceRoles ?? {}).flat() as string[];
+  const tous = [...new Set([...realmRoles, ...clientRoles])].filter(r => !ROLES_SYSTEME.has(r));
+  console.log('[GerAI Guard] Rôles extraits:', tous);
+  return tous;
 }
 
-function hasRole(userRoles: string[], variants: string[]): boolean {
-  // ✅ Compare en normalisant les deux côtés
-  return userRoles.some(userRole =>
-    variants.some(variant =>
-      normaliserRole(userRole) === normaliserRole(variant)
-    )
-  );
+function hasAnyRole(userRoles: string[], variants: string[]): boolean {
+  return userRoles.some(ur => variants.some(v => normaliserRole(ur) === normaliserRole(v)));
 }
 
-// ── Guard de redirection selon le rôle ──────────────
-export const roleRedirectGuard: CanActivateFn = (): UrlTree | boolean => {
-  const keycloak = inject(Keycloak);
+// ────────────────────────────────────────────────────────────
+// Guard 1 : REDIRECTION INITIALE
+// ────────────────────────────────────────────────────────────
+const roleRedirectLogic = async (
+  _route: ActivatedRouteSnapshot,
+  _state: RouterStateSnapshot,
+  authData: AuthGuardData
+): Promise<boolean | UrlTree> => {
+  const { authenticated, grantedRoles } = authData;
   const router = inject(Router);
 
-  if (!keycloak.authenticated) {
-    keycloak.login({ redirectUri: window.location.origin });
+  if (!authenticated) {
+    console.warn('[GerAI Guard] Non authentifié');
     return false;
   }
 
-  const roles = getRoles(keycloak);
-  console.log('🔐 Rôles détectés:', roles);
-  console.log('🔐 Rôles normalisés:', roles.map(normaliserRole));
+  const roles = getTousLesRoles(grantedRoles);
 
-  if (hasRole(roles, ROLE_CHEF)) return router.createUrlTree(['/chef/dashboard']);
-  if (hasRole(roles, ROLE_EMPLOYE)) return router.createUrlTree(['/employe/dashboard']);
-  if (hasRole(roles, ROLE_ADMIN)) return router.createUrlTree(['/admin/dashboard']);
+  if (hasAnyRole(roles, ROLE_CHEF)) return router.parseUrl('/chef/dashboard');
+  if (hasAnyRole(roles, ROLE_EMPLOYE)) return router.parseUrl('/employe/dashboard');
+  if (hasAnyRole(roles, ROLE_ADMIN)) return router.parseUrl('/chef/dashboard');
 
-  console.warn('⚠️ Aucun rôle métier reconnu !', roles);
-  return router.createUrlTree(['/access-denied']);
+  return router.parseUrl('/access-denied');
 };
 
-// ── Guard de protection par rôle ────────────────────
-export const requireRoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): UrlTree | boolean => {
-  const keycloak = inject(Keycloak);
+export const roleRedirectGuard: CanActivateFn =
+  createAuthGuard<CanActivateFn>(roleRedirectLogic);
+
+// ────────────────────────────────────────────────────────────
+// Guard 2 : PROTECTION DES ROUTES
+// ────────────────────────────────────────────────────────────
+const requireRoleLogic = async (
+  route: ActivatedRouteSnapshot,
+  _state: RouterStateSnapshot,
+  authData: AuthGuardData
+): Promise<boolean | UrlTree> => {
+  const { authenticated, grantedRoles } = authData;
   const router = inject(Router);
 
-  if (!keycloak.authenticated) {
-    keycloak.login({ redirectUri: window.location.origin });
-    return false;
-  }
+  if (!authenticated) return router.parseUrl('/access-denied');
 
-  const requiredRoles: string[] = route.data?.['roles'] ?? [];
-  if (requiredRoles.length === 0) return true;
+  const rolesRequis: string[] = route.data?.['roles'] ?? [];
+  if (rolesRequis.length === 0) return true;
 
-  const userRoles = (keycloak.tokenParsed?.['roles'] as string[]) ?? [];
+  const userRoles = getTousLesRoles(grantedRoles);
 
-  // ✅ Compare en normalisant les deux côtés
-  const hasAccess = requiredRoles.some(required =>
-    userRoles.some(userRole =>
-      normaliserRole(userRole) === normaliserRole(required)
-    )
+  const aAcces = rolesRequis.some(requis =>
+    userRoles.some(ur => normaliserRole(ur) === normaliserRole(requis))
   );
 
-  if (!hasAccess) {
-    console.warn(`⛔ Accès refusé. Rôles requis: ${requiredRoles}, rôles user: ${userRoles}`);
-    return router.createUrlTree(['/access-denied']);
+  if (!aAcces) {
+    console.warn(`[GerAI Guard] ⛔ Accès refusé. Requis: [${rolesRequis}] | Possédés: [${userRoles}]`);
+    return router.parseUrl('/access-denied');
   }
 
   return true;
 };
+
+export const requireRoleGuard: CanActivateChildFn =
+  createAuthGuard<CanActivateChildFn>(requireRoleLogic);

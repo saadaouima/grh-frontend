@@ -48,7 +48,7 @@ export class BreadcrumbComponent {
         const breadcrumbList = this.filterNavigation(this.navigations, activeLink);
         const title = breadcrumbList[breadcrumbList.length - 1]?.title || 'Welcome';
         this.navigationList = breadcrumbList.splice(-2);
-        this.titleService.setTitle(title + ' | Berry Angular Admin Template');
+        this.titleService.setTitle(title + ' | GerAI');
       }
     });
   }

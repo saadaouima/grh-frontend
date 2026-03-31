@@ -1,0 +1,108 @@
+<!-- [ breadcrumb ] -->
+<app-breadcrumb></app-breadcrumb>
+
+<div class="rapports-page">
+
+  <!-- ── Header ──────────────────────────────────────── -->
+  <div class="rapports-header">
+    <div>
+      <h4 class="rapports-title">
+        <i class="ti ti-chart-dots"></i> Rapports RH
+      </h4>
+      <p class="rapports-sub">Analyse et export des indicateurs clés</p>
+    </div>
+    <button class="btn-export" (click)="exportPdf()" [disabled]="isExporting">
+      @if (isExporting) {
+        <span class="spinner-border spinner-border-sm"></span>
+      } @else {
+        <i class="ti ti-file-download"></i>
+      }
+      Exporter PDF
+    </button>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────── -->
+  <div class="tabs-bar">
+    @for (tab of tabs; track tab.value) {
+      <button class="tab-btn" [class.active]="activeTab === tab.value"
+        (click)="switchTab($any(tab.value))">
+        <i [class]="tab.icon"></i>
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- ── Stat cards ──────────────────────────────────── -->
+  <div class="stats-grid">
+    @for (stat of currentStats; track stat.label) {
+      <div class="stat-card">
+        <div class="stat-icon-wrap" [style.background]="stat.color + '18'">
+          <i [class]="stat.icon" [style.color]="stat.color"></i>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value" [style.color]="stat.color">{{ stat.value }}</h3>
+          <p class="stat-label">{{ stat.label }}</p>
+          @if (stat.trend) {
+            <span class="stat-trend" [class.trend-up]="stat.trendUp" [class.trend-down]="!stat.trendUp">
+              <i [class]="stat.trendUp ? 'ti ti-trending-up' : 'ti ti-trending-down'"></i>
+              {{ stat.trend }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── Table ───────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-header">
+      <h6 class="table-title">
+        Détail — {{ currentTabLabel }}
+      </h6>
+      <span class="table-count">{{ currentRows.length }} entrées</span>
+    </div>
+    <div class="table-responsive">
+      <table class="rapport-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            @for (col of currentColumns; track col) {
+              <th>{{ columnLabels[col] }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of currentRows; track $index; let i = $index) {
+            <tr>
+              <td class="td-num">{{ i + 1 }}</td>
+              @for (col of currentColumns; track col) {
+                <td>
+                  @if (col === 'statut' || col === 'appreciation') {
+                    <span class="status-pill" [ngClass]="statutClass(row[col])">
+                      {{ row[col] }}
+                    </span>
+                  } @else if (col === 'progression') {
+                    <div class="progress-cell">
+                      <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill"
+                          [style.width]="row[col]"
+                          [class.fill-success]="+(row[col] + '').replace('%','') === 100"
+                          [class.fill-warning]="+(row[col] + '').replace('%','') < 40"
+                          [class.fill-danger]="+(row[col] + '').replace('%','') < 20">
+                        </div>
+                      </div>
+                      <span class="progress-val">{{ row[col] }}</span>
+                    </div>
+                  } @else {
+                    {{ row[col] }}
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

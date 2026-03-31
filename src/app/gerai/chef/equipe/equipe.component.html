@@ -1,0 +1,130 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Mon Équipe">
+
+      <!-- Header avec bouton ajouter -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">{{ membres.length }} membre(s)</span>
+        <button class="btn btn-primary btn-sm" (click)="ouvrirModal()">
+          <i class="ti ti-user-plus me-1"></i> Ajouter un employé
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Membre</th>
+              <th>Poste</th>
+              <th>Email</th>
+              <th>Statut</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of membres; track m.id) {
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center
+                                justify-content-center fw-bold" style="width:38px;height:38px;font-size:14px">
+                    {{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ m.prenom }} {{ m.nom }}</div>
+                    <div class="text-muted small">ID #{{ m.id }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ m.poste }}</td>
+              <td class="text-muted">{{ m.email }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="m.statut === 'ACTIF'" [class.bg-warning]="m.statut === 'CONGE'">
+                  {{ m.statut === 'ACTIF' ? 'Actif' : 'En congé' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <button class="btn btn-outline-primary btn-sm me-2" (click)="voirProfil(m)">
+                  <i class="ti ti-user me-1"></i>Profil
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="voirDemandes(m)">
+                  <i class="ti ti-file-text me-1"></i>Demandes
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </app-card>
+  </div>
+</div>
+
+<!-- ── Modal Ajouter Employé ── -->
+@if (showModal) {
+<div class="modal-backdrop-custom" (click)="fermerModal()"></div>
+<div class="modal-custom">
+  <div class="modal-custom-header">
+    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Ajouter un employé</h5>
+    <button class="btn-close-modal" (click)="fermerModal()">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <div class="modal-custom-body">
+    <form [formGroup]="form" (ngSubmit)="ajouterMembre()">
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Prénom <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="prenom" placeholder="Prénom" />
+          @if (form.get('prenom')?.invalid && form.get('prenom')?.touched) {
+          <small class="text-danger">Prénom requis</small>
+          }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Nom <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="nom" placeholder="Nom" />
+          @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
+          <small class="text-danger">Nom requis</small>
+          }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Poste <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="poste" placeholder="Ex: Développeur Frontend" />
+          @if (form.get('poste')?.invalid && form.get('poste')?.touched) {
+          <small class="text-danger">Poste requis</small>
+          }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Email <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" formControlName="email" placeholder="email@gerai.tn" />
+          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <small class="text-danger">Email valide requis</small>
+          }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Statut</label>
+          <select class="form-select" formControlName="statut">
+            <option value="ACTIF">Actif</option>
+            <option value="CONGE">En congé</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-light" (click)="fermerModal()">Annuler</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-user-plus me-1"></i>Ajouter
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+}

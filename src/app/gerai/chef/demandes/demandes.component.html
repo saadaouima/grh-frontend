@@ -1,0 +1,73 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Demandes">
+
+      <!-- Filtre actif -->
+      @if (employeIdFiltre) {
+      <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+        <span>
+          <i class="ti ti-filter me-2"></i>
+          Demandes de <strong>{{ employeNomFiltre }}</strong>
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="voirToutesDemandes()">
+          <i class="ti ti-x me-1"></i>Voir toutes
+        </button>
+      </div>
+      }
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              @if (!employeIdFiltre) { <th>Employé</th> }
+              <th>Type</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (demandesFiltrees.length === 0) {
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                Aucune demande trouvée
+              </td>
+            </tr>
+            } @else {
+            @for (d of demandesFiltrees; track d.id) {
+            <tr>
+              <td class="fw-bold">#{{ d.id }}</td>
+              @if (!employeIdFiltre) {
+              <td>{{ d.employeNom }}</td>
+              }
+              <td>{{ d.type }}</td>
+              <td>{{ d.dateDemande | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [class.bg-warning]="d.statut === 'EN_ATTENTE'"
+                  [class.bg-success]="d.statut === 'VALIDEE'" [class.bg-danger]="d.statut === 'REFUSEE'">
+                  {{ d.statutLabel }}
+                </span>
+              </td>
+              <td class="text-end">
+                @if (d.statut === 'EN_ATTENTE') {
+                <button class="btn btn-success btn-sm me-1" (click)="valider(d.id)">
+                  <i class="ti ti-check"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="refuser(d.id)">
+                  <i class="ti ti-x"></i>
+                </button>
+                } @else {
+                <span class="text-muted small">Traité</span>
+                }
+              </td>
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </app-card>
+  </div>
+</div>

@@ -18,7 +18,7 @@ export const congesHandlers = [
      * GET /api/conges/solde
      * Récupère le solde de congés de l'employé
      */
-    http.get('*/api/conges/solde', () => {
+    http.get('/api/conges/solde', () => {
         const solde = getSolde();
         console.log('[MSW] 💰 GET /api/conges/solde');
         return HttpResponse.json(solde);
@@ -28,7 +28,7 @@ export const congesHandlers = [
      * GET /api/conges/mes-demandes
      * Récupère toutes les demandes de congés de l'employé
      */
-    http.get('*/api/conges/mes-demandes', () => {
+    http.get('/api/conges/mes-demandes', () => {
         const demandes = getDemandes();
         console.log('[MSW] 📋 GET /api/conges/mes-demandes -', demandes.length, 'demandes');
         return HttpResponse.json(demandes);
@@ -38,7 +38,7 @@ export const congesHandlers = [
      * GET /api/conges/statistiques
      * Récupère les statistiques de congés
      */
-    http.get('*/api/conges/statistiques', () => {
+    http.get('/api/conges/statistiques', () => {
         const stats = getStatistiques();
         console.log('[MSW] 📊 GET /api/conges/statistiques');
         return HttpResponse.json(stats);
@@ -48,7 +48,7 @@ export const congesHandlers = [
      * GET /api/conges/complet
      * Récupère toutes les données d'un coup (optimisé)
      */
-    http.get('*/api/conges/complet', () => {
+    http.get('/api/conges/complet', () => {
         const data = {
             solde: getSolde(),
             demandes: getDemandes(),
@@ -62,7 +62,7 @@ export const congesHandlers = [
      * POST /api/conges/demander
      * Crée une nouvelle demande de congé
      */
-    http.post('*/api/conges/demander', async ({ request }) => {
+    http.post('/api/conges/demander', async ({ request }) => {
         const data = await request.json() as CreateDemandeDTO;
 
         // Validation basique
@@ -96,7 +96,7 @@ export const congesHandlers = [
      * DELETE /api/conges/:id
      * Annule une demande en attente
      */
-    http.delete('*/api/conges/:id', ({ params }) => {
+    http.delete('/api/conges/:id', ({ params }) => {
         const id = Number(params['id']);
         const success = annulerDemande(id);
 

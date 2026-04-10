@@ -21,7 +21,7 @@ export const profilEmployeHandlers = [
      * GET /api/employe/profil
      * Récupère le profil de l'employé connecté
      */
-    http.get('*/api/employe/profil', () => {
+    http.get('/api/employe/profil', () => {
         const profil = getProfil();
         console.log('[MSW] 👤 GET /api/employe/profil');
         return HttpResponse.json(profil);
@@ -31,7 +31,7 @@ export const profilEmployeHandlers = [
      * PUT /api/employe/profil
      * Met à jour le profil de l'employé
      */
-    http.put('*/api/employe/profil', async ({ request }) => {
+    http.put('/api/employe/profil', async ({ request }) => {
         const updates = await request.json() as UpdateProfilDTO;
         const updatedProfil = updateProfil(updates);
 
@@ -43,7 +43,7 @@ export const profilEmployeHandlers = [
      * GET /api/employe/documents
      * Récupère les documents de l'employé
      */
-    http.get('*/api/employe/documents', () => {
+    http.get('/api/employe/documents', () => {
         const docs = getDocuments();
         console.log('[MSW] 📄 GET /api/employe/documents -', docs.length, 'documents');
         return HttpResponse.json(docs);
@@ -53,7 +53,7 @@ export const profilEmployeHandlers = [
      * POST /api/employe/documents
      * Upload un document
      */
-    http.post('*/api/employe/documents', async ({ request }) => {
+    http.post('/api/employe/documents', async ({ request }) => {
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
 
@@ -88,7 +88,7 @@ export const profilEmployeHandlers = [
      * DELETE /api/employe/documents/:id
      * Supprime un document
      */
-    http.delete('*/api/employe/documents/:id', ({ params }) => {
+    http.delete('/api/employe/documents/:id', ({ params }) => {
         const id = Number(params['id']);
         const success = supprimerDocument(id);
 
@@ -104,7 +104,7 @@ export const profilEmployeHandlers = [
      * GET /api/employe/documents/:id/:action
      * Télécharge un document (simulation Jasper Reports)
      */
-    http.get('*/api/employe/documents/:id/:action', async ({ params }) => {
+    http.get('/api/employe/documents/:id/:action', async ({ params }) => {
         const { action } = params;
 
         // Création d'un Blob PDF factice
@@ -132,7 +132,7 @@ export const profilEmployeHandlers = [
      * GET /api/employe/activites
      * Récupère les activités de l'employé
      */
-    http.get('*/api/employe/activites', () => {
+    http.get('/api/employe/activites', () => {
         const activites = getActivites();
         console.log('[MSW] 📅 GET /api/employe/activites -', activites.length, 'activités');
         return HttpResponse.json(activites);
@@ -142,7 +142,7 @@ export const profilEmployeHandlers = [
      * GET /api/employe/statistiques
      * Récupère les statistiques de l'employé
      */
-    http.get('*/api/employe/statistiques', () => {
+    http.get('/api/employe/statistiques', () => {
         const stats = getStatistiques();
         console.log('[MSW] 📊 GET /api/employe/statistiques');
         return HttpResponse.json(stats);

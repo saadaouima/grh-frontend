@@ -4,8 +4,8 @@ import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { environment } from "src/environments/environment";
 import { Employe } from "../../theme/shared/interfaces/employe";
-import { StatistiquesEmploye } from "../../theme/shared/interfaces/StatistiquesEmploye";
-import { CreateEmployeDTO } from "../../theme/shared/interfaces/CreateEmployeDTO";
+import { StatistiquesEmploye } from "../../theme/shared/interfaces/statistiques-employe";
+import { CreateEmployeDTO } from "../../theme/shared/interfaces/create-employe-dto";
 //SERVICE
 
 @Injectable({

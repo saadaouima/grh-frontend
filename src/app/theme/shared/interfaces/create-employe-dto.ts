@@ -4,6 +4,6 @@ export interface CreateEmployeDTO {
     email: string;
     telephone?: string;
     dateEmbauche: string;
-    paoste: string;
+    poste: string;
     departement: string;
 }

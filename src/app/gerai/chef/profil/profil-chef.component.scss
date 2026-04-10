@@ -31,26 +31,75 @@
   .profile-header { padding: 24px 20px !important; }
 
   .profile-avatar {
-    position: relative !important; width: 120px !important; height: 120px !important;
-    margin: 0 auto 16px !important;
-    img { width: 100% !important; height: 100% !important; border-radius: 50% !important; object-fit: cover !important; border: 4px solid #EFF6FF !important; }
-    .avatar-badge {
-      position: absolute !important; bottom: 4px !important; right: 4px !important;
-      width: 32px !important; height: 32px !important;
-      background: linear-gradient(135deg, #10B981, #059669) !important;
-      border-radius: 50% !important; display: flex !important; align-items: center !important;
-      justify-content: center !important; color: white !important; font-size: 16px !important;
-      border: 3px solid white !important;
+  position: relative !important;
+  width: 120px !important;
+  height: 120px !important;
+  margin: 0 auto 16px !important;
+
+  // Skeleton (loading state)
+  .avatar-skeleton {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #E5E7EB;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 4px solid #EFF6FF !important;
+    display: block;
+  }
+
+  .avatar-badge {
+    position: absolute !important;
+    bottom: 4px !important;
+    right: 4px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: linear-gradient(135deg, #10B981, #059669) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-size: 16px !important;
+    border: 3px solid white !important;
+    z-index: 2;
+  }
+
+  .btn-change-photo {
+    position: absolute !important;
+    bottom: 4px !important;
+    left: 4px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: #3B82F6 !important;
+    border: 3px solid white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    z-index: 2;
+
+    &:hover {
+      transform: scale(1.1) !important;
     }
-    .btn-change-photo {
-      position: absolute !important; bottom: 4px !important; left: 4px !important;
-      width: 32px !important; height: 32px !important;
-      background: #3B82F6 !important; border: 3px solid white !important;
-      border-radius: 50% !important; display: flex !important; align-items: center !important;
-      justify-content: center !important; color: white !important; font-size: 14px !important;
-      cursor: pointer !important; transition: all 0.2s !important;
-      &:hover { transform: scale(1.1) !important; }
-    }
+  }
+}
+
+  // Optional animation for skeleton
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
   }
 
   .profile-name  { font-size: 20px !important; font-weight: 700 !important; color: #1E293B !important; margin: 0 0 4px !important; }

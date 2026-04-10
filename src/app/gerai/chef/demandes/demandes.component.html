@@ -35,33 +35,54 @@
               </td>
             </tr>
             } @else {
-            @for (d of demandesFiltrees; track d.id) {
-            <tr>
-              <td class="fw-bold">#{{ d.id }}</td>
-              @if (!employeIdFiltre) {
-              <td>{{ d.employeNom }}</td>
-              }
-              <td>{{ d.type }}</td>
-              <td>{{ d.dateDemande | date:'dd/MM/yyyy' }}</td>
-              <td>
-                <span class="badge" [class.bg-warning]="d.statut === 'EN_ATTENTE'"
-                  [class.bg-success]="d.statut === 'VALIDEE'" [class.bg-danger]="d.statut === 'REFUSEE'">
-                  {{ d.statutLabel }}
-                </span>
-              </td>
-              <td class="text-end">
-                @if (d.statut === 'EN_ATTENTE') {
-                <button class="btn btn-success btn-sm me-1" (click)="valider(d.id)">
-                  <i class="ti ti-check"></i>
-                </button>
-                <button class="btn btn-danger btn-sm" (click)="refuser(d.id)">
-                  <i class="ti ti-x"></i>
-                </button>
-                } @else {
-                <span class="text-muted small">Traité</span>
+           @for (d of demandesFiltrees; track d.id) {
+              <tr>
+                <!-- ID -->
+                <td class="fw-bold">#{{ d.id }}</td>
+
+                <!-- Photo + Nom (uniquement si pas de filtre employé) -->
+                @if (!employeIdFiltre) {
+                  <td class="d-flex align-items-center">
+                    <img [src]="d.employePhoto"
+                        alt="{{ d.employePrenom }} {{ d.employeNom }}"
+                        width="40" height="40"
+                        class="me-2 rounded-circle object-fit-cover">
+                    <span>{{ d.employePrenom }} {{ d.employeNom }}</span>
+                  </td>
                 }
-              </td>
-            </tr>
+
+                <!-- Type -->
+                <td>{{ d.typeLabel }}</td>
+
+                <!-- Date -->
+                <td>{{ d.dateCreation | date:'dd/MM/yyyy' }}</td>
+
+                <!-- Statut avec badge -->
+                <td>
+                  <span class="badge"
+                        [class.bg-warning]="d.statut === 'EN_ATTENTE'"
+                        [class.bg-success]="d.statut === 'VALIDEE_CHEF' || d.statut === 'VALIDEE_RH'"
+                        [class.bg-danger]="d.statut === 'REJETEE'">
+                    {{ d.statutLabel }}
+                  </span>
+                </td>
+                <!-- Actions -->
+                <td class="text-end">
+                  <button class="btn btn-info btn-sm me-1" (click)="voirDemande(d)">
+                    <i class="ti ti-eye"></i> Détails
+                  </button>
+                  @if (d.statut === 'EN_ATTENTE') {
+                    <button class="btn btn-success btn-sm me-1" (click)="valider(d.id)">
+                      <i class="ti ti-check"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" (click)="refuser(d.id)">
+                      <i class="ti ti-x"></i>
+                    </button>
+                  } @else {
+                    <span class="text-muted small">Traité</span>
+                  }
+                </td>
+              </tr>
             }
             }
           </tbody>

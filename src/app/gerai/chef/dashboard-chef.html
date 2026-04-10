@@ -65,7 +65,7 @@
     <!-- KPI 3 : Projets actifs -->
     <div class="col-xl-3 col-md-6">
       <div class="kpi-card cursor-pointer" style="background: linear-gradient(135deg, #065F46 0%, #059669 100%);"
-        (click)="naviguerVers('/chef/projets')">
+        (click)="naviguerVers('/api/affectation/projets')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-layout-kanban"></i></div>
         <div class="kpi-value">{{ projetsActifs }}</div>
@@ -90,7 +90,6 @@
 
   <!-- ── Row 2 : Demandes + Équipe + Tâches ── -->
   <div class="row g-3 mb-4">
-
     <!-- Demandes à valider -->
     <div class="col-xl-4 col-lg-6">
       <div class="dash-card h-100">
@@ -216,7 +215,7 @@
             <i class="ti ti-layout-kanban me-2 text-success"></i>
             Avancement des projets
           </h6>
-          <button class="add-btn" (click)="naviguerVers('/chef/projets')" title="Gérer les projets">
+          <button class="add-btn" (click)="naviguerVers('/api/affectation/projets')" title="Gérer les projets">
             <i class="ti ti-plus"></i>
           </button>
         </div>

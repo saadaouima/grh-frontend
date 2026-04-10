@@ -2,29 +2,35 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Demande } from '../../theme/shared/interfaces/demande';
+import { Demande } from 'src/app/gerai/models/demande.model';
 @Injectable({
   providedIn: 'root'
 })
 export class DemandeService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/demandes`;
+   private readonly API_URL = '/api/demandes';
 
   getDemandes(): Observable<Demande[]> {
-    return this.http.get<Demande[]>(this.apiUrl);
+    return this.http.get<Demande[]>(this.API_URL);
   }
 
   getDemandesRecentes(limit: number = 5): Observable<Demande[]> {
-    return this.http.get<Demande[]>(`${this.apiUrl}/recentes?limit=${limit}`);
+    return this.http.get<Demande[]>(`${this.API_URL}/recentes?limit=${limit}`);
   }
 
   createDemande(demande: Partial<Demande>): Observable<Demande> {
-    return this.http.post<Demande>(this.apiUrl, demande);
+    return this.http.post<Demande>(this.API_URL, demande);
   }
   validerDemande(id: number): Observable<Demande> {
-    return this.http.put<Demande>(`${this.apiUrl}/${id}/valider`, {});
+    return this.http.put<Demande>(`${this.API_URL}/${id}/valider`, {});
   }
   refuserDemande(id: number, motif: string): Observable<Demande> {
-    return this.http.put<Demande>(`${this.apiUrl}/${id}/refuser`, { motif });
+    return this.http.put<Demande>(`${this.API_URL}/${id}/refuser`, { motif });
   }
+
+// ✅ Récupérer une demande par ID
+  getDemandeById(id: number): Observable<Demande> {
+    return this.http.get<Demande>(`${this.API_URL}/${id}`);
+  }
+
 }

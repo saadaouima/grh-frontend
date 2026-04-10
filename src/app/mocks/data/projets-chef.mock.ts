@@ -1,17 +1,18 @@
 import { Projet } from 'src/app/gerai/models/projet.model';
 import { Employe } from 'src/app/gerai/models/employe.model';
+import { StatutProjet } from 'src/app/gerai/models/projet.model';
 
 // ── RÉFÉRENTIEL EMPLOYÉS ──────────────────────────────────
 export const MOCK_EMPLOYES: Employe[] = [
-    { id: 1, nom: 'Ben Ali', prenom: 'Sami', email: 's.benali@gerai.tn', poste: 'Développeur', departement: 'Informatique' },
-    { id: 2, nom: 'Trabelsi', prenom: 'Ines', email: 'i.trabelsi@gerai.tn', poste: 'Designer', departement: 'Design' },
-    { id: 3, nom: 'Gharbi', prenom: 'Mohamed', email: 'm.gharbi@gerai.tn', poste: 'Analyste', departement: 'Informatique' },
-    { id: 4, nom: 'Sassi', prenom: 'Leila', email: 'l.sassi@gerai.tn', poste: 'Testeur', departement: 'Qualité' },
-    { id: 5, nom: 'Hammami', prenom: 'Youssef', email: 'y.hammami@gerai.tn', poste: 'DevOps', departement: 'Informatique' }
+    { id: 1, nom: 'Ben Ali', prenom: 'Sami', email: 's.benali@gerai.tn', poste: 'Développeur', departement: 'Informatique', statut: 'ACTIF' },
+    { id: 2, nom: 'Trabelsi', prenom: 'Ines', email: 'i.trabelsi@gerai.tn', poste: 'Designer', departement: 'Design', statut: 'CONGE' },
+    { id: 3, nom: 'Gharbi', prenom: 'Mohamed', email: 'm.gharbi@gerai.tn', poste: 'Analyste', departement: 'Informatique', statut: 'ACTIF' },
+    { id: 4, nom: 'Sassi', prenom: 'Leila', email: 'l.sassi@gerai.tn', poste: 'Testeur', departement: 'Qualité', statut: 'CONGE' },
+    { id: 5, nom: 'Hammami', prenom: 'Youssef', email: 'y.hammami@gerai.tn', poste: 'DevOps', departement: 'Informatique', statut: 'ACTIF' }
 ];
 
 // ── BASE DE DONNÉES PROJETS (Utilise 'let' pour le CRUD) ──
-export let MOCK_PROJETS: Projet[] = [
+export let MOCK_PROJETS : Projet[] = [
     {
         id: 1,
         nom: 'Refonte Système RH',
@@ -19,11 +20,11 @@ export let MOCK_PROJETS: Projet[] = [
         couleur: '#6366f1',
         dateDebut: '2025-01-15',
         dateFin: '2025-06-30',
-        statut: 'EN_COURS',
+        statut: StatutProjet.EN_COURS,
         progression: 65,
         totalTaches: 20,
         tachesCompletees: 13,
-        chefProjet: 'Ahmed Mansour',
+        chefProjet: undefined,
         membres: MOCK_EMPLOYES.slice(0, 3),
         equipe: [
             { id: 1, nom: 'Sami Ben Ali', initiales: 'SB' },
@@ -38,11 +39,11 @@ export let MOCK_PROJETS: Projet[] = [
         couleur: '#f59e0b',
         dateDebut: '2025-02-01',
         dateFin: '2025-08-31',
-        statut: 'EN_COURS',
+        statut: StatutProjet.EN_COURS,
         progression: 40,
         totalTaches: 15,
         tachesCompletees: 6,
-        chefProjet: 'Ahmed Mansour',
+        chefProjet: undefined,
         membres: [MOCK_EMPLOYES[0], MOCK_EMPLOYES[3]],
         equipe: [
             { id: 1, nom: 'Sami Ben Ali', initiales: 'SB' },
@@ -56,11 +57,11 @@ export let MOCK_PROJETS: Projet[] = [
         couleur: '#10b981',
         dateDebut: '2024-09-01',
         dateFin: '2024-12-31',
-        statut: 'TERMINE',
+        statut: StatutProjet.TERMINE,
         progression: 100,
         totalTaches: 30,
         tachesCompletees: 30,
-        chefProjet: 'Ahmed Mansour',
+        chefProjet: undefined,
         membres: [MOCK_EMPLOYES[1], MOCK_EMPLOYES[2], MOCK_EMPLOYES[4]],
         equipe: [
             { id: 2, nom: 'Ines Trabelsi', initiales: 'IT' },
@@ -75,11 +76,11 @@ export let MOCK_PROJETS: Projet[] = [
         couleur: '#ef4444',
         dateDebut: '2025-03-01',
         dateFin: '2025-04-30',
-        statut: 'EN_PAUSE',
+        statut: StatutProjet.EN_PAUSE,
         progression: 20,
         totalTaches: 12,
         tachesCompletees: 2,
-        chefProjet: 'Ahmed Mansour',
+        chefProjet: undefined,
         membres: [MOCK_EMPLOYES[2], MOCK_EMPLOYES[3]],
         equipe: [
             { id: 3, nom: 'Mohamed Gharbi', initiales: 'MG' },
@@ -93,11 +94,11 @@ export let MOCK_PROJETS: Projet[] = [
         couleur: '#8b5cf6',
         dateDebut: '2025-07-01',
         dateFin: '2025-12-31',
-        statut: 'EN_PAUSE',
+        statut: StatutProjet.EN_PAUSE,
         progression: 0,
         totalTaches: 8,
         tachesCompletees: 0,
-        chefProjet: 'Ahmed Mansour',
+        chefProjet: undefined,
         membres: [...MOCK_EMPLOYES],
         equipe: MOCK_EMPLOYES.map(e => ({
             id: e.id,

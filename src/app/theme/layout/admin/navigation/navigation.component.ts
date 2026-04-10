@@ -30,8 +30,13 @@ export class NavigationComponent implements OnInit {
   }
 
   private loadNavigation(): void {
-    const allRoles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
+    console.log('🔍 Token parsed:', this.keycloak.tokenParsed);
+    const realmRoles = this.keycloak.tokenParsed?.realm_access?.roles ?? [];
+    const allRoles = [...realmRoles];
     const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
+
+    console.log('🔍 Rôles extraits du token:', allRoles);
+    console.log('🔍 Rôles meta:', metaRoles);
 
     if (metaRoles.includes('chef')) this.userRole = 'chef';
     else if (metaRoles.includes('employe')) this.userRole = 'employe';

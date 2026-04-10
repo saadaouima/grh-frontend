@@ -1,33 +1,41 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe }    from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import Keycloak from 'keycloak-js';
+import { forkJoin } from 'rxjs';
 
 // Project imports
 import { SharedModule }        from 'src/app/theme/shared/shared.module';
 import { CardComponent }       from 'src/app/theme/shared/components/card/card.component';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-import { Projet }              from 'src/app/theme/shared/interfaces/projet';
 import { Employe }             from 'src/app/theme/shared/interfaces/employe';
+import { ProjetService }       from '../../services/projet-chef.service';
+import { Projet }              from '../../models/projet.model';
+import { StatutProjet }        from '../../models/projet.model';
+import { ChangeDetectorRef }   from '@angular/core';
 
 @Component({
   selector   : 'app-projets',
   standalone : true,
   imports    : [
-    CommonModule,           // ngClass, slice pipe
-    DatePipe,               // date pipe
-    FormsModule,            // ngModel
-    ReactiveFormsModule,    // formGroup, formControlName
-    SharedModule,           // directives partagées
-    CardComponent,          // app-card
-    BreadcrumbComponent    // app-breadcrumb
+    CommonModule,
+    DatePipe,
+    FormsModule,
+    ReactiveFormsModule,
+    SharedModule,
+    CardComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './projets.component.html',
   styleUrls  : ['./projets.component.scss']
 })
 export class ProjetsComponent implements OnInit {
 
-  private fb = inject(FormBuilder);
+  constructor(private cd: ChangeDetectorRef) {}
 
+  private keycloak = inject(Keycloak);
+  private fb = inject(FormBuilder);
+  private projetService = inject(ProjetService);
 
   // ── Stats ──────────────────────────────────────────────
   totalProjets    = 0;
@@ -43,10 +51,11 @@ export class ProjetsComponent implements OnInit {
   employes       : Employe[] = [];
   selectedMembres: Employe[] = [];
   selectedProjet : Projet | null = null;
-
+  
   // ── Filters ────────────────────────────────────────────
-  searchTerm   = '';
-  statusFilter = '';
+  searchTerm = '';
+  statusFilter: StatutProjet | '' = '';
+  StatutProjet = StatutProjet;
 
   // ── Modal state ────────────────────────────────────────
   showModal       = false;
@@ -56,11 +65,14 @@ export class ProjetsComponent implements OnInit {
 
   projetForm!: FormGroup;
 
+  managerNomComplet: string = '';
+
+  
+
   // ── Lifecycle ──────────────────────────────────────────
   ngOnInit(): void {
     this.initForm();
-    this.loadFakeData();
-    this.computeStats();
+    this.loadData();
   }
 
   // ── Form ───────────────────────────────────────────────
@@ -69,96 +81,95 @@ export class ProjetsComponent implements OnInit {
       nom        : ['', Validators.required],
       description: [''],
       dateDebut  : ['', Validators.required],
-      datefin    : [''],
-      statut     : ['Enattente'],
+      dateFin    : [''],
+      statut     : [StatutProjet.EN_PAUSE],
       progression: [0]
     });
   }
 
-  // ── Fake data (à remplacer par un service) ────────────
-  loadFakeData(): void {
-    this.employes = [
-      { id: 1, nom: 'Ben Ali',  prenom: 'Sami',    email: 's.benali@gerai.tn',  poste: 'Développeur', departement: 'Informatique' },
-      { id: 2, nom: 'Trabelsi', prenom: 'Ines',    email: 'i.trabelsi@gerai.tn', poste: 'Designer',    departement: 'Design'       },
-      { id: 3, nom: 'Gharbi',   prenom: 'Mohamed', email: 'm.gharbi@gerai.tn',  poste: 'Analyste',    departement: 'Informatique' },
-      { id: 4, nom: 'Sassi',    prenom: 'Leila',   email: 'l.sassi@gerai.tn',   poste: 'Testeur',     departement: 'Qualité'      },
-      { id: 5, nom: 'Hammami',  prenom: 'Youssef', email: 'y.hammami@gerai.tn', poste: 'DevOps',      departement: 'Informatique' }
-    ];
+  // ── Load data from service (MSW handlers will respond) ─
+  loadData(): void {
+      forkJoin({
+      projets: this.projetService.getProjets(),
+      employes: this.projetService.getEmployes()
+    }).subscribe(({ projets, employes }) => {
+      this.employes = employes;
+      this.projets = projets;
+       console.log('Raw projets from service:', projets);
 
-    this.projets = [
-      {
-        id: 1, nom: 'Refonte Système RH',
-        description: 'Migration et modernisation complète du système RH vers une plateforme cloud.',
-        dateDebut: '2025-01-15', datefin: '2025-06-30',
-        statut: 'Encours', progression: 65,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[0], this.employes[1], this.employes[2]]
-      },
-      {
-        id: 2, nom: 'Application Mobile Employés',
-        description: "Développement d'une application mobile RH.",
-        dateDebut: '2025-02-01', datefin: '2025-08-31',
-        statut: 'Encours', progression: 40,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[0], this.employes[3]]
-      },
-      {
-        id: 3, nom: 'Portail Fournisseurs',
-        description: "Portail de gestion des fournisseurs et appels d'offres.",
-        dateDebut: '2024-09-01', datefin: '2024-12-31',
-        statut: 'Termine', progression: 100,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[1], this.employes[2], this.employes[4]]
-      },
-      {
-        id: 4, nom: 'Tableau de Bord Analytics',
-        description: 'Dashboard analytique pour le suivi des KPIs RH.',
-        dateDebut: '2025-03-01', datefin: '2025-04-30',
-        statut: 'Enretard', progression: 20,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[2], this.employes[3]]
-      },
-      {
-        id: 5, nom: 'Formation IA & Automatisation',
-        description: "Programme de formation aux outils d'intelligence artificielle.",
-        dateDebut: '2025-07-01', datefin: '2025-12-31',
-        statut: 'Enattente', progression: 0,
-        chefProjet: 'Ahmed Mansour',
-        membres: [...this.employes]
-      }
-    ];
+      const managerFullName = this.getManagerFullName();
+      console.log('Manager full name:', managerFullName);
 
-    this.filteredProjets = [...this.projets];
+      
+
+      this.projets = projets.map(p => ({
+        ...p,
+        chefProjet: managerFullName, // ✅ inject full name here
+        membres: employes.filter(e => p.membres?.some(m => m.id === e.id)),
+        dateFin: p.dateFin
+      }));
+
+      this.filteredProjets = [...this.projets];
+
+      console.log('Filtered projets after mapping:', this.filteredProjets);
+
+      this.computeStats();
+      this.cd.detectChanges();
+    });
+  }
+
+
+  private getManagerFullName(): string {
+    const token = this.keycloak.tokenParsed;
+    console.log('Token parsed:', token);
+    if (!token) return '—';
+
+    const prenom = token?.['given_name'] || '';
+    const nom = token?.['family_name'] || '';
+
+    if (prenom && nom) {
+      return `${prenom} ${nom}`; // ✅ full name
+    }
+
+    // fallback if only "name" or "preferred_username" exists
+    return token?.['name'] || token?.['preferred_username'] || '—';
   }
 
   // ── Stats ──────────────────────────────────────────────
-  computeStats(): void {
+ computeStats(): void {
     this.totalProjets     = this.projets.length;
-    this.projetsEnCours   = this.projets.filter(p => p.statut === 'Encours').length;
-    this.projetsTermines  = this.projets.filter(p => p.statut === 'Termine').length;
-    this.projetsEnAttente = this.projets.filter(p => p.statut === 'Enattente').length;
-    this.projetsEnRetard  = this.projets.filter(p => p.statut === 'Enretard').length;
-    this.tauxReussite     = this.totalProjets
+    this.projetsEnCours   = this.projets.filter(p => p.statut === StatutProjet.EN_COURS).length;
+    this.projetsTermines  = this.projets.filter(p => p.statut === StatutProjet.TERMINE).length;
+    this.projetsEnAttente = this.projets.filter(p => p.statut === StatutProjet.EN_PAUSE).length;
+    this.projetsEnRetard  = this.projets.filter(p => p.statut === StatutProjet.EN_RETARD).length;
+
+    this.tauxReussite = this.totalProjets
       ? Math.round((this.projetsTermines / this.totalProjets) * 100)
       : 0;
-  }
+ }
+
 
   // ── Filter ─────────────────────────────────────────────
   filterProjets(): void {
     this.filteredProjets = this.projets.filter(p => {
-      const matchSearch = !this.searchTerm ||
+      const matchSearch =
+        !this.searchTerm ||
         p.nom.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (p.description ?? '').toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchStatus = !this.statusFilter || p.statut === this.statusFilter;
+
+      const matchStatus =
+        !this.statusFilter || p.statut === this.statusFilter;
+
       return matchSearch && matchStatus;
     });
   }
+
 
   // ── Modal helpers ──────────────────────────────────────
   openCreateModal(): void {
     this.isEditMode     = false;
     this.selectedMembres = [];
-    this.projetForm.reset({ statut: 'Enattente', progression: 0 });
+    this.projetForm.reset({ statut: StatutProjet.EN_PAUSE, progression: 0 });
     this.showModal = true;
   }
 
@@ -170,7 +181,7 @@ export class ProjetsComponent implements OnInit {
       nom        : projet.nom,
       description: projet.description ?? '',
       dateDebut  : projet.dateDebut,
-      datefin    : projet.datefin ?? '',
+      dateFin    : projet.dateFin ?? '',
       statut     : projet.statut,
       progression: projet.progression ?? 0
     });
@@ -193,6 +204,9 @@ export class ProjetsComponent implements OnInit {
     this.selectedProjet  = null;
   }
 
+
+
+
   // ── Membres ────────────────────────────────────────────
   isMembre(emp: Employe): boolean {
     return this.selectedMembres.some(m => m.id === emp.id);
@@ -207,60 +221,73 @@ export class ProjetsComponent implements OnInit {
     }
   }
 
-  // ── CRUD ───────────────────────────────────────────────
+  
+
+  // ── CRUD (via service, MSW intercepts) ─────────────────
   saveProjet(): void {
     if (this.projetForm.invalid) return;
     this.isSaving = true;
     const formVal = this.projetForm.value;
 
-    // Simule un appel API (à remplacer par projetService.save())
-    setTimeout(() => {
-      if (this.isEditMode && this.selectedProjet) {
-        const idx = this.projets.findIndex(p => p.id === this.selectedProjet!.id);
-        this.projets[idx] = { ...this.selectedProjet, ...formVal, membres: this.selectedMembres };
-      } else {
-        const newId = this.projets.length ? Math.max(...this.projets.map(p => p.id)) + 1 : 1;
-        this.projets.push({
-          id: newId,
-          chefProjet: 'Ahmed Mansour',
-          membres: this.selectedMembres,
-          ...formVal
-        });
-      }
-      this.filteredProjets = [...this.projets];
-      this.computeStats();
-      this.isSaving = false;
-      this.closeModal();
-    }, 700);
+    if (this.isEditMode && this.selectedProjet) {
+      this.projetService.updateProjet(this.selectedProjet.id, {
+        ...this.selectedProjet,
+        ...formVal,
+        membres: this.selectedMembres
+      }).subscribe(updated => {
+        const idx = this.projets.findIndex(p => p.id === updated.id);
+        this.projets[idx] = updated;
+        this.refreshAfterSave();
+      });
+    } else {
+      this.projetService.createProjet({
+        chefProjet: 'Ahmed Mansour',
+        membres: this.selectedMembres,
+        ...formVal
+      }).subscribe(created => {
+        this.projets.push(created);
+        this.refreshAfterSave();
+      });
+    }
+  }
+
+  private refreshAfterSave(): void {
+    this.filteredProjets = [...this.projets];
+    this.computeStats();
+    this.isSaving = false;
+    this.closeModal();
   }
 
   deleteProjet(projet: Projet): void {
     if (!confirm(`Supprimer le projet "${projet.nom}" ?`)) return;
-    this.projets        = this.projets.filter(p => p.id !== projet.id);
-    this.filteredProjets = [...this.projets];
-    this.computeStats();
+    this.projetService.deleteProjet(projet.id).subscribe(() => {
+      this.projets = this.projets.filter(p => p.id !== projet.id);
+      this.filteredProjets = [...this.projets];
+      this.computeStats();
+    });
   }
 
-  // ── Display helpers ────────────────────────────────────
-  getStatusBadgeClass(statut: string): string {
-    const map: Record<string, string> = {
-      Encours  : 'badge-primary',
-      Termine  : 'badge-success',
-      Enattente: 'badge-warning',
-      Enretard : 'badge-danger'
-    };
-    return map[statut] ?? 'badge-secondary';
-  }
+  // ── UI helpers ─────────────────────────────────────────
+ getStatusBadgeClass(statut: StatutProjet): string {
+  const map: Record<StatutProjet, string> = {
+    [StatutProjet.EN_COURS]: 'badge-primary',
+    [StatutProjet.TERMINE]: 'badge-success',
+    [StatutProjet.EN_PAUSE]: 'badge-warning',
+    [StatutProjet.EN_RETARD]: 'badge-danger'
+  };
+  return map[statut] ?? 'badge-secondary';
+}
 
-  getStatusLabel(statut: string): string {
-    const map: Record<string, string> = {
-      Encours  : 'En cours',
-      Termine  : 'Terminé',
-      Enattente: 'En attente',
-      Enretard : 'En retard'
-    };
-    return map[statut] ?? statut;
-  }
+getStatusLabel(statut: StatutProjet): string {
+  const map: Record<StatutProjet, string> = {
+    [StatutProjet.EN_COURS]: 'En cours',
+    [StatutProjet.TERMINE]: 'Terminé',
+    [StatutProjet.EN_PAUSE]: 'En attente',
+    [StatutProjet.EN_RETARD]: 'En retard'
+  };
+  return map[statut] ?? statut;
+}
+
 
   getProgressClass(progression: number): string {
     if (progression >= 80) return 'bg-success';

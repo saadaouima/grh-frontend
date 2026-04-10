@@ -4,16 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
-
-export interface DemandeChef {
-  id: number;
-  employeId: number;
-  employeNom: string;
-  type: string;
-  dateDemande: Date;
-  statut: 'EN_ATTENTE' | 'VALIDEE' | 'REFUSEE';
-  statutLabel: string;
-}
+import { DemandeService } from  'src/app/gerai/services/demande.service';
+import { Demande } from 'src/app/gerai/models/demande.model';
+import { ChangeDetectorRef }   from '@angular/core';
 
 @Component({
   selector: 'app-demandes-chef',
@@ -23,56 +16,82 @@ export interface DemandeChef {
   styleUrls: ['./demandes.component.scss']
 })
 export class DemandesChefComponent implements OnInit {
+  
+  constructor(private cd: ChangeDetectorRef) {}
 
-  private route = inject(ActivatedRoute);
+ private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private demandeService = inject(DemandeService);
 
-  employeIdFiltre: number | null = null;
+  employeIdFiltre: string | null = null;
   employeNomFiltre: string = '';
+  demandeSelectionnee: Demande | null = null;
 
-  toutesLesDemandes: DemandeChef[] = [
-    { id: 1, employeId: 1, employeNom: 'Sami Ben Ali', type: 'Congé', dateDemande: new Date('2024-02-15'), statut: 'EN_ATTENTE', statutLabel: 'En attente' },
-    { id: 2, employeId: 1, employeNom: 'Sami Ben Ali', type: 'Formation', dateDemande: new Date('2024-02-10'), statut: 'VALIDEE', statutLabel: 'Validée' },
-    { id: 3, employeId: 2, employeNom: 'Ines Trabelsi', type: 'Document', dateDemande: new Date('2024-02-05'), statut: 'REFUSEE', statutLabel: 'Refusée' },
-    { id: 4, employeId: 2, employeNom: 'Ines Trabelsi', type: 'Congé', dateDemande: new Date('2024-01-28'), statut: 'VALIDEE', statutLabel: 'Validée' },
-    { id: 5, employeId: 3, employeNom: 'Youssef Karray', type: 'Congé', dateDemande: new Date('2024-01-15'), statut: 'EN_ATTENTE', statutLabel: 'En attente' },
-  ];
-
-  demandesFiltrees: DemandeChef[] = [];
+  toutesLesDemandes: Demande[] = [];
+  demandesFiltrees: Demande[] = [];
 
   ngOnInit(): void {
+    // Charger toutes les demandes depuis le service
+    this.demandeService.getDemandes().subscribe(demandes => {
+      this.toutesLesDemandes = demandes;
+      this.appliquerFiltre();
+      this.cd.markForCheck();
+    });
+
     // ✅ Récupère l'employeId depuis les queryParams
     this.route.queryParams.subscribe(params => {
-      this.employeIdFiltre = params['employeId'] ? Number(params['employeId']) : null;
+      this.employeIdFiltre = params['employeId'] ? String(params['employeId']) : null;
       this.appliquerFiltre();
+      this.cd.markForCheck();
     });
   }
 
   appliquerFiltre(): void {
+    let demandes = [...this.toutesLesDemandes];
+
+    // Filtrer par employé si nécessaire
     if (this.employeIdFiltre !== null) {
-      this.demandesFiltrees = this.toutesLesDemandes
-        .filter(d => d.employeId === this.employeIdFiltre);
-      const premier = this.demandesFiltrees[0];
-      this.employeNomFiltre = premier ? premier.employeNom : '';
+      demandes = demandes.filter(d => d.employeId === this.employeIdFiltre);
+      const premier = demandes[0];
+      this.employeNomFiltre = premier ? `${premier.employePrenom} ${premier.employeNom}` : '';
     } else {
-      this.demandesFiltrees = [...this.toutesLesDemandes];
       this.employeNomFiltre = '';
     }
+
+    // Trier par dateCreation (descendant)
+    this.demandesFiltrees = demandes.sort((a, b) =>
+      new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()
+    );
   }
+
 
   voirToutesDemandes(): void {
     this.router.navigate(['/chef/demandes']);
   }
 
   valider(id: number): void {
-    const d = this.toutesLesDemandes.find(d => d.id === id);
-    if (d) { d.statut = 'VALIDEE'; d.statutLabel = 'Validée'; }
-    this.appliquerFiltre();
+    this.demandeService.validerDemande(id).subscribe(updated => {
+      const index = this.toutesLesDemandes.findIndex(d => d.id === id);
+      if (index !== -1) {
+        this.toutesLesDemandes[index] = updated;
+        this.appliquerFiltre();
+      }
+    });
   }
 
   refuser(id: number): void {
-    const d = this.toutesLesDemandes.find(d => d.id === id);
-    if (d) { d.statut = 'REFUSEE'; d.statutLabel = 'Refusée'; }
-    this.appliquerFiltre();
+    const motif = 'Motif de refus simulé';
+    this.demandeService.refuserDemande(id, motif).subscribe(updated => {
+      const index = this.toutesLesDemandes.findIndex(d => d.id === id);
+      if (index !== -1) {
+        this.toutesLesDemandes[index] = updated;
+        this.appliquerFiltre();
+      }
+    });
   }
+
+  voirDemande(demande: Demande): void {
+    this.router.navigate(['/chef/demandes', demande.id]);
+  }
+
 }

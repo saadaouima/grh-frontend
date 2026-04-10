@@ -52,5 +52,10 @@ export const ProjetsHandlers = [
     // 5. Récupérer les employés (pour les sélections dans les formulaires)
     http.get('/api/affectation/employes', () => {
         return HttpResponse.json(MOCK_EMPLOYES);
-    })
+    }),
+    /*http.all('*', ({ request }) => {
+        console.warn('Unhandled request:', request.url);
+        return new HttpResponse(null, { status: 404 });
+    })*/
+
 ];

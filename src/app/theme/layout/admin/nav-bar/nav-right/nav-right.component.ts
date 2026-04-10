@@ -72,7 +72,7 @@ export class NavRightComponent implements OnInit {
   loadUserProfile(): void {
     try {
       const token = this.keycloak.tokenParsed;
-      const roles = (token?.['roles'] as string[]) ?? [];
+      const roles = (token?.realm_access?.roles as string[]) ?? [];
       const isChef = roles.includes('chef') || roles.includes('CHEF');
 
       this.userRole = isChef ? 'chef' : 'employe';

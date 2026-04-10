@@ -10,7 +10,7 @@
  */
 
 import { http, HttpResponse, delay } from 'msw';
-import { Projet, TacheProjet } from 'src/app/gerai/models/projet.model';
+import { Projet, StatutProjet, TacheProjet } from 'src/app/gerai/models/projet.model';
 
 // ── Helpers dates ────────────────────────────────────────────
 const dateIn = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString().split('T')[0];
@@ -26,7 +26,7 @@ export let PROJETS_MOCK: Projet[] = [
         nom: 'GerAI — Module RH',
         description: 'Développement du système de gestion RH avec dashboards employé et chef, gestion des demandes, congés et absences.',
         couleur: '#3B82F6',
-        statut: 'EN_COURS',
+        statut: StatutProjet.EN_COURS,
         progression: 68,
         dateDebut: datePast(60),
         dateEcheance: dateIn(20),
@@ -44,7 +44,7 @@ export let PROJETS_MOCK: Projet[] = [
         nom: 'Portail Fournisseurs',
         description: 'Mise en place d\'un portail self-service pour les fournisseurs externes avec gestion des contrats et factures.',
         couleur: '#10B981',
-        statut: 'EN_COURS',
+        statut: StatutProjet.EN_COURS,
         progression: 42,
         dateDebut: datePast(30),
         dateEcheance: dateIn(45),
@@ -60,7 +60,7 @@ export let PROJETS_MOCK: Projet[] = [
         nom: 'App Mobile RH',
         description: 'Application mobile (React Native) pour les employés : pointage, demandes, notifications push.',
         couleur: '#F59E0B',
-        statut: 'EN_PAUSE',
+        statut: StatutProjet.EN_PAUSE,
         progression: 25,
         dateDebut: datePast(45),
         dateEcheance: dateIn(60),
@@ -77,7 +77,7 @@ export let PROJETS_MOCK: Projet[] = [
         nom: 'Migration Base de Données',
         description: 'Migration de la base monolithique PostgreSQL vers une architecture microservices avec Kafka.',
         couleur: '#8B5CF6',
-        statut: 'TERMINE',
+        statut: StatutProjet.TERMINE,
         progression: 100,
         dateDebut: datePast(90),
         dateEcheance: datePast(10),

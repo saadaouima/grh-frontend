@@ -163,6 +163,15 @@ export const NAV_CHEF: NavigationItem[] = [
         url: '/chef/rapports',
         icon: 'ti ti-chart-dots',
         breadcrumbs: false
+      },
+      {
+        id: 'profil-chef',
+        title: 'Mon Profil',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/chef/profil',
+        icon: 'ti ti-user',
+        breadcrumbs: false
       }
     ]
   },

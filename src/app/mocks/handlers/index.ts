@@ -1,4 +1,3 @@
-import { http, passthrough } from 'msw';
 import { demandesHandlers } from './demandes.handlers';
 import { chatHandlers } from './chat.handlers';
 import { equipeHandlers } from './equipe-chef.handlers';
@@ -12,9 +11,6 @@ import { projetsEmployeHandlers } from './projets-employe.handlers';
 import { congesHandlers } from './conges.handlers';
 
 export const allHandlers = [
-    // Laisser passer les requêtes WebSocket natives
-    http.all('http://localhost:8085/ws/*', () => passthrough()),
-
     // Modules métier
     ...equipeHandlers,
     ...chatHandlers,

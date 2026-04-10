@@ -88,6 +88,12 @@ export const routes: Routes = [
         data: { roles: ['chef', 'admin'] }
       },
       {
+        path: 'chef/demandes/:id',
+        loadComponent: () => import('./gerai/chef/demande-detail/demande-detail.component')
+          .then(m => m.DemandeDetailComponent),
+        data: { roles: ['chef', 'admin'] }
+      },
+      {
         path: 'chef/taches',
         loadComponent: () => import('./gerai/chef/taches/affectation-taches.component')
           .then(m => m.AffectationTachesComponent),
@@ -104,6 +110,12 @@ export const routes: Routes = [
         loadComponent: () => import('./gerai/chef/rapports/rapports.component')
           .then(m => m.RapportsComponent),
         data: { roles: ['chef', 'admin'] }
+      },
+      {
+        path: 'chef/profil',
+        loadComponent: () => import('./gerai/chef/profil/profil-chef.component')
+          .then(m => m.ProfilChefComponent),
+        data: { roles: ['employe', 'employé', 'chef', 'admin'] }
       },
 
       // ─── PAGES COMMUNES ───

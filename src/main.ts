@@ -17,38 +17,48 @@ import {
   IncludeBearerTokenCondition
 } from 'keycloak-angular';
 
+import { enableMocking } from './app/mocks/browser';
+
 if (environment.production) enableProdMode();
 
 const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
-  urlPattern: /^(http:\/\/localhost:8085)(\/.*)?$/i
+  urlPattern: /^https?:\/\/localhost:8085(\/.*)?$/i // ✅ match http or https
 });
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideRouter(routes),
+async function main() {
+  if (!environment.production) {
+    await enableMocking(); // ✅ start MSW in dev
+  }
 
-    provideHttpClient(
-      withInterceptors([includeBearerTokenInterceptor])
-    ),
+  bootstrapApplication(AppComponent, {
+    providers: [
+      provideRouter(routes),
 
-    {
-      provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
-      useValue: [urlCondition]
-    },
+      provideHttpClient(
+        withInterceptors([includeBearerTokenInterceptor])
+      ),
 
-    provideKeycloak({
-      config: {
-        url: environment.keycloak.url,
-        realm: environment.keycloak.realm,
-        clientId: environment.keycloak.clientId
+      {
+        provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
+        useValue: [urlCondition]
       },
-      initOptions: {
-        onLoad: 'login-required',
-        checkLoginIframe: false,
-        pkceMethod: 'S256',
-        flow: 'standard',
-        redirectUri: window.location.origin + '/'
-      }
-    })
-  ]
-}).catch(err => console.error(err));
+
+      provideKeycloak({
+        config: {
+          url: environment.keycloak.url,
+          realm: environment.keycloak.realm,
+          clientId: environment.keycloak.clientId
+        },
+        initOptions: {
+          onLoad: 'login-required',
+          checkLoginIframe: false,
+          pkceMethod: 'S256',
+          flow: 'standard',
+          redirectUri: window.location.origin // ✅ safer without trailing slash
+        }
+      })
+    ]
+  }).catch(err => console.error(err));
+}
+
+main();

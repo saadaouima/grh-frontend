@@ -26,7 +26,7 @@ export class NavLeftComponent implements OnInit {
   }
 
   loadMenuByRole(): void {
-    const roles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
+    const roles = (this.keycloak.tokenParsed?.realm_access?.roles as string[]) ?? [];
 
     if (roles.includes('chef') || roles.includes('CHEF')) {
       this.userRole = 'chef';
@@ -34,10 +34,11 @@ export class NavLeftComponent implements OnInit {
     } else if (roles.includes('employe') || roles.includes('EMPLOYE')) {
       this.userRole = 'employe';
       this.navigationItems = NAV_EMPLOYE;
-    } else {
+    } 
+    /*else {
       this.userRole = 'employe';
       this.navigationItems = NAV_EMPLOYE;
-    }
+    }*/
   }
 
   navCollapsedMob(): void {

@@ -4,24 +4,28 @@ export interface Membre {
     initiales: string;
 }
 
+export enum StatutProjet {
+  EN_COURS = 'EN_COURS',
+  EN_PAUSE = 'EN_PAUSE',
+  TERMINE = 'TERMINE',
+  EN_RETARD = 'EN_RETARD'
+}
+
 export interface Projet {
-    id: number;
-    nom: string;
-    description: string;
-    couleur: string;
-    statut: 'EN_COURS' | 'EN_PAUSE' | 'TERMINE' | 'TERMINEE';
-    progression: number;
-    dateDebut: string;
-    dateFin?: string;
-    /** @deprecated Use dateFin. Kept for legacy chef projets mock */
-    datefin?: string;
-    dateEcheance?: string;
-    totalTaches: number;
-    tachesCompletees: number;
-    equipe: Membre[];
-    chefProjet?: string;
-    /** @deprecated Use equipe. Kept for legacy chef projets component */
-    membres?: any[];
+  id: number;
+  nom: string;
+  description: string;
+  couleur: string;
+  statut: StatutProjet;
+  progression: number;
+  dateDebut: string;
+  dateFin?: string;
+  dateEcheance?: string;
+  totalTaches: number;
+  tachesCompletees: number;
+  equipe: Membre[];
+  chefProjet?: string;
+  membres?: any[]; // legacy
 }
 
 export interface TacheProjet {

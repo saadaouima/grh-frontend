@@ -8,4 +8,5 @@ export interface Employe {
   poste?: string;
   departement?: string;
   chefId?: number;
+  statut: 'ACTIF' | 'CONGE' | string;
 }

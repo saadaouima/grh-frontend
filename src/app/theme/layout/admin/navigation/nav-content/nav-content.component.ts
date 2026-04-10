@@ -50,7 +50,8 @@ export class NavContentComponent implements OnInit {
   }
 
   private loadNavigationByRole(): void {
-    const allRoles = (this.keycloak.tokenParsed?.['roles'] as string[]) ?? [];
+    const realmRoles = this.keycloak.tokenParsed?.realm_access?.roles ?? [];
+    const allRoles = [...realmRoles];
     const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
 
     if (metaRoles.includes('chef') || metaRoles.includes('CHEF')) {

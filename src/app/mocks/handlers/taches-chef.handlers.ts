@@ -1,13 +1,7 @@
 import { http, HttpResponse, delay } from 'msw';
-import { MOCK_PROJETS, MOCK_TACHES, updateTachesList } from 'src/app/mocks/data/tache.mock';
+import { MOCK_TACHES, updateTachesList } from 'src/app/mocks/data/tache.mock';
 
 export const TachesHandlers = [
-    // GET Projets
-    http.get('/api/affectation/projets', async () => {
-        await delay(20);
-        return HttpResponse.json(MOCK_PROJETS);
-    }),
-
     // GET Tâches filtrées
     http.get('/api/affectation/taches', async ({ request }) => {
         const url = new URL(request.url);

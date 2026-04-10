@@ -3,7 +3,7 @@ import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { Subject } from 'rxjs';
 import SockJS from 'sockjs-client';
 import Keycloak from 'keycloak-js';
-import { MessageDTO, TypingResponse } from 'src/app/gerai/models/chat.models';
+import { MessageDTO, TypingResponse } from 'src/app/gerai/models/chat.model';
 
 export interface PresenceDTO {
   userId: string;

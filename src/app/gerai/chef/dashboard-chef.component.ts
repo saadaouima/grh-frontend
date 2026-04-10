@@ -42,8 +42,8 @@ const ROLES_SYSTEME_KEYCLOAK = [
   selector: 'app-dashboard-chef',
   standalone: true,
   imports: [CommonModule, SharedModule],
-  templateUrl: './dashboard-chef.html',
-  styleUrls: ['./dashboard-chef.scss']
+  templateUrl: './dashboard-chef.component.html',
+  styleUrls: ['./dashboard-chef.component.scss']
 })
 export class DashboardChefComponent implements OnInit {
 

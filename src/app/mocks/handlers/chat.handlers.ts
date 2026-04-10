@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.models';
+import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.model';
 
 /* ══════════════════════════════════════════════════════════════
    📊 DATA MOCK - Utilisateurs Keycloak + état partagé

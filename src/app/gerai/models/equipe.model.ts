@@ -21,7 +21,7 @@ export interface MembreEquipe {
 }
 
 /**
- * DTO pour la création d’un membre
+ * DTO pour la création d'un membre
  */
 export interface CreateMembreDTO {
     prenom: string;
@@ -36,7 +36,7 @@ export interface CreateMembreDTO {
 }
 
 /**
- * DTO pour la mise à jour d’un membre
+ * DTO pour la mise à jour d'un membre
  */
 export interface UpdateMembreDTO {
     prenom?: string;

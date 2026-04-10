@@ -14,11 +14,11 @@
  */
 
 import { delay, http, HttpResponse } from 'msw';
-import { MembreEquipe } from 'src/app/gerai/models/equipe.models';
+import { MembreEquipe } from 'src/app/gerai/models/equipe.model';
 import {
     KPIsChef, DemandeChef, TacheChef,
     ProjetChef, NotificationChef
-} from 'src/app/gerai/models/chef.models';
+} from 'src/app/gerai/models/chef.model';
 
 // ── Dates ─────────────────────────────────────────────────────
 const now = Date.now();

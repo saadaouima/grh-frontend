@@ -1,6 +1,6 @@
 import { Component, OnDestroy, ViewEncapsulation, input, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
-import { Spinkit } from './spinkits';
+import { Spinkit } from './spinkit';
 
 @Component({
   selector: 'app-spinner',

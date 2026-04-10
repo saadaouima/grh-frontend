@@ -1,4 +1,4 @@
-import { MembreEquipe } from 'src/app/gerai/models/equipe.models';
+import { MembreEquipe } from 'src/app/gerai/models/equipe.model';
 
 export let MOCK_MEMBRES: MembreEquipe[] = [
     {

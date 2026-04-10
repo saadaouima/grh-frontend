@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { MembreEquipe, CreateMembreDTO, UpdateMembreDTO } from 'src/app/gerai/models/equipe.models';
+import { MembreEquipe, CreateMembreDTO, UpdateMembreDTO } from 'src/app/gerai/models/equipe.model';
 import { MOCK_MEMBRES, getNextMembreId } from '../data/equipe.mock';
 
 export const equipeHandlers = [

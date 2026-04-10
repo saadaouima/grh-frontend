@@ -24,8 +24,8 @@ const ROLE_LABELS: Record<string, string> = {
   selector: 'app-dashboard-employe',
   standalone: true,
   imports: [CommonModule, SharedModule, BajajChartComponent],
-  templateUrl: './dashboard-employe.html',
-  styleUrls: ['./dashboard-employe.scss']
+  templateUrl: './dashboard-employe.component.html',
+  styleUrls: ['./dashboard-employe.component.scss']
 })
 export class DashboardEmployeComponent implements OnInit {
 

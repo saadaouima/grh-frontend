@@ -20,7 +20,7 @@
  */
 
 import { delay, http, HttpResponse } from 'msw';
-import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.models';
+import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.model';
 
 // ══════════════════════════════════════════════════════════════
 // IDENTITÉ SIMULÉE (remplace keycloak.sub en dev)

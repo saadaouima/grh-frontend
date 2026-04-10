@@ -12,7 +12,7 @@ import { ChatWebSocketService } from 'src/app/gerai/services/chat-websocket.serv
 import { Subscription } from 'rxjs';
 import Keycloak from 'keycloak-js';
 import { HttpClient } from '@angular/common/http';
-import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.models';
+import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.model';
 
 export interface ChatMessage {
   id: number;

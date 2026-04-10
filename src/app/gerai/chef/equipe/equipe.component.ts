@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
 import { EquipeApiService } from '../../services/equipe-api.service';
-import { MembreEquipe } from '../../models/equipe.models';
+import { MembreEquipe } from '../../models/equipe.model';
 import { ChangeDetectorRef } from '@angular/core';
 
 

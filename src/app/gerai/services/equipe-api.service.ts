@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MembreEquipe, CreateMembreDTO, UpdateMembreDTO } from '../models/equipe.models';
+import { MembreEquipe, CreateMembreDTO, UpdateMembreDTO } from '../models/equipe.model';
 
 @Injectable({ providedIn: 'root' })
 export class EquipeApiService {

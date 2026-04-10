@@ -18,13 +18,13 @@ export const routes: Routes = [
       // ─── DASHBOARDS ───
       {
         path: 'employe/dashboard',
-        loadComponent: () => import('./gerai/employe/dashboard-employe')
+        loadComponent: () => import('./gerai/employe/dashboard-employe.component')
           .then(m => m.DashboardEmployeComponent),
         data: { roles: ['employe', 'employé', 'chef', 'admin'] }
       },
       {
         path: 'chef/dashboard',
-        loadComponent: () => import('./gerai/chef/dashboard-chef')
+        loadComponent: () => import('./gerai/chef/dashboard-chef.component')
           .then(m => m.DashboardChefComponent),
         data: { roles: ['chef', 'admin'] }
       },

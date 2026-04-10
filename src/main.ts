@@ -9,6 +9,11 @@ import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
 import { environment } from './environments/environment';
 
+// Build a URL-pattern that matches the configured API host at runtime so the
+// Keycloak interceptor works correctly in every environment without hardcoding.
+const apiOrigin = new URL(environment.apiUrl).origin; // e.g. "http://localhost:8085"
+const apiOriginPattern = new RegExp(`^${apiOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\/.*)?$`, 'i');
+
 import {
   provideKeycloak,
   includeBearerTokenInterceptor,
@@ -22,7 +27,7 @@ import { enableMocking } from './app/mocks/browser';
 if (environment.production) enableProdMode();
 
 const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
-  urlPattern: /^https?:\/\/localhost:8085(\/.*)?$/i // ✅ match http or https
+  urlPattern: apiOriginPattern
 });
 
 async function main() {

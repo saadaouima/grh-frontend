@@ -8,7 +8,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-import { ChatWebSocketService } from 'src/app/gerai/services/ChatWebSocketService';
+import { ChatWebSocketService } from 'src/app/gerai/services/chat-websocket.service';
 import { Subscription } from 'rxjs';
 import Keycloak from 'keycloak-js';
 import { HttpClient } from '@angular/common/http';

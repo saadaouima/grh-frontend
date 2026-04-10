@@ -40,6 +40,11 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/",
+              "assets": [
+                "src/favicon.ico",
+                "src/assets"
+              ],
               "budgets": [
                 {
                   "type": "initial",

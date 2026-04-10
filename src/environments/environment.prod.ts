@@ -6,16 +6,16 @@ export const environment = {
 
   // 🔐 Configuration Keycloak
   keycloak: {
-    url: 'http://localhost:8080',
+    url: 'https://keycloak.gerai.tn',
     realm: 'gerai',
     clientId: 'gerai'
   },
 
   // 🌐 Configuration API Backend Spring Boot
-  apiUrl: 'http://localhost:8085/api',
+  apiUrl: 'https://api.gerai.tn/api',
 
   // 📡 Configuration WebSocket chat-service
-  websocketUrl: 'ws://localhost:8085/ws',
+  websocketUrl: 'wss://api.gerai.tn/ws',
 
   // 🔧 Configuration générale
   app: {

@@ -457,11 +457,96 @@
     100% { background-position: -200% 0; }
   }
 
+  // ── Presence row ───────────────────────────────────
+  .presence-row {
+    display: flex !important; align-items: center !important; gap: 10px !important;
+    padding: 8px 10px !important; border-radius: 10px !important;
+    transition: background 0.15s !important; border: 1px solid transparent !important;
+
+    &:hover { background: #F8FAFF !important; border-color: rgba(99,102,241,0.1) !important; }
+  }
+
+  .presence-avatar {
+    width: 36px !important; height: 36px !important; border-radius: 10px !important;
+    background: linear-gradient(135deg, #3B82F6, #6366F1) !important;
+    color: white !important; font-size: 12px !important; font-weight: 700 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    flex-shrink: 0 !important;
+
+    &.avatar-absent {
+      background: linear-gradient(135deg, #94A3B8, #64748B) !important;
+    }
+  }
+
+  .statut-tag {
+    font-size: 10px !important; font-weight: 700 !important;
+    border-radius: 6px !important; padding: 3px 8px !important; flex-shrink: 0 !important;
+    white-space: nowrap !important;
+
+    &.tag-actif   { background: #F0FDF4 !important; color: #16A34A !important; }
+    &.tag-conge   { background: #FFF7ED !important; color: #C2410C !important; }
+    &.tag-inactif { background: #F8FAFC !important; color: #94A3B8 !important; }
+  }
+
+  .badge-present {
+    font-size: 11px !important; font-weight: 700 !important;
+    background: #F0FDF4 !important; color: #16A34A !important;
+    border-radius: 6px !important; padding: 3px 10px !important;
+  }
+
+  .badge-absent {
+    font-size: 11px !important; font-weight: 700 !important;
+    background: #FFF7ED !important; color: #C2410C !important;
+    border-radius: 6px !important; padding: 3px 10px !important;
+  }
+
+  // ── Workload chart ──────────────────────────────────
+  .charge-row { padding: 0 4px !important; }
+
+  .charge-avatar {
+    width: 28px !important; height: 28px !important; border-radius: 8px !important;
+    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    color: white !important; font-size: 10px !important; font-weight: 700 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .charge-nom  { font-size: 13px !important; font-weight: 600 !important; color: #1E293B !important; }
+  .charge-count { font-size: 12px !important; font-weight: 600 !important; color: #64748B !important; }
+
+  .retard-badge {
+    font-size: 10px !important; font-weight: 700 !important;
+    background: #FEE2E2 !important; color: #DC2626 !important;
+    border-radius: 5px !important; padding: 2px 7px !important;
+  }
+
+  .charge-track {
+    height: 6px !important; background: #F1F5F9 !important;
+    border-radius: 100px !important; overflow: hidden !important;
+  }
+
+  .charge-fill {
+    height: 100% !important; border-radius: 100px !important;
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+    &.fill-normal { background: linear-gradient(90deg, #6366F1, #8B5CF6) !important; }
+    &.fill-danger { background: linear-gradient(90deg, #EF4444, #DC2626) !important; }
+  }
+
+  // ── Empty state ─────────────────────────────────────
+  .empty-state {
+    display: flex !important; flex-direction: column !important;
+    align-items: center !important; justify-content: center !important;
+    padding: 28px 16px !important; gap: 8px !important;
+
+    i { font-size: 28px !important; color: #10B981 !important; }
+    p { font-size: 13px !important; color: #94A3B8 !important; margin: 0 !important; }
+  }
+
   // ── Responsive ─────────────────────────────────────
   @media (max-width: 768px) {
     .chef-banner { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
     .banner-stats { width: 100% !important; justify-content: space-around !important; }
-    .quick-grid { grid-template-columns: 1fr 1fr !important; }
     .kpi-card { min-height: 150px !important; }
   }
 
@@ -562,4 +647,23 @@
     background: linear-gradient(90deg, #1e2536 25%, #334155 50%, #1e2536 75%) !important;
     background-size: 200% 100% !important;
   }
+
+  // --- Présence ---
+  .presence-row:hover { background: rgba(255,255,255,0.03) !important; border-color: rgba(99,102,241,0.15) !important; }
+
+  .statut-tag {
+    &.tag-actif   { background: rgba(22,163,74,0.12) !important;  color: #4ADE80 !important; }
+    &.tag-conge   { background: rgba(194,65,12,0.12) !important;  color: #FB923C !important; }
+    &.tag-inactif { background: rgba(148,163,184,0.1) !important; color: #94A3B8 !important; }
+  }
+  .badge-present { background: rgba(22,163,74,0.12) !important;  color: #4ADE80 !important; }
+  .badge-absent  { background: rgba(194,65,12,0.12) !important;  color: #FB923C !important; }
+
+  // --- Charge ---
+  .charge-nom   { color: #E2E8F0 !important; }
+  .charge-track { background: rgba(255,255,255,0.08) !important; }
+  .retard-badge { background: rgba(220,38,38,0.15) !important; color: #F87171 !important; }
+
+  // --- Empty state ---
+  .empty-state p { color: #64748B !important; }
 }

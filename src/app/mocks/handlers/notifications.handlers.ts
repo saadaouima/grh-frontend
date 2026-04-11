@@ -6,6 +6,18 @@ import {
 
 type Role = 'CHEF' | 'EMPLOYE';
 
+/* ── Inline mock data for NotificationService (theme/shared/interfaces/notification format) ── */
+
+const now = Date.now();
+const ago = (min: number) => new Date(now - min * 60_000).toISOString().split('T')[0];
+
+let serviceNotifications = [
+    { id: 1, titre: 'Demande approuvée', message: 'Votre demande de congé a été approuvée.', type: 'SUCCESS' as const, date: ago(5), lu: false },
+    { id: 2, titre: 'Nouvelle tâche assignée', message: 'Une tâche "Intégration API" vous a été affectée.', type: 'INFO' as const, date: ago(30), lu: false },
+    { id: 3, titre: 'Échéance proche', message: 'La tâche "Tests unitaires" arrive à échéance demain.', type: 'WARNING' as const, date: ago(120), lu: false },
+    { id: 4, titre: 'Demande refusée', message: 'Votre demande de formation a été refusée.', type: 'ERROR' as const, date: ago(300), lu: true }
+];
+
 // Utilisation de références locales pour permettre la mutation propre par MSW
 let chefNotifs = [...MOCK_CHEF_NOTIFICATIONS];
 let employeNotifs = [...MOCK_EMPLOYE_NOTIFICATIONS];
@@ -108,6 +120,30 @@ export const notificationsHandlers = [
             employeNotifs = [];
         }
 
+        return new HttpResponse(null, { status: 204 });
+    }),
+
+    /* ── NotificationService endpoints (http://localhost:8085/api/notifications) ── */
+
+    /**
+     * GET http://localhost:8085/api/notifications/mes-notifications
+     * Used by NotificationService.getNotifications()
+     */
+    http.get('http://localhost:8085/api/notifications/mes-notifications', async () => {
+        await delay(100);
+        return HttpResponse.json(serviceNotifications);
+    }),
+
+    /**
+     * PUT http://localhost:8085/api/notifications/:id/marquer-comme-lue
+     * Used by NotificationService.marquerCommeLue(id)
+     */
+    http.put('http://localhost:8085/api/notifications/:id/marquer-comme-lue', async ({ params }) => {
+        await delay(60);
+        const id = Number(params['id']);
+        const notif = serviceNotifications.find(n => n.id === id);
+        if (!notif) return new HttpResponse(null, { status: 404 });
+        notif.lu = true;
         return new HttpResponse(null, { status: 204 });
     })
 ];

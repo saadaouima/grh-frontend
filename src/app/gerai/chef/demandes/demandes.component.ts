@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
 import { DemandeService } from  'src/app/gerai/services/demande.service';
-import { Demande } from 'src/app/gerai/models/demande.model';
+import { Demande, StatutDemande } from 'src/app/gerai/models/demande.model';
 import { ChangeDetectorRef }   from '@angular/core';
 
 @Component({
@@ -26,9 +26,19 @@ export class DemandesChefComponent implements OnInit {
   employeIdFiltre: string | null = null;
   employeNomFiltre: string = '';
   demandeSelectionnee: Demande | null = null;
+  filtreStatut: StatutDemande | '' = '';
 
   toutesLesDemandes: Demande[] = [];
   demandesFiltrees: Demande[] = [];
+
+  readonly statuts: { valeur: StatutDemande | ''; label: string }[] = [
+    { valeur: '',            label: 'Toutes'       },
+    { valeur: 'EN_ATTENTE',  label: 'En attente'   },
+    { valeur: 'VALIDEE_CHEF',label: 'Validée chef' },
+    { valeur: 'VALIDEE_RH',  label: 'Validée RH'   },
+    { valeur: 'VALIDEE',     label: 'Validée'      },
+    { valeur: 'REJETEE',     label: 'Rejetée'      }
+  ];
 
   ngOnInit(): void {
     // Charger toutes les demandes depuis le service
@@ -38,9 +48,9 @@ export class DemandesChefComponent implements OnInit {
       this.cd.markForCheck();
     });
 
-    // ✅ Récupère l'employeId depuis les queryParams
     this.route.queryParams.subscribe(params => {
       this.employeIdFiltre = params['employeId'] ? String(params['employeId']) : null;
+      this.filtreStatut = (params['statut'] as StatutDemande) || '';
       this.appliquerFiltre();
       this.cd.markForCheck();
     });
@@ -49,7 +59,6 @@ export class DemandesChefComponent implements OnInit {
   appliquerFiltre(): void {
     let demandes = [...this.toutesLesDemandes];
 
-    // Filtrer par employé si nécessaire
     if (this.employeIdFiltre !== null) {
       demandes = demandes.filter(d => d.employeId === this.employeIdFiltre);
       const premier = demandes[0];
@@ -58,10 +67,26 @@ export class DemandesChefComponent implements OnInit {
       this.employeNomFiltre = '';
     }
 
-    // Trier par dateCreation (descendant)
+    if (this.filtreStatut !== '') {
+      demandes = demandes.filter(d => d.statut === this.filtreStatut);
+    }
+
     this.demandesFiltrees = demandes.sort((a, b) =>
       new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()
     );
+  }
+
+  setFiltreStatut(statut: StatutDemande | ''): void {
+    this.filtreStatut = statut;
+    this.appliquerFiltre();
+    this.cd.markForCheck();
+  }
+
+  countParStatut(statut: StatutDemande | ''): number {
+    const base = this.employeIdFiltre
+      ? this.toutesLesDemandes.filter(d => d.employeId === this.employeIdFiltre)
+      : this.toutesLesDemandes;
+    return statut === '' ? base.length : base.filter(d => d.statut === statut).length;
   }
 
 

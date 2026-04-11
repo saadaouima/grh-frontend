@@ -85,9 +85,18 @@ function trouverOuCreerConversation(
 
 export const chatHandlers = [
 
-    /* 🔑 USERS KEYCLOAK MOCK */
+    /* 🔑 USERS — Keycloak admin endpoint (KeycloakUserService) */
     http.get('http://localhost:8085/api/keycloak/users', () => {
         return HttpResponse.json(CHAT_USERS_MOCK);
+    }),
+
+    /* 🔑 USERS — Chat users endpoint (ChatComponent) */
+    http.get('http://localhost:8085/api/chat/users', () => {
+        const withFullName = CHAT_USERS_MOCK.map(u => ({
+            ...u,
+            nomComplet: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username
+        }));
+        return HttpResponse.json(withFullName);
     }),
 
     /* 📋 GET CONVERSATIONS */
@@ -95,22 +104,12 @@ export const chatHandlers = [
         return HttpResponse.json(conversations);
     }),
 
-    /* ➕ CREATE / GET CONVERSATION */
+    /* ➕ CREATE / GET CONVERSATION — params sent as query string (not body) */
     http.post('http://localhost:8085/api/chat/conversations', async ({ request }) => {
 
-        let body: any = {};
-
-        try {
-            body = await request.json();
-        } catch {
-            return HttpResponse.json(
-                { message: 'Body JSON invalide ou manquant' },
-                { status: 400 }
-            );
-        }
-
-        const user2Id = body.user2Id;
-        const user2Nom = body.user2Nom;
+        const url = new URL(request.url);
+        const user2Id = url.searchParams.get('user2Id');
+        const user2Nom = url.searchParams.get('user2Nom') ?? 'Inconnu';
 
         if (!user2Id) {
             return HttpResponse.json(

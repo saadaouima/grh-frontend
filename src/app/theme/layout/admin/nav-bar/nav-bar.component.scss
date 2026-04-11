@@ -14,8 +14,8 @@
     width: 100% !important;
     z-index: 1050 !important; // Passe au-dessus du contenu et de la sidebar
     
-    background: linear-gradient(90deg, #0c4a6e, #0369a1) !important;
-    box-shadow: 0 4px 20px rgba(3, 105, 161, 0.3) !important;
+    background: linear-gradient(90deg, #0369a1, #0ea5e9) !important;
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.25) !important;
     border-bottom: none !important;
     height: 70px !important;
 
@@ -62,7 +62,7 @@
   }
 
   .gerai-logo {
-    height: 52px !important;
+    height: 150px !important;
     width: auto !important;
     transition: transform 0.2s ease !important;
 

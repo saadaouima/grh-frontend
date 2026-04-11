@@ -20,6 +20,16 @@ export const TachesHandlers = [
         return HttpResponse.json(newTache, { status: 201 });
     }),
 
+    // PUT Mettre à jour une tâche
+    http.put('/api/affectation/taches/:id', async ({ params, request }) => {
+        const id = Number(params['id']);
+        const idx = MOCK_TACHES.findIndex(t => t.id === id);
+        if (idx === -1) return new HttpResponse(null, { status: 404 });
+        const update = (await request.json()) as any;
+        MOCK_TACHES[idx] = { ...MOCK_TACHES[idx], ...update };
+        return HttpResponse.json(MOCK_TACHES[idx]);
+    }),
+
     // DELETE Tâche
     http.delete('/api/affectation/taches/:id', ({ params }) => {
         const { id } = params;

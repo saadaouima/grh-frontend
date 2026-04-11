@@ -9,6 +9,7 @@ import { profilEmployeHandlers } from './employe-profile.handlers';
 import { tachesHandlers } from './taches-employe.handlers';
 import { projetsEmployeHandlers } from './projets-employe.handlers';
 import { congesHandlers } from './conges.handlers';
+import { employeHandlers } from './employe.handlers';
 
 export const allHandlers = [
     // Modules métier
@@ -22,5 +23,6 @@ export const allHandlers = [
     ...profilEmployeHandlers,
     ...tachesHandlers,
     ...projetsEmployeHandlers,
-    ...congesHandlers
-];  
+    ...congesHandlers,
+    ...employeHandlers
+];

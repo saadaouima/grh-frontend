@@ -21,7 +21,7 @@ export class ConfigurationComponent implements OnInit {
     this.fontFamily(this.setFontFamily);
 
     // Restaurer le mode sauvegardé
-    const saved = localStorage.getItem('gerai-theme');
+    const saved = localStorage.getItem('synapse-theme');
     if (saved === 'dark') {
       this.isDarkMode = true;
       this.renderer.addClass(document.body, 'dark');
@@ -42,10 +42,10 @@ export class ConfigurationComponent implements OnInit {
     this.isDarkMode = !this.isDarkMode;
     if (this.isDarkMode) {
       this.renderer.addClass(document.body, 'dark');
-      localStorage.setItem('gerai-theme', 'dark');
+      localStorage.setItem('synapse-theme', 'dark');
     } else {
       this.renderer.removeClass(document.body, 'dark');
-      localStorage.setItem('gerai-theme', 'light');
+      localStorage.setItem('synapse-theme', 'light');
     }
   }
 }

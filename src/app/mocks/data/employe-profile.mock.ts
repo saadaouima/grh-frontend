@@ -95,7 +95,7 @@ export let activites: ActiviteEmploye[] = [
         id: 1,
         employeId: 'kc-user-id',
         titre: 'Connexion sécurisée',
-        description: 'Authentification réussie via Keycloak GerAI',
+        description: 'Authentification réussie via Keycloak SYNAPSE',
         date: new Date().toISOString(),
         type: 'presence',
         statut: 'validee',

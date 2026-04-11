@@ -1,36 +1,41 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule, DatePipe }    from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 // Project imports
 import { SharedModule }        from 'src/app/theme/shared/shared.module';
 import { CardComponent }       from 'src/app/theme/shared/components/card/card.component';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-import { Projet }              from 'src/app/theme/shared/interfaces/projet';
-import { Employe }             from 'src/app/theme/shared/interfaces/employe';
-import { Tache }               from 'src/app/theme/shared/interfaces/tache';
+import { TacheService }        from 'src/app/gerai/services/tache-chef.service';
+import { ProjetService }       from 'src/app/gerai/services/projet-chef.service';
+import { Projet }              from 'src/app/gerai/models/projet.model';
+import { Tache }               from 'src/app/gerai/models/tache.model';
+import { Employe }             from 'src/app/gerai/models/employe.model';
 
 @Component({
   selector   : 'app-affectation-taches',
   standalone : true,
   imports    : [
-    CommonModule,           // ngClass, slice pipe
-    DatePipe,               // date pipe
-    FormsModule,            // ngModel
-    ReactiveFormsModule,    // formGroup, formControlName
-    SharedModule,           // directives partagées
-    CardComponent,          // app-card
-    BreadcrumbComponent    // app-breadcrumb
+    CommonModule,
+    DatePipe,
+    FormsModule,
+    ReactiveFormsModule,
+    SharedModule,
+    CardComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './affectation-taches.component.html',
   styleUrls  : ['./affectation-taches.component.scss']
 })
 export class AffectationTachesComponent implements OnInit {
 
-  private fb = inject(FormBuilder);
+  private fb            = inject(FormBuilder);
+  private cdr           = inject(ChangeDetectorRef);
+  private tacheService  = inject(TacheService);
+  private projetService = inject(ProjetService);
 
-
-  priorities = [
+  readonly priorities = [
     { label: 'Haute',   value: 'Haute',   color: '#ff5370' },
     { label: 'Moyenne', value: 'Moyenne', color: '#FFB64D' },
     { label: 'Basse',   value: 'Basse',   color: '#2ed8b6' }
@@ -43,81 +48,65 @@ export class AffectationTachesComponent implements OnInit {
   filteredTaches : Tache[]   = [];
 
   // ── State ──────────────────────────────────────────────
-  selectedProjetNom : string         = '';
-  selectedProjet    : Projet | null  = null;
-  filterPriorite    : string         = '';
+  loading           = false;
+  error: string | null = null;
+  selectedProjetNom : string        = '';
+  selectedProjet    : Projet | null = null;
+  filterPriorite    : string        = '';
 
   // ── Modal ──────────────────────────────────────────────
   showModal    = false;
   isEditMode   = false;
   isSaving     = false;
-  editingTache : Tache | null = null;
+  editingTache  : Tache | null = null;
+  membreChoisi  : any | null   = null;
 
   tacheForm!: FormGroup;
 
   // ── Lifecycle ──────────────────────────────────────────
   ngOnInit(): void {
     this.initForm();
-    this.loadFakeData();
+    this.loadData();
   }
 
   // ── Form ───────────────────────────────────────────────
   initForm(): void {
     this.tacheForm = this.fb.group({
-      titre    : ['', Validators.required],
-      priorite : ['Moyenne', Validators.required],
-      assigneA : ['', Validators.required],
-      echeance : ['', Validators.required]
+      titre         : ['', Validators.required],
+      description   : [''],
+      priorite      : ['Moyenne', Validators.required],
+      statut        : ['A_FAIRE', Validators.required],
+      assigneA      : ['', Validators.required],
+      dateDebut     : [''],
+      echeance      : ['', Validators.required],
+      effortEstime  : [null]
     });
   }
 
-  // ── Fake data ─────────────────────────────────────────
-  loadFakeData(): void {
-    this.employes = [
-      { id: 1, nom: 'Ben Ali',  prenom: 'Sami',    email: 's.benali@gerai.tn',   poste: 'Développeur', departement: 'Informatique' },
-      { id: 2, nom: 'Trabelsi', prenom: 'Ines',    email: 'i.trabelsi@gerai.tn', poste: 'Designer',    departement: 'Design'       },
-      { id: 3, nom: 'Gharbi',   prenom: 'Mohamed', email: 'm.gharbi@gerai.tn',   poste: 'Analyste',    departement: 'Informatique' },
-      { id: 4, nom: 'Sassi',    prenom: 'Leila',   email: 'l.sassi@gerai.tn',    poste: 'Testeur',     departement: 'Qualité'      },
-      { id: 5, nom: 'Hammami',  prenom: 'Youssef', email: 'y.hammami@gerai.tn',  poste: 'DevOps',      departement: 'Informatique' }
-    ];
+  // ── Data loading ───────────────────────────────────────
+  loadData(): void {
+    this.loading = true;
+    this.error   = null;
 
-    this.projets = [
-      {
-        id: 1, nom: 'Refonte Système RH',
-        description: 'Migration complète du système RH.',
-        dateDebut: '2025-01-15', datefin: '2025-06-30',
-        statut: 'Encours', progression: 65,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[0], this.employes[1], this.employes[2]]
+    forkJoin({
+      projets  : this.projetService.getProjets(),
+      taches   : this.tacheService.getTaches(),
+      employes : this.projetService.getEmployes()
+    }).subscribe({
+      next: ({ projets, taches, employes }) => {
+        this.projets  = projets;
+        this.taches   = taches;
+        this.employes = employes;
+        this.loading  = false;
+        this.applyFilter();
+        this.cdr.markForCheck();
       },
-      {
-        id: 2, nom: 'Application Mobile Employés',
-        description: 'App mobile de gestion RH.',
-        dateDebut: '2025-02-01', datefin: '2025-08-31',
-        statut: 'Encours', progression: 40,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[0], this.employes[3]]
-      },
-      {
-        id: 3, nom: 'Tableau de Bord Analytics',
-        description: 'Dashboard KPIs RH.',
-        dateDebut: '2025-03-01', datefin: '2025-04-30',
-        statut: 'Enretard', progression: 20,
-        chefProjet: 'Ahmed Mansour',
-        membres: [this.employes[2], this.employes[3], this.employes[4]]
+      error: () => {
+        this.error   = 'Erreur lors du chargement des données.';
+        this.loading = false;
+        this.cdr.markForCheck();
       }
-    ];
-
-    this.taches = [
-      { id: 1, titre: 'Analyse des besoins',      projet: 'Refonte Système RH',         priorite: 'Haute',   prioriteColor: '#ff5370', echeance: '2025-01-31', assigneA: 'Mohamed Gharbi'  },
-      { id: 2, titre: 'Conception UX/UI',          projet: 'Refonte Système RH',         priorite: 'Haute',   prioriteColor: '#ff5370', echeance: '2025-02-28', assigneA: 'Ines Trabelsi'   },
-      { id: 3, titre: 'Développement backend API', projet: 'Refonte Système RH',         priorite: 'Haute',   prioriteColor: '#ff5370', echeance: '2025-04-30', assigneA: 'Sami Ben Ali'    },
-      { id: 4, titre: 'Intégration Keycloak',      projet: 'Refonte Système RH',         priorite: 'Moyenne', prioriteColor: '#FFB64D', echeance: '2025-04-15', assigneA: 'Sami Ben Ali'    },
-      { id: 5, titre: 'Tests unitaires',           projet: 'Refonte Système RH',         priorite: 'Basse',   prioriteColor: '#2ed8b6', echeance: '2025-05-15', assigneA: 'Mohamed Gharbi'  },
-      { id: 6, titre: 'Maquettes mobile',          projet: 'Application Mobile Employés', priorite: 'Haute',  prioriteColor: '#ff5370', echeance: '2025-03-15', assigneA: 'Ines Trabelsi'   },
-      { id: 7, titre: 'Tests QA mobile',           projet: 'Application Mobile Employés', priorite: 'Moyenne',prioriteColor: '#FFB64D', echeance: '2025-05-31', assigneA: 'Leila Sassi'     },
-      { id: 8, titre: 'Config infrastructure',     projet: 'Tableau de Bord Analytics',  priorite: 'Haute',   prioriteColor: '#ff5370', echeance: '2025-04-20', assigneA: 'Youssef Hammami' }
-    ];
+    });
   }
 
   // ── Projet selection ───────────────────────────────────
@@ -127,8 +116,8 @@ export class AffectationTachesComponent implements OnInit {
       this.filteredTaches = [];
       return;
     }
-    this.selectedProjet  = this.projets.find(p => p.nom === this.selectedProjetNom) ?? null;
-    this.filterPriorite  = '';
+    this.selectedProjet = this.projets.find(p => p.nom === this.selectedProjetNom) ?? null;
+    this.filterPriorite = '';
     this.applyFilter();
   }
 
@@ -161,18 +150,25 @@ export class AffectationTachesComponent implements OnInit {
   openCreateTaskModal(): void {
     this.isEditMode   = false;
     this.editingTache = null;
-    this.tacheForm.reset({ priorite: 'Moyenne' });
+    this.membreChoisi = null;
+    this.tacheForm.reset({ priorite: 'Moyenne', statut: 'A_FAIRE' });
     this.showModal = true;
   }
 
   editTask(tache: Tache): void {
     this.isEditMode   = true;
     this.editingTache = tache;
+    this.membreChoisi = (this.selectedProjet?.membres ?? [])
+      .find((m: any) => `${m.prenom} ${m.nom}` === tache.assigneA) ?? null;
     this.tacheForm.patchValue({
-      titre   : tache.titre,
-      priorite: tache.priorite,
-      assigneA: tache.assigneA ?? '',
-      echeance: tache.echeance
+      titre        : tache.titre,
+      description  : tache.description ?? '',
+      priorite     : tache.priorite,
+      statut       : tache.statut ?? 'A_FAIRE',
+      assigneA     : tache.assigneA ?? '',
+      dateDebut    : tache.dateDebut ?? '',
+      echeance     : tache.echeance,
+      effortEstime : tache.effortEstime ?? null
     });
     this.showModal = true;
   }
@@ -180,73 +176,110 @@ export class AffectationTachesComponent implements OnInit {
   closeModal(): void {
     this.showModal    = false;
     this.editingTache = null;
+    this.membreChoisi = null;
     this.tacheForm.reset();
+  }
+
+  selectMembre(m: any): void {
+    this.membreChoisi = m;
+    this.tacheForm.get('assigneA')?.setValue(`${m.prenom} ${m.nom}`);
   }
 
   // ── CRUD ───────────────────────────────────────────────
   saveTask(): void {
     if (this.tacheForm.invalid) return;
     this.isSaving = true;
-    const val = this.tacheForm.value;
+
+    const val          = this.tacheForm.value;
     const prioriteColor = this.getPrioriteColor(val.priorite);
 
-    setTimeout(() => {
-      if (this.isEditMode && this.editingTache) {
-        const idx = this.taches.findIndex(t => t.id === this.editingTache!.id);
-        this.taches[idx] = {
-          ...this.editingTache,
-          titre        : val.titre,
-          priorite     : val.priorite,
-          prioriteColor,
-          assigneA     : val.assigneA,
-          echeance     : val.echeance
-        };
-      } else {
-        const newId = this.taches.length ? Math.max(...this.taches.map(t => t.id)) + 1 : 1;
-        this.taches.push({
-          id           : newId,
-          titre        : val.titre,
-          projet       : this.selectedProjetNom,
-          priorite     : val.priorite,
-          prioriteColor,
-          assigneA     : val.assigneA,
-          echeance     : val.echeance
-        });
-      }
-      this.applyFilter();
-      this.isSaving = false;
-      this.closeModal();
-    }, 700);
+    if (this.isEditMode && this.editingTache) {
+      const updated: Tache = {
+        ...this.editingTache,
+        titre        : val.titre,
+        description  : val.description || undefined,
+        priorite     : val.priorite,
+        prioriteColor,
+        statut       : val.statut,
+        assigneA     : val.assigneA,
+        dateDebut    : val.dateDebut || undefined,
+        echeance     : val.echeance,
+        effortEstime : val.effortEstime || undefined
+      };
+
+      this.tacheService.updateTache(updated.id, updated).subscribe({
+        next: saved => {
+          const idx = this.taches.findIndex(t => t.id === saved.id);
+          if (idx !== -1) this.taches[idx] = saved;
+          this.applyFilter();
+          this.isSaving = false;
+          this.closeModal();
+          this.cdr.markForCheck();
+        },
+        error: () => { this.isSaving = false; }
+      });
+
+    } else {
+      const newTache: Omit<Tache, 'id'> = {
+        titre        : val.titre,
+        description  : val.description || undefined,
+        projet       : this.selectedProjetNom,
+        priorite     : val.priorite,
+        prioriteColor,
+        statut       : val.statut,
+        assigneA     : val.assigneA,
+        dateDebut    : val.dateDebut || undefined,
+        echeance     : val.echeance,
+        effortEstime : val.effortEstime || undefined
+      };
+
+      this.tacheService.createTache(newTache as Tache).subscribe({
+        next: created => {
+          this.taches.push(created);
+          this.applyFilter();
+          this.isSaving = false;
+          this.closeModal();
+          this.cdr.markForCheck();
+        },
+        error: () => { this.isSaving = false; }
+      });
+    }
   }
 
   deleteTask(tache: Tache): void {
     if (!confirm(`Supprimer la tâche "${tache.titre}" ?`)) return;
-    this.taches = this.taches.filter(t => t.id !== tache.id);
-    this.applyFilter();
+
+    this.tacheService.deleteTache(tache.id).subscribe({
+      next: () => {
+        this.taches = this.taches.filter(t => t.id !== tache.id);
+        this.applyFilter();
+        this.cdr.markForCheck();
+      },
+      error: () => { this.error = 'Erreur lors de la suppression.'; }
+    });
   }
 
   // ── Display helpers ────────────────────────────────────
   getStatusBadgeClass(statut: string): string {
     const map: Record<string, string> = {
-      Encours  : 'badge-primary',
-      Termine  : 'badge-success',
-      Enattente: 'badge-warning',
-      Enretard : 'badge-danger'
+      EN_COURS  : 'badge-primary',
+      TERMINE   : 'badge-success',
+      EN_PAUSE  : 'badge-warning',
+      EN_RETARD : 'badge-danger'
     };
     return map[statut] ?? 'badge-secondary';
   }
 
   getStatusLabel(statut: string): string {
     const map: Record<string, string> = {
-      Encours  : 'En cours',
-      Termine  : 'Terminé',
-      Enattente: 'En attente',
-      Enretard : 'En retard'
+      EN_COURS  : 'En cours',
+      TERMINE   : 'Terminé',
+      EN_PAUSE  : 'En pause',
+      EN_RETARD : 'En retard'
     };
     return map[statut] ?? statut;
   }
 
-  // Initiales depuis "Prénom Nom"
   getInitiales(fullName: string = ''): string {
     const parts = fullName.trim().split(' ');
     if (parts.length >= 2) return parts[0].charAt(0) + parts[1].charAt(0);

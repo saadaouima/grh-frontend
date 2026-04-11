@@ -1,6 +1,6 @@
 :host ::ng-deep {
 
-  .gerai-dashboard {
+  .synapse-dashboard {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     color: #1E293B;
     padding: 4px 0 24px;
@@ -404,7 +404,7 @@
 body.dark & {
 
   // Fond global du dashboard (sécurité)
-  .gerai-dashboard {
+  .synapse-dashboard {
     background-color: transparent !important;
   }
 

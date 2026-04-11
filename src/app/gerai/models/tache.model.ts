@@ -6,6 +6,8 @@ export interface Tache {
     prioriteColor: string;
     statut?: 'A_FAIRE' | 'EN_COURS' | 'TERMINEE';
     echeance: string;
+    dateDebut?: string;
+    effortEstime?: number;
     progression?: number;
     description?: string;
     assigneNom?: string;

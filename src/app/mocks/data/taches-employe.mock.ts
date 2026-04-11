@@ -33,7 +33,7 @@ export let TACHES_MOCK: TacheKanban[] = [
     {
         id: 1,
         titre: 'Rédiger les spécifications API v2',
-        projet: 'GerAI - RH',
+        projet: 'SYNAPSE - RH',
         priorite: 'Haute',
         prioriteColor: '#EF4444',
         statut: 'A_FAIRE',
@@ -68,7 +68,7 @@ export let TACHES_MOCK: TacheKanban[] = [
     {
         id: 4,
         titre: 'Intégration API Spring Boot',
-        projet: 'GerAI - RH',
+        projet: 'SYNAPSE - RH',
         priorite: 'Haute',
         prioriteColor: '#EF4444',
         statut: 'EN_COURS',
@@ -79,7 +79,7 @@ export let TACHES_MOCK: TacheKanban[] = [
     {
         id: 5,
         titre: 'Revue de code sprint 12',
-        projet: 'GerAI - RH',
+        projet: 'SYNAPSE - RH',
         priorite: 'Moyenne',
         prioriteColor: '#F59E0B',
         statut: 'EN_COURS',
@@ -103,7 +103,7 @@ export let TACHES_MOCK: TacheKanban[] = [
     {
         id: 7,
         titre: 'Migration base de données',
-        projet: 'GerAI - RH',
+        projet: 'SYNAPSE - RH',
         priorite: 'Haute',
         prioriteColor: '#EF4444',
         statut: 'TERMINEE',

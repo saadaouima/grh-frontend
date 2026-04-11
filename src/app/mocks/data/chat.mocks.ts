@@ -39,21 +39,21 @@ export const CHAT_USERS_MOCK = [
         username: 'nabil',
         firstName: 'Nabil',
         lastName: 'Benzarti',
-        email: 'nabil@gerai.tn'
+        email: 'nabil@synapse.tn'
     },
     {
         id: 'd8004f21-7290-48e0-ae89-082098650085',
         username: 'ahmed',
         firstName: 'Ahmed',
         lastName: 'Khalil',
-        email: 'ahmed@gerai.tn'
+        email: 'ahmed@synapse.tn'
     },
     {
         id: '749f7e52-bc66-4d0a-9d6e-0960bc21008d',
         username: 'sarra',
         firstName: 'Sarra',
         lastName: 'Trabelsi',
-        email: 'sarra@gerai.tn'
+        email: 'sarra@synapse.tn'
     }
 ] as const;
 

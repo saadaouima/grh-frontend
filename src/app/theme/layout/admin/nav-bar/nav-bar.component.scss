@@ -1,5 +1,5 @@
 // =====================================================
-// 🎨 Nav Bar (Header) - GerAI — Sticky & Dark Mode
+// 🎨 Nav Bar (Header) - SYNAPSE — Sticky & Dark Mode
 // ======================================================
 
 :host ::ng-deep {
@@ -35,7 +35,7 @@
   // ── Ajustement du contenu (Padding-top) ──────────────
   // Pour éviter que le haut des pages soit caché derrière le header
   .pc-container, 
-  .gerai-dashboard, 
+  .synapse-dashboard, 
   .projets-page,
   .profil-page,
   .demandes-page {
@@ -53,7 +53,7 @@
   }
 
   // ── Logo container ────────────────────────────────
-  .gerai-logo-container {
+  .synapse-logo-container {
     display: flex !important;
     align-items: center !important;
     padding: 0 20px !important;
@@ -61,7 +61,7 @@
     flex-shrink: 0 !important;
   }
 
-  .gerai-logo {
+  .synapse-logo {
     height: 150px !important;
     width: auto !important;
     transition: transform 0.2s ease !important;
@@ -112,13 +112,13 @@
 
   // ── Responsive ─────────────────────────────────────
   @media (max-width: 768px) {
-    .gerai-logo-container { padding: 0 12px !important; }
-    .gerai-logo { height: 42px !important; }
+    .synapse-logo-container { padding: 0 12px !important; }
+    .synapse-logo { height: 42px !important; }
   }
 
   @media (max-width: 480px) {
-    .gerai-logo-container { padding: 0 8px !important; }
-    .gerai-logo { height: 36px !important; }
+    .synapse-logo-container { padding: 0 8px !important; }
+    .synapse-logo { height: 36px !important; }
   }
 
   // ══════════════════════════════════════════════════

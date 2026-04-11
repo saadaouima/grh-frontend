@@ -35,7 +35,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 1, keycloakId: '98d63792-7104-4b53-b0a5-f39b6999a0d8',
         nom: 'Benzarti', prenom: 'Nabil',
-        email: 'nabil.benzarti@gerai.tn', poste: 'Développeur Frontend',
+        email: 'nabil.benzarti@synapse.tn', poste: 'Développeur Frontend',
         departement: 'Informatique', statut: 'ACTIF',
         present: true, telephone: '+216 71 001 001',
         dateEmbauche: ago(540), manager: 'Mariem Saadaoui',
@@ -44,7 +44,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 2, keycloakId: 'd8004f21-7290-48e0-ae89-082098650085',
         nom: 'Khalil', prenom: 'Amina',
-        email: 'amina.khalil@gerai.tn', poste: 'Développeur Backend',
+        email: 'amina.khalil@synapse.tn', poste: 'Développeur Backend',
         departement: 'Informatique', statut: 'ACTIF',
         present: true, telephone: '+216 71 001 002',
         dateEmbauche: ago(480), manager: 'Mariem Saadaoui',
@@ -53,7 +53,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 3, keycloakId: '749f7e52-bc66-4d0a-9d6e-0960bc21008d',
         nom: 'Trabelsi', prenom: 'Sarah',
-        email: 'sarah.trabelsi@gerai.tn', poste: 'DevOps Engineer',
+        email: 'sarah.trabelsi@synapse.tn', poste: 'DevOps Engineer',
         departement: 'Infrastructure', statut: 'ACTIF',
         present: true, telephone: '+216 71 001 003',
         dateEmbauche: ago(360), manager: 'Mariem Saadaoui',
@@ -62,7 +62,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 4, keycloakId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         nom: 'Saidi', prenom: 'Mehdi',
-        email: 'mehdi.saidi@gerai.tn', poste: 'Chef de Projet',
+        email: 'mehdi.saidi@synapse.tn', poste: 'Chef de Projet',
         departement: 'Management', statut: 'ACTIF',
         present: false, telephone: '+216 71 001 004',
         dateEmbauche: ago(720), manager: 'Mariem Saadaoui',
@@ -71,7 +71,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 5, keycloakId: 'a1b2c3d4-0000-0000-0000-000000000005',
         nom: 'Manager', prenom: 'Stéphane',
-        email: 'stephane.manager@gerai.tn', poste: 'Architecte Solution',
+        email: 'stephane.manager@synapse.tn', poste: 'Architecte Solution',
         departement: 'Informatique', statut: 'CONGE',
         present: false, telephone: '+216 71 001 005',
         dateEmbauche: ago(900), manager: 'Mariem Saadaoui',
@@ -80,7 +80,7 @@ export let MOCK_EQUIPE: MembreEquipe[] = [
     {
         id: 6, keycloakId: 'a1b2c3d4-0000-0000-0000-000000000006',
         nom: 'Mansouri', prenom: 'Leila',
-        email: 'leila.mansouri@gerai.tn', poste: 'Analyste BI',
+        email: 'leila.mansouri@synapse.tn', poste: 'Analyste BI',
         departement: 'Data', statut: 'ACTIF',
         present: true, telephone: '+216 71 001 006',
         dateEmbauche: ago(270), manager: 'Mariem Saadaoui',
@@ -181,7 +181,7 @@ export let MOCK_TACHES_CHEF: TacheChef[] = [
 
 export let MOCK_PROJETS_CHEF: ProjetChef[] = [
     {
-        id: 1, nom: 'GerAI — Module RH',
+        id: 1, nom: 'SYNAPSE — Module RH',
         description: 'Système de gestion RH complet avec dashboards, congés et demandes.',
         dateDebut: ago(60), dateFinPrevue: inDays(30),
         avancement: 68, statut: 'en_cours',
@@ -240,7 +240,7 @@ export let MOCK_NOTIFS_CHEF: NotificationChef[] = [
     },
     {
         id: 4, titre: 'Échéance approchante',
-        message: 'GerAI Module RH arrive à échéance dans 30 jours.',
+        message: 'SYNAPSE Module RH arrive à échéance dans 30 jours.',
         date: isoAgo(3), type: 'warning', lue: false, lien: '/chef/projets'
     }
 ];

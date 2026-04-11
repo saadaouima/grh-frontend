@@ -4,11 +4,11 @@ import { StatutProjet } from 'src/app/gerai/models/projet.model';
 
 // ── RÉFÉRENTIEL EMPLOYÉS ──────────────────────────────────
 export const MOCK_EMPLOYES: Employe[] = [
-    { id: 1, nom: 'Ben Ali', prenom: 'Sami', email: 's.benali@gerai.tn', poste: 'Développeur', departement: 'Informatique', statut: 'ACTIF' },
-    { id: 2, nom: 'Trabelsi', prenom: 'Ines', email: 'i.trabelsi@gerai.tn', poste: 'Designer', departement: 'Design', statut: 'CONGE' },
-    { id: 3, nom: 'Gharbi', prenom: 'Mohamed', email: 'm.gharbi@gerai.tn', poste: 'Analyste', departement: 'Informatique', statut: 'ACTIF' },
-    { id: 4, nom: 'Sassi', prenom: 'Leila', email: 'l.sassi@gerai.tn', poste: 'Testeur', departement: 'Qualité', statut: 'CONGE' },
-    { id: 5, nom: 'Hammami', prenom: 'Youssef', email: 'y.hammami@gerai.tn', poste: 'DevOps', departement: 'Informatique', statut: 'ACTIF' }
+    { id: 1, nom: 'Ben Ali', prenom: 'Sami', email: 's.benali@synapse.tn', poste: 'Développeur', departement: 'Informatique', statut: 'ACTIF' },
+    { id: 2, nom: 'Trabelsi', prenom: 'Ines', email: 'i.trabelsi@synapse.tn', poste: 'Designer', departement: 'Design', statut: 'CONGE' },
+    { id: 3, nom: 'Gharbi', prenom: 'Mohamed', email: 'm.gharbi@synapse.tn', poste: 'Analyste', departement: 'Informatique', statut: 'ACTIF' },
+    { id: 4, nom: 'Sassi', prenom: 'Leila', email: 'l.sassi@synapse.tn', poste: 'Testeur', departement: 'Qualité', statut: 'CONGE' },
+    { id: 5, nom: 'Hammami', prenom: 'Youssef', email: 'y.hammami@synapse.tn', poste: 'DevOps', departement: 'Informatique', statut: 'ACTIF' }
 ];
 
 // ── BASE DE DONNÉES PROJETS (Utilise 'let' pour le CRUD) ──

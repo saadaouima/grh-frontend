@@ -23,7 +23,7 @@ const datePast = (d: number) => new Date(Date.now() - d * 86_400_000).toISOStrin
 export let PROJETS_MOCK: Projet[] = [
     {
         id: 1,
-        nom: 'GerAI — Module RH',
+        nom: 'SYNAPSE — Module RH',
         description: 'Développement du système de gestion RH avec dashboards employé et chef, gestion des demandes, congés et absences.',
         couleur: '#3B82F6',
         statut: StatutProjet.EN_COURS,
@@ -98,7 +98,7 @@ export let TACHES_PROJET_MOCK: TacheProjet[] = [
     {
         id: 1,
         titre: 'Intégration API authentification Keycloak',
-        projetNom: 'GerAI — Module RH',
+        projetNom: 'SYNAPSE — Module RH',
         projetCouleur: '#3B82F6',
         priorite: 'Haute',
         echeance: dateIn(2),
@@ -107,7 +107,7 @@ export let TACHES_PROJET_MOCK: TacheProjet[] = [
     {
         id: 2,
         titre: 'Revue de code sprint 12',
-        projetNom: 'GerAI — Module RH',
+        projetNom: 'SYNAPSE — Module RH',
         projetCouleur: '#3B82F6',
         priorite: 'Moyenne',
         echeance: dateIn(1),
@@ -134,7 +134,7 @@ export let TACHES_PROJET_MOCK: TacheProjet[] = [
     {
         id: 5,
         titre: 'Tests d\'intégration module absences',
-        projetNom: 'GerAI — Module RH',
+        projetNom: 'SYNAPSE — Module RH',
         projetCouleur: '#3B82F6',
         priorite: 'Moyenne',
         echeance: datePast(2),   // En retard intentionnellement

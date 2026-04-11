@@ -198,6 +198,414 @@
       color: #333;
     }
   }
+
+  // ── Add modal — search ────────────────────────────────
+  .search-hint {
+    font-size: 13px;
+    color: #64748B;
+    margin-bottom: 12px;
+  }
+
+  .search-input-wrap {
+    position: relative;
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94A3B8;
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      padding-left: 36px;
+      padding-right: 36px;
+      border-radius: 10px;
+      border: 1.5px solid #E2E8F0;
+      font-size: 14px;
+
+      &:focus {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+
+    .search-spinner {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #3B82F6;
+      font-size: 16px;
+    }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+
+  .search-dropdown {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: #F0F7FF; }
+
+    .sri-avatar-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sri-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .sri-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sri-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sri-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .sri-meta {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+
+    .sri-arrow { color: #CBD5E1; font-size: 14px; }
+  }
+
+  .search-empty {
+    font-size: 13px;
+    color: #94A3B8;
+    text-align: center;
+    padding: 16px 0 4px;
+  }
+
+  // ── Add modal — employee preview ──────────────────────
+  .employe-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px;
+
+    .ep-avatar-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ep-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .ep-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ep-info {
+      flex: 1;
+
+      p { margin: 0 0 2px; }
+    }
+
+    .ep-name  { font-size: 15px; font-weight: 700; color: #1E293B; }
+    .ep-meta  { font-size: 12px; color: #64748B; }
+    .ep-email, .ep-tel { font-size: 12px; color: #475569; margin-top: 4px !important; }
+
+    .ep-change {
+      background: none;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #64748B;
+      flex-shrink: 0;
+      transition: all 0.15s;
+
+      &:hover { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; }
+    }
+  }
+
+  // ── Statut radio group ────────────────────────────────
+  .statut-select-wrap {
+    .statut-options {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .statut-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      transition: all 0.15s;
+      user-select: none;
+
+      input[type="radio"] { display: none; }
+
+      &:hover { border-color: #3B82F6; background: #F0F7FF; }
+      &.selected { border-color: #3B82F6; background: #EFF6FF; color: #1D4ED8; }
+    }
+  }
+
+  // ── Shared avatar system ──────────────────────────────
+  .member-avatar-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.member-avatar-lg {
+      width: 72px;
+      height: 72px;
+
+      .member-initials {
+        font-size: 26px;
+      }
+    }
+  }
+
+  .member-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .member-initials {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  // ── Profil Modal ─────────────────────────────────────
+  .modal-profil {
+    width: 640px;
+  }
+
+  .profil-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #F1F5F9;
+    margin-bottom: 20px;
+  }
+
+  .profil-identity {
+    flex: 1;
+  }
+
+  .profil-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0 0 2px;
+  }
+
+  .profil-poste {
+    font-size: 13px;
+    color: #64748B;
+    margin: 0 0 8px;
+  }
+
+  .profil-statut-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &.badge-actif   { background: #D1FAE5; color: #059669; }
+    &.badge-conge   { background: #FEF3C7; color: #D97706; }
+    &.badge-inactif { background: #F1F5F9; color: #64748B; }
+  }
+
+  .profil-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .profil-section {
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94A3B8;
+      margin-bottom: 10px;
+    }
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .info-label {
+    font-size: 11px;
+    color: #94A3B8;
+    font-weight: 600;
+  }
+
+  .info-val {
+    font-size: 13px;
+    color: #1E293B;
+    font-weight: 500;
+  }
+
+  .profil-stats-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .profil-stat-box {
+    flex: 1;
+    background: #F8FAFC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid #E2E8F0;
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: #3B82F6;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: #94A3B8;
+      font-weight: 600;
+      text-align: center;
+    }
+  }
+
+  .competences-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .competence-chip {
+    background: #EFF6FF;
+    color: #3B82F6;
+    border: 1px solid #BFDBFE;
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .profil-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid #F1F5F9;
+  }
 }
 
 // ── STYLE MODE DARK COMPLÉTÉ ──────────────────────────
@@ -305,6 +713,97 @@
   }
 
   .modal-backdrop-custom {
-    background: rgba(0, 0, 0, 0.8) !important; // Plus opaque en dark mode
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  // ── Add modal Dark ───────────────────────────────────
+  .search-hint { color: #64748B !important; }
+
+  .search-input {
+    background: #0F172A !important;
+    border-color: #334155 !important;
+    color: #F8FAFC !important;
+
+    &::placeholder { color: #475569 !important; }
+    &:focus { border-color: #60A5FA !important; }
+  }
+
+  .search-dropdown {
+    background: #1E293B !important;
+    border-color: #334155 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+  }
+
+  .search-result-item {
+    &:hover { background: rgba(59, 130, 246, 0.08) !important; }
+    .sri-name { color: #F8FAFC !important; }
+    .sri-meta { color: #64748B !important; }
+  }
+
+  .employe-preview {
+    background: #0F172A !important;
+    border-color: #334155 !important;
+
+    .ep-name  { color: #F8FAFC !important; }
+    .ep-meta, .ep-email, .ep-tel { color: #94A3B8 !important; }
+    .ep-change { border-color: #334155 !important; color: #64748B !important;
+      &:hover { background: rgba(59,130,246,0.1) !important; border-color: #60A5FA !important; color: #60A5FA !important; }
+    }
+  }
+
+  .statut-option {
+    border-color: #334155 !important;
+    color: #CBD5E1 !important;
+    &:hover { border-color: #60A5FA !important; background: rgba(59,130,246,0.08) !important; }
+    &.selected { border-color: #60A5FA !important; background: rgba(59,130,246,0.12) !important; color: #93C5FD !important; }
+  }
+
+  // ── Profil Modal Dark ─────────────────────────────────
+  .profil-hero {
+    border-bottom-color: #334155 !important;
+  }
+
+  .profil-name {
+    color: #F8FAFC !important;
+  }
+
+  .profil-poste {
+    color: #94A3B8 !important;
+  }
+
+  .profil-statut-badge {
+    &.badge-actif   { background: rgba(16, 185, 129, 0.15) !important; color: #34D399 !important; }
+    &.badge-conge   { background: rgba(245, 158, 11, 0.15) !important; color: #FBBF24 !important; }
+    &.badge-inactif { background: rgba(100, 116, 139, 0.15) !important; color: #94A3B8 !important; }
+  }
+
+  .section-title {
+    color: #64748B !important;
+  }
+
+  .info-label {
+    color: #64748B !important;
+  }
+
+  .info-val {
+    color: #CBD5E1 !important;
+  }
+
+  .profil-stat-box {
+    background: #0F172A !important;
+    border-color: #334155 !important;
+
+    .stat-val { color: #60A5FA !important; }
+    .stat-lbl { color: #64748B !important; }
+  }
+
+  .competence-chip {
+    background: rgba(59, 130, 246, 0.1) !important;
+    color: #60A5FA !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+  }
+
+  .profil-footer {
+    border-top-color: #334155 !important;
   }
 }

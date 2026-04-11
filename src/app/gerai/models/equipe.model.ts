@@ -4,6 +4,7 @@ export interface MembreEquipe {
     prenom: string;
     poste: string;
     email: string;
+    photo?: string;
     present?: boolean;
     keycloakId?: string;
     // ✅ Propriétés ajoutées pour correspondre au HTML et aux Mocks
@@ -28,11 +29,12 @@ export interface CreateMembreDTO {
     nom: string;
     poste: string;
     email: string;
-    statut?: 'ACTIF' | 'CONGE' | 'INACTIF'; // Ajout de INACTIF ici aussi
+    statut?: 'ACTIF' | 'CONGE' | 'INACTIF';
     telephone?: string;
     departement?: string;
     manager?: string;
     competences?: string[];
+    photo?: string;
 }
 
 /**
@@ -48,4 +50,5 @@ export interface UpdateMembreDTO {
     departement?: string;
     manager?: string;
     competences?: string[];
+    photo?: string;
 }

@@ -42,8 +42,8 @@
             <small class="text-muted">
               <i class="ti ti-calendar me-1"></i>
               {{ selectedProjet.dateDebut | date:'dd/MM/yy' }}
-              @if (selectedProjet.datefin) {
-                → {{ selectedProjet.datefin | date:'dd/MM/yy' }}
+              @if (selectedProjet.dateFin) {
+                → {{ selectedProjet.dateFin | date:'dd/MM/yy' }}
               }
             </small>
             <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedProjet.statut)">
@@ -179,7 +179,7 @@
                   <strong>{{ m.prenom }} {{ m.nom }}</strong>
                   <small class="text-muted d-block">{{ m.poste }}</small>
                 </div>
-                <span class="badge bg-light text-dark" style="font-size:11px; white-space:nowrap;">
+                <span class="task-count-badge">
                   {{ getTaskCountForMembre(m.id) }} tâche(s)
                 </span>
               </div>
@@ -212,50 +212,113 @@
           <form [formGroup]="tacheForm">
             <div class="row g-3">
 
-              <div class="col-md-8">
-                <label class="form-label fw-semibold">
-                  Titre de la tâche <span class="text-danger">*</span>
-                </label>
+              <!-- Titre -->
+              <div class="col-12">
+                <label class="form-label">Titre de la tâche <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" formControlName="titre"
-                  placeholder="Ex : Intégration API Keycloak">
+                  placeholder="Ex : Intégration API Keycloak" />
                 @if (tacheForm.get('titre')?.invalid && tacheForm.get('titre')?.touched) {
                   <div class="text-danger small mt-1">Le titre est requis.</div>
                 }
               </div>
 
+              <!-- Priorité | Date début | Échéance -->
               <div class="col-md-4">
-                <label class="form-label fw-semibold">Priorité <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="priorite">
-                  <option value="Haute">🔴 Haute</option>
-                  <option value="Moyenne">🟡 Moyenne</option>
-                  <option value="Basse">🟢 Basse</option>
-                </select>
+                <label class="form-label">Priorité <span class="text-danger">*</span></label>
+                <div class="priority-radio-group">
+                  @for (p of priorities; track p.value) {
+                    <label class="priority-radio-option"
+                      [class.selected]="tacheForm.get('priorite')?.value === p.value"
+                      [style.--pcolor]="p.color">
+                      <input type="radio" formControlName="priorite" [value]="p.value" />
+                      <span class="prio-dot" [style.background]="p.color"></span>
+                      {{ p.label }}
+                    </label>
+                  }
+                </div>
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                  Assigner à <span class="text-danger">*</span>
-                </label>
-                <select class="form-select" formControlName="assigneA">
-                  <option value="">— Choisir un membre —</option>
-                  @for (m of (selectedProjet?.membres ?? []); track m.id) {
-                    <option [value]="m.prenom + ' ' + m.nom">
-                      {{ m.prenom }} {{ m.nom }} ({{ m.poste }})
-                    </option>
-                  }
-                </select>
-                @if (tacheForm.get('assigneA')?.invalid && tacheForm.get('assigneA')?.touched) {
-                  <div class="text-danger small mt-1">Veuillez assigner un membre.</div>
+              <div class="col-md-4">
+                <label class="form-label">Date de début</label>
+                <input type="date" class="form-control" formControlName="dateDebut" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Date d'échéance <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="echeance" />
+                @if (tacheForm.get('echeance')?.invalid && tacheForm.get('echeance')?.touched) {
+                  <div class="text-danger small mt-1">Date requise.</div>
                 }
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                  Date d'échéance <span class="text-danger">*</span>
+              <!-- Description -->
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" formControlName="description" rows="3"
+                  placeholder="Décrivez ce qui doit être fait…"></textarea>
+              </div>
+
+              <!-- Statut initial | Effort estimé -->
+              <div class="col-md-8">
+                <label class="form-label">Statut initial <span class="text-danger">*</span></label>
+                <div class="statut-radio-group">
+                  <label class="statut-radio-option" [class.selected]="tacheForm.get('statut')?.value === 'A_FAIRE'">
+                    <input type="radio" formControlName="statut" value="A_FAIRE" />
+                    <i class="ti ti-circle-dashed"></i> À faire
+                  </label>
+                  <label class="statut-radio-option" [class.selected]="tacheForm.get('statut')?.value === 'EN_COURS'">
+                    <input type="radio" formControlName="statut" value="EN_COURS" />
+                    <i class="ti ti-loader"></i> En cours
+                  </label>
+                  @if (isEditMode) {
+                    <label class="statut-radio-option" [class.selected]="tacheForm.get('statut')?.value === 'TERMINEE'">
+                      <input type="radio" formControlName="statut" value="TERMINEE" />
+                      <i class="ti ti-circle-check"></i> Terminée
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Effort estimé</label>
+                <div class="effort-input-wrap">
+                  <input type="number" class="form-control" formControlName="effortEstime"
+                    min="1" max="999" placeholder="0" />
+                  <span class="effort-unit">jours</span>
+                </div>
+              </div>
+
+              <!-- Assigné à — visual member picker -->
+              <div class="col-12">
+                <label class="form-label">
+                  Assigné à <span class="text-danger">*</span>
                 </label>
-                <input type="date" class="form-control" formControlName="echeance">
-                @if (tacheForm.get('echeance')?.invalid && tacheForm.get('echeance')?.touched) {
-                  <div class="text-danger small mt-1">La date d'échéance est requise.</div>
+                @if ((selectedProjet?.membres?.length ?? 0) === 0) {
+                  <p class="text-muted small">Aucun membre dans ce projet.</p>
+                } @else {
+                  <div class="member-picker">
+                    @for (m of selectedProjet?.membres; track m.id) {
+                      <div class="member-pick-card"
+                        [class.picked]="membreChoisi?.id === m.id"
+                        (click)="selectMembre(m)">
+                        <div class="mpcard-avatar">{{ m.prenom?.charAt(0) }}{{ m.nom?.charAt(0) }}</div>
+                        <div class="mpcard-info">
+                          <span class="mpcard-name">{{ m.prenom }} {{ m.nom }}</span>
+                          <span class="mpcard-poste">{{ m.poste }}</span>
+                          <span class="mpcard-count">
+                            <i class="ti ti-checkbox"></i>
+                            {{ getTaskCountForMembre(m.id) }} tâche(s)
+                          </span>
+                        </div>
+                        @if (membreChoisi?.id === m.id) {
+                          <i class="ti ti-circle-check mpcard-check"></i>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+                @if (tacheForm.get('assigneA')?.invalid && tacheForm.get('assigneA')?.touched) {
+                  <div class="text-danger small mt-1">Veuillez sélectionner un membre.</div>
                 }
               </div>
 

@@ -15,8 +15,8 @@
           <thead>
             <tr>
               <th>Membre</th>
-              <th>Poste</th>
               <th>Email</th>
+              <th>Département</th>
               <th>Statut</th>
               <th class="text-end">Actions</th>
             </tr>
@@ -26,25 +26,28 @@
             <tr>
               <td>
                 <div class="d-flex align-items-center gap-2">
-                  <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center
-                                justify-content-center fw-bold" style="width:38px;height:38px;font-size:14px">
-                    {{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}
+                  <div class="member-avatar-wrap">
+                    @if (m.photo) {
+                      <img class="member-photo" [src]="m.photo" [alt]="m.prenom" (error)="m.photo = undefined" />
+                    } @else {
+                      <div class="member-initials">{{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}</div>
+                    }
                   </div>
                   <div>
                     <div class="fw-semibold">{{ m.prenom }} {{ m.nom }}</div>
-                    <div class="text-muted small">ID #{{ m.id }}</div>
+                    <div class="text-muted small">{{ m.poste }}</div>
                   </div>
                 </div>
               </td>
-              <td>{{ m.poste }}</td>
               <td class="text-muted">{{ m.email }}</td>
+              <td class="text-muted">{{ m.departement ?? '—' }}</td>
               <td>
                 <span class="badge" [class.bg-success]="m.statut === 'ACTIF'" [class.bg-warning]="m.statut === 'CONGE'">
                   {{ m.statut === 'ACTIF' ? 'Actif' : 'En congé' }}
                 </span>
               </td>
               <td class="text-end">
-                <button class="btn btn-outline-primary btn-sm me-2" (click)="voirProfil(m)">
+                <button class="btn btn-outline-primary btn-sm me-2" (click)="ouvrirProfilModal(m)">
                   <i class="ti ti-user me-1"></i>Profil
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" (click)="voirDemandes(m)">
@@ -61,70 +64,232 @@
   </div>
 </div>
 
-<!-- ── Modal Ajouter Employé ── -->
-@if (showModal) {
-<div class="modal-backdrop-custom" (click)="fermerModal()"></div>
-<div class="modal-custom">
+<!-- ── Modal Profil Employé ── -->
+@if (showProfilModal && membreSelectionne) {
+<div class="modal-backdrop-custom" (click)="fermerProfilModal()"></div>
+<div class="modal-custom modal-profil">
   <div class="modal-custom-header">
-    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Ajouter un employé</h5>
-    <button class="btn-close-modal" (click)="fermerModal()">
+    <h5 class="mb-0"><i class="ti ti-user-circle me-2"></i>Profil employé</h5>
+    <button class="btn-close-modal" (click)="fermerProfilModal()">
       <i class="ti ti-x"></i>
     </button>
   </div>
 
   <div class="modal-custom-body">
-    <form [formGroup]="form" (ngSubmit)="ajouterMembre()">
 
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Prénom <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" formControlName="prenom" placeholder="Prénom" />
-          @if (form.get('prenom')?.invalid && form.get('prenom')?.touched) {
-          <small class="text-danger">Prénom requis</small>
+    <!-- Avatar + nom + statut -->
+    <div class="profil-hero">
+      <div class="member-avatar-wrap member-avatar-lg">
+        @if (membreSelectionne.photo) {
+          <img class="member-photo" [src]="membreSelectionne.photo" [alt]="membreSelectionne.prenom"
+               (error)="membreSelectionne.photo = undefined" />
+        } @else {
+          <div class="member-initials">{{ membreSelectionne.prenom.charAt(0) }}{{ membreSelectionne.nom.charAt(0) }}</div>
+        }
+      </div>
+      <div class="profil-identity">
+        <h4 class="profil-name">{{ membreSelectionne.prenom }} {{ membreSelectionne.nom }}</h4>
+        <p class="profil-poste">{{ membreSelectionne.poste }}</p>
+        <span class="profil-statut-badge"
+          [class.badge-actif]="membreSelectionne.statut === 'ACTIF'"
+          [class.badge-conge]="membreSelectionne.statut === 'CONGE'"
+          [class.badge-inactif]="membreSelectionne.statut === 'INACTIF'">
+          {{ membreSelectionne.statut === 'ACTIF' ? 'Actif' : membreSelectionne.statut === 'CONGE' ? 'En congé' : 'Inactif' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="profil-sections">
+
+      <!-- Contact -->
+      <div class="profil-section">
+        <h6 class="section-title"><i class="ti ti-address-book me-1"></i>Contact</h6>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Email</span>
+            <span class="info-val">{{ membreSelectionne.email }}</span>
+          </div>
+          @if (membreSelectionne.telephone) {
+          <div class="info-item">
+            <span class="info-label">Téléphone</span>
+            <span class="info-val">{{ membreSelectionne.telephone }}</span>
+          </div>
           }
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Nom <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" formControlName="nom" placeholder="Nom" />
-          @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
-          <small class="text-danger">Nom requis</small>
-          }
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Poste <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" formControlName="poste" placeholder="Ex: Développeur Frontend" />
-          @if (form.get('poste')?.invalid && form.get('poste')?.touched) {
-          <small class="text-danger">Poste requis</small>
-          }
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Email <span class="text-danger">*</span></label>
-          <input type="email" class="form-control" formControlName="email" placeholder="email@gerai.tn" />
-          @if (form.get('email')?.invalid && form.get('email')?.touched) {
-          <small class="text-danger">Email valide requis</small>
-          }
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Statut</label>
-          <select class="form-select" formControlName="statut">
-            <option value="ACTIF">Actif</option>
-            <option value="CONGE">En congé</option>
-          </select>
         </div>
       </div>
 
-      <div class="d-flex justify-content-end gap-2 mt-4">
-        <button type="button" class="btn btn-light" (click)="fermerModal()">Annuler</button>
-        <button type="submit" class="btn btn-primary">
-          <i class="ti ti-user-plus me-1"></i>Ajouter
+      <!-- RH -->
+      <div class="profil-section">
+        <h6 class="section-title"><i class="ti ti-building me-1"></i>Informations RH</h6>
+        <div class="info-grid">
+          @if (membreSelectionne.departement) {
+          <div class="info-item">
+            <span class="info-label">Département</span>
+            <span class="info-val">{{ membreSelectionne.departement }}</span>
+          </div>
+          }
+          <div class="info-item">
+            <span class="info-label">Date d'embauche</span>
+            <span class="info-val">{{ membreSelectionne.dateEmbauche | date:'dd/MM/yyyy' }}</span>
+          </div>
+          @if (membreSelectionne.anciennete) {
+          <div class="info-item">
+            <span class="info-label">Ancienneté</span>
+            <span class="info-val">{{ membreSelectionne.anciennete }}</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="profil-stats-row">
+        <div class="profil-stat-box">
+          <span class="stat-val">{{ membreSelectionne.congesRestants ?? '—' }}</span>
+          <span class="stat-lbl">Congés restants</span>
+        </div>
+        <div class="profil-stat-box">
+          <span class="stat-val">{{ membreSelectionne.tachesCompletes ?? '—' }}</span>
+          <span class="stat-lbl">Tâches terminées</span>
+        </div>
+      </div>
+
+      <!-- Compétences -->
+      @if (membreSelectionne.competences && membreSelectionne.competences.length > 0) {
+      <div class="profil-section">
+        <h6 class="section-title"><i class="ti ti-tool me-1"></i>Compétences</h6>
+        <div class="competences-wrap">
+          @for (c of membreSelectionne.competences; track c) {
+            <span class="competence-chip">{{ c }}</span>
+          }
+        </div>
+      </div>
+      }
+
+    </div>
+
+    <!-- Footer actions -->
+    <div class="profil-footer">
+      <button class="btn btn-outline-secondary btn-sm" (click)="fermerProfilModal()">Fermer</button>
+      <button class="btn btn-outline-primary btn-sm" (click)="voirDemandes(membreSelectionne); fermerProfilModal()">
+        <i class="ti ti-file-text me-1"></i>Voir ses demandes
+      </button>
+    </div>
+
+  </div>
+</div>
+}
+
+<!-- ── Modal Ajouter Employé ── -->
+@if (showModal) {
+<div class="modal-backdrop-custom" (click)="fermerModal()"></div>
+<div class="modal-custom">
+  <div class="modal-custom-header">
+    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Ajouter un membre à l'équipe</h5>
+    <button class="btn-close-modal" (click)="fermerModal()"><i class="ti ti-x"></i></button>
+  </div>
+
+  <div class="modal-custom-body">
+
+    <!-- ── Étape 1 : Recherche ── -->
+    @if (!employeChoisi) {
+      <p class="search-hint">Recherchez un employé enregistré dans le système.</p>
+
+      <div class="search-input-wrap">
+        <i class="ti ti-search search-icon"></i>
+        <input
+          type="text"
+          class="form-control search-input"
+          placeholder="Nom, prénom ou email…"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          autocomplete="off" />
+        @if (searching) {
+          <span class="search-spinner"><i class="ti ti-loader-2 spin"></i></span>
+        }
+      </div>
+
+      <!-- Résultats -->
+      @if (searchResults.length > 0) {
+        <ul class="search-dropdown">
+          @for (e of searchResults; track e.id) {
+            <li class="search-result-item" (click)="selectionnerEmploye(e)">
+              <div class="sri-avatar-wrap">
+                @if (e.photo) {
+                  <img class="sri-photo" [src]="e.photo" [alt]="e.prenom" (error)="e.photo = undefined" />
+                } @else {
+                  <div class="sri-avatar">{{ e.prenom.charAt(0) }}{{ e.nom.charAt(0) }}</div>
+                }
+              </div>
+              <div class="sri-info">
+                <span class="sri-name">{{ e.prenom }} {{ e.nom }}</span>
+                <span class="sri-meta">{{ e.poste ?? '—' }} · {{ e.departement ?? '—' }}</span>
+              </div>
+              <i class="ti ti-chevron-right sri-arrow"></i>
+            </li>
+          }
+        </ul>
+      } @else if (searchQuery.length >= 2 && !searching) {
+        <p class="search-empty">Aucun employé trouvé pour « {{ searchQuery }} »</p>
+      }
+
+      <div class="d-flex justify-content-end mt-4">
+        <button class="btn btn-light btn-sm" (click)="fermerModal()">Annuler</button>
+      </div>
+    }
+
+    <!-- ── Étape 2 : Confirmation ── -->
+    @if (employeChoisi) {
+      <div class="employe-preview">
+        <div class="ep-avatar-wrap">
+          @if (employeChoisi.photo) {
+            <img class="ep-photo" [src]="employeChoisi.photo" [alt]="employeChoisi.prenom" (error)="employeChoisi.photo = undefined" />
+          } @else {
+            <div class="ep-avatar">{{ employeChoisi.prenom.charAt(0) }}{{ employeChoisi.nom.charAt(0) }}</div>
+          }
+        </div>
+        <div class="ep-info">
+          <p class="ep-name">{{ employeChoisi.prenom }} {{ employeChoisi.nom }}</p>
+          <p class="ep-meta">{{ employeChoisi.poste ?? '—' }} · {{ employeChoisi.departement ?? '—' }}</p>
+          <p class="ep-email"><i class="ti ti-mail me-1"></i>{{ employeChoisi.email }}</p>
+          @if (employeChoisi.telephone) {
+            <p class="ep-tel"><i class="ti ti-phone me-1"></i>{{ employeChoisi.telephone }}</p>
+          }
+        </div>
+        <button class="ep-change" (click)="reinitialiserRecherche()" title="Changer">
+          <i class="ti ti-pencil"></i>
         </button>
       </div>
 
-    </form>
+      <div class="statut-select-wrap mt-3">
+        <label class="form-label fw-semibold">Statut dans l'équipe</label>
+        <div class="statut-options">
+          <label class="statut-option" [class.selected]="statutAjouter === 'ACTIF'">
+            <input type="radio" name="statut" value="ACTIF" [(ngModel)]="statutAjouter" />
+            <i class="ti ti-circle-check text-success"></i> Actif
+          </label>
+          <label class="statut-option" [class.selected]="statutAjouter === 'CONGE'">
+            <input type="radio" name="statut" value="CONGE" [(ngModel)]="statutAjouter" />
+            <i class="ti ti-beach text-warning"></i> En congé
+          </label>
+          <label class="statut-option" [class.selected]="statutAjouter === 'INACTIF'">
+            <input type="radio" name="statut" value="INACTIF" [(ngModel)]="statutAjouter" />
+            <i class="ti ti-user-off text-secondary"></i> Inactif
+          </label>
+        </div>
+      </div>
+
+      @if (ajoutError) {
+        <p class="text-danger small mt-2"><i class="ti ti-alert-circle me-1"></i>{{ ajoutError }}</p>
+      }
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button class="btn btn-light btn-sm" (click)="fermerModal()">Annuler</button>
+        <button class="btn btn-primary btn-sm" (click)="confirmerAjout()">
+          <i class="ti ti-user-plus me-1"></i>Confirmer l'ajout
+        </button>
+      </div>
+    }
+
   </div>
 </div>
 }

@@ -19,7 +19,7 @@ export const environment = {
 
   // 🔧 Configuration générale
   app: {
-    name: 'GerAI',
+    name: 'SYNAPSE',
     description: 'Gestion des Ressources Humaines Intelligente',
     version: packageInfo.version,
     author: 'Votre équipe'

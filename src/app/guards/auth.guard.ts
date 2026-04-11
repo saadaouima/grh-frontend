@@ -27,7 +27,7 @@ function getTousLesRoles(grantedRoles: AuthGuardData['grantedRoles']): string[] 
   const realmRoles = grantedRoles.realmRoles ?? [];
   const clientRoles = Object.values(grantedRoles.resourceRoles ?? {}).flat() as string[];
   const tous = [...new Set([...realmRoles, ...clientRoles])].filter(r => !ROLES_SYSTEME.has(r));
-  console.log('[GerAI Guard] Rôles extraits:', tous);
+  console.log('[SYNAPSE Guard] Rôles extraits:', tous);
   return tous;
 }
 
@@ -47,7 +47,7 @@ const roleRedirectLogic = async (
   const router = inject(Router);
 
   if (!authenticated) {
-    console.warn('[GerAI Guard] Non authentifié');
+    console.warn('[SYNAPSE Guard] Non authentifié');
     return false;
   }
 
@@ -86,7 +86,7 @@ const requireRoleLogic = async (
   );
 
   if (!aAcces) {
-    console.warn(`[GerAI Guard] ⛔ Accès refusé. Requis: [${rolesRequis}] | Possédés: [${userRoles}]`);
+    console.warn(`[SYNAPSE Guard] ⛔ Accès refusé. Requis: [${rolesRequis}] | Possédés: [${userRoles}]`);
     return router.parseUrl('/access-denied');
   }
 

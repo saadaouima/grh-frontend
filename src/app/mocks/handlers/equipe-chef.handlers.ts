@@ -37,6 +37,7 @@ export const equipeHandlers = [
             prenom: body.prenom,
             poste: body.poste,
             email: body.email,
+            photo: body.photo,
             statut: body.statut ?? 'ACTIF',
             telephone: body.telephone ?? '',
             dateEmbauche: new Date().toISOString().split('T')[0],

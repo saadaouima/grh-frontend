@@ -20,8 +20,8 @@ export interface NavigationItem {
 // ═══════════════════════════════════════════════════
 export const NAV_EMPLOYE: NavigationItem[] = [
   {
-    id: 'gerai-employe',
-    title: 'GERAI',
+    id: 'synapse-employe',
+    title: 'SYNAPSE',
     type: 'group',
     icon: 'icon-navigation',
     children: [
@@ -105,8 +105,8 @@ export const NAV_EMPLOYE: NavigationItem[] = [
 // ═══════════════════════════════════════════════════
 export const NAV_CHEF: NavigationItem[] = [
   {
-    id: 'gerai-chef',
-    title: 'GERAI',
+    id: 'synapse-chef',
+    title: 'SYNAPSE',
     type: 'group',
     icon: 'icon-navigation',
     children: [

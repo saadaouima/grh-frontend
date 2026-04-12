@@ -29,6 +29,10 @@ export class NavigationComponent implements OnInit {
     this.loadNavigation();
   }
 
+  logout(): void {
+    this.keycloak.logout({ redirectUri: window.location.origin });
+  }
+
   private loadNavigation(): void {
     console.log('🔍 Token parsed:', this.keycloak.tokenParsed);
     const realmRoles = this.keycloak.tokenParsed?.realm_access?.roles ?? [];

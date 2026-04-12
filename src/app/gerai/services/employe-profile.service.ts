@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import Keycloak from 'keycloak-js';
 
 import {
@@ -19,38 +19,33 @@ import {
 export class ProfilEmployeService {
 
     private http = inject(HttpClient);
-    private keycloak = inject(Keycloak); // ✅ utilisation native (provideKeycloak)
+    private keycloak = inject(Keycloak);
     private baseUrl = '/api/employe';
 
     /* ════════════════════════════════════════════
-       👤 PROFIL (Fusion Keycloak + Backend)
+       👤 PROFIL (Fusion token Keycloak + Backend)
     ════════════════════════════════════════════ */
 
     getProfil(): Observable<ProfilEmploye> {
+        // Extract identity directly from the parsed JWT — synchronous, no round-trip needed
+        const token = this.keycloak.tokenParsed as Record<string, any> | undefined;
 
-        return from(this.keycloak.loadUserProfile()).pipe(
-            switchMap((kcProfile: any) => {
+        const id        = token?.['sub']              ?? '';
+        const prenom    = token?.['given_name']       ?? token?.['preferred_username'] ?? '';
+        const nom       = token?.['family_name']      ?? '';
+        const nomComplet= token?.['name']             ?? `${prenom} ${nom}`.trim();
+        const email     = token?.['email']            ?? '';
 
-                const attributes = kcProfile?.attributes;
-                const kcPhoto =
-                    attributes?.picture?.[0] ||
-                    attributes?.photo?.[0];
-
-                return this.http.get<ProfilEmploye>(`${this.baseUrl}/profil`).pipe(
-                    map(profilBackend => ({
-                        ...profilBackend,
-                        id: kcProfile?.id || profilBackend.id,
-                        nom: kcProfile?.lastName || profilBackend.nom,
-                        prenom: kcProfile?.firstName || profilBackend.prenom,
-                        nomComplet:
-                            kcProfile?.firstName && kcProfile?.lastName
-                                ? `${kcProfile.firstName} ${kcProfile.lastName}`
-                                : profilBackend.nomComplet,
-                        email: kcProfile?.email || profilBackend.email,
-                        photo: kcPhoto || profilBackend.photo
-                    }))
-                );
-            })
+        return this.http.get<ProfilEmploye>(`${this.baseUrl}/profil`).pipe(
+            map(profilBackend => ({
+                ...profilBackend,
+                // Token values always win over backend for identity fields
+                id,
+                nom:        nom        || profilBackend.nom,
+                prenom:     prenom     || profilBackend.prenom,
+                nomComplet: nomComplet || profilBackend.nomComplet,
+                email:      email      || profilBackend.email
+            }))
         );
     }
 

@@ -125,14 +125,24 @@
   text-overflow: ellipsis;
 }
 
-// ── Déconnexion ──────────────────────────────────
-.nav-logout {
-  margin-top: 8px;
+// ── Déconnexion (pinned footer) ──────────────────
+.nav-logout-footer {
+  flex-shrink: 0;
   border-top: 1px solid #f1f5f9;
-  padding-top: 8px;
+  padding: 8px 0;
 
-  .nav-link {
+  .logout-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border-radius: 0 10px 10px 0;
+    margin-right: 12px;
     color: #ef4444;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all .2s;
 
     .coded-micon i { color: #ef4444; }
 

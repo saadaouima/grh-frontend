@@ -303,11 +303,92 @@
   color: #64748b;
   min-width: 34px;
 }
+// ── Error banner ──────────────────────────────────
+.alert-error {
+  background: rgba(255,83,112,.1);
+  border: 1.5px solid rgba(255,83,112,.25);
+  color: #c0233e;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+// ── Empty row ──────────────────────────────────────
+.empty-row {
+  text-align: center;
+  padding: 32px !important;
+  color: #94a3b8;
+  font-size: 13px;
+  i { font-size: 16px; vertical-align: middle; }
+}
+
+// ── Skeleton loader ────────────────────────────────
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+%skeleton-base {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
+.skeleton-card {
+  @extend %skeleton-base;
+  pointer-events: none;
+  min-height: 90px;
+  border: 1.5px solid #f1f5f9;
+}
+
+.skeleton-table {
+  padding: 20px;
+}
+
+.skeleton-icon {
+  @extend %skeleton-base;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.skeleton-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+
+.skeleton-line {
+  @extend %skeleton-base;
+  height: 12px;
+  &.wide   { width: 60%; }
+  &.narrow { width: 35%; }
+  &.full   { width: 100%; }
+}
+
 // ══════════════════════════════════════════════════
 // MODE DARK - PAGE RAPPORTS
 // ══════════════════════════════════════════════════
 :host-context(.dark) {
   
+  // --- Error & empty ---
+  .alert-error { background: rgba(255,83,112,.15); border-color: rgba(255,83,112,.3); color: #f87171; }
+  .empty-row { color: #475569; }
+
+  // --- Skeleton ---
+  .skeleton-card, .skeleton-icon, .skeleton-line {
+    background: linear-gradient(90deg, #1f2b4d 25%, #243059 50%, #1f2b4d 75%) !important;
+    background-size: 800px 100% !important;
+    border-color: #243059 !important;
+  }
+
   // --- Header & Titres ---
   .rapports-title {
     color: #ffffff !important;

@@ -35,19 +35,16 @@
 
       }
 
-      <!-- ── Séparateur + Déconnexion ──────────────── -->
-      <li class="nav-item pcoded-menu-caption">
-        <label></label>
-      </li>
-      <li class="nav-item nav-logout">
-        <a class="nav-link" href="javascript:void(0)" (click)="logout()">
-          <span class="coded-micon">
-            <i class="ti ti-logout"></i>
-          </span>
-          <span class="coded-mtext">Se déconnecter</span>
-        </a>
-      </li>
-
     </ul>
   </ng-scrollbar>
+
+  <!-- ── Déconnexion (always visible at bottom) ── -->
+  <div class="nav-logout-footer">
+    <a class="nav-link logout-link" href="javascript:void(0)" (click)="logout()">
+      <span class="coded-micon">
+        <i class="ti ti-logout"></i>
+      </span>
+      <span class="coded-mtext">Se déconnecter</span>
+    </a>
+  </div>
 </div>

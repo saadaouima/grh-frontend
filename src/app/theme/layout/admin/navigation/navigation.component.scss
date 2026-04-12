@@ -1,0 +1,77 @@
+// ── Sidebar logout footer ─────────────────────────────────
+.sidebar-logout {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 8px 0;
+  background: inherit;
+}
+
+.sidebar-logout-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-radius: 0 10px 10px 0;
+  margin-right: 12px;
+  color: #ef4444;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  .pc-micon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+
+    i {
+      font-size: 18px;
+      color: #ef4444;
+      pointer-events: none;
+    }
+  }
+
+  .pc-mtext {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+
+    .pc-micon {
+      background: rgba(239, 68, 68, 0.1);
+      i { color: #dc2626; }
+    }
+  }
+}
+
+// ── Dark mode ─────────────────────────────────────────────
+:host-context(body.dark) {
+  .sidebar-logout {
+    border-top-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .sidebar-logout-link {
+    color: #f87171;
+
+    .pc-micon i { color: #f87171; }
+
+    &:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #fca5a5;
+      .pc-micon i { color: #fca5a5; }
+    }
+  }
+}

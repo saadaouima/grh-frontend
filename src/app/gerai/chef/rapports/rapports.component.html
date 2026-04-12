@@ -11,7 +11,7 @@
       </h4>
       <p class="rapports-sub">Analyse et export des indicateurs clés</p>
     </div>
-    <button class="btn-export" (click)="exportPdf()" [disabled]="isExporting">
+    <button class="btn-export" (click)="exportPdf()" [disabled]="isExporting || loading">
       @if (isExporting) {
         <span class="spinner-border spinner-border-sm"></span>
       } @else {
@@ -32,77 +32,118 @@
     }
   </div>
 
-  <!-- ── Stat cards ──────────────────────────────────── -->
-  <div class="stats-grid">
-    @for (stat of currentStats; track stat.label) {
-      <div class="stat-card">
-        <div class="stat-icon-wrap" [style.background]="stat.color + '18'">
-          <i [class]="stat.icon" [style.color]="stat.color"></i>
-        </div>
-        <div class="stat-body">
-          <h3 class="stat-value" [style.color]="stat.color">{{ stat.value }}</h3>
-          <p class="stat-label">{{ stat.label }}</p>
-          @if (stat.trend) {
-            <span class="stat-trend" [class.trend-up]="stat.trendUp" [class.trend-down]="!stat.trendUp">
-              <i [class]="stat.trendUp ? 'ti ti-trending-up' : 'ti ti-trending-down'"></i>
-              {{ stat.trend }}
-            </span>
-          }
-        </div>
-      </div>
-    }
-  </div>
-
-  <!-- ── Table ───────────────────────────────────────── -->
-  <div class="table-card">
-    <div class="table-header">
-      <h6 class="table-title">
-        Détail — {{ currentTabLabel }}
-      </h6>
-      <span class="table-count">{{ currentRows.length }} entrées</span>
+  <!-- ── Error ───────────────────────────────────────── -->
+  @if (error) {
+    <div class="alert-error">
+      <i class="ti ti-alert-circle me-2"></i>{{ error }}
     </div>
-    <div class="table-responsive">
-      <table class="rapport-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            @for (col of currentColumns; track col) {
-              <th>{{ columnLabels[col] }}</th>
+  }
+
+  <!-- ── Loading skeleton ────────────────────────────── -->
+  @if (loading) {
+    <div class="stats-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="stat-card skeleton-card">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line wide"></div>
+            <div class="skeleton-line narrow"></div>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="table-card skeleton-table">
+      <div class="skeleton-line wide mb-3"></div>
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="skeleton-line full mb-2"></div>
+      }
+    </div>
+  }
+
+  <!-- ── Content ─────────────────────────────────────── -->
+  @if (!loading && !error) {
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      @for (stat of stats; track stat.label) {
+        <div class="stat-card">
+          <div class="stat-icon-wrap" [style.background]="stat.color + '18'">
+            <i [class]="stat.icon" [style.color]="stat.color"></i>
+          </div>
+          <div class="stat-body">
+            <h3 class="stat-value" [style.color]="stat.color">{{ stat.value }}</h3>
+            <p class="stat-label">{{ stat.label }}</p>
+            @if (stat.trend) {
+              <span class="stat-trend"
+                [class.trend-up]="stat.trendUp"
+                [class.trend-down]="!stat.trendUp">
+                <i [class]="stat.trendUp ? 'ti ti-trending-up' : 'ti ti-trending-down'"></i>
+                {{ stat.trend }}
+              </span>
             }
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of currentRows; track $index; let i = $index) {
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h6 class="table-title">Détail — {{ currentTabLabel }}</h6>
+        <span class="table-count">{{ rows.length }} entrées</span>
+      </div>
+      <div class="table-responsive">
+        <table class="rapport-table">
+          <thead>
             <tr>
-              <td class="td-num">{{ i + 1 }}</td>
+              <th>#</th>
               @for (col of currentColumns; track col) {
-                <td>
-                  @if (col === 'statut' || col === 'appreciation') {
-                    <span class="status-pill" [ngClass]="statutClass(row[col])">
-                      {{ row[col] }}
-                    </span>
-                  } @else if (col === 'progression') {
-                    <div class="progress-cell">
-                      <div class="progress-bar-wrap">
-                        <div class="progress-bar-fill"
-                          [style.width]="row[col]"
-                          [class.fill-success]="+(row[col] + '').replace('%','') === 100"
-                          [class.fill-warning]="+(row[col] + '').replace('%','') < 40"
-                          [class.fill-danger]="+(row[col] + '').replace('%','') < 20">
-                        </div>
-                      </div>
-                      <span class="progress-val">{{ row[col] }}</span>
-                    </div>
-                  } @else {
-                    {{ row[col] }}
-                  }
-                </td>
+                <th>{{ columnLabels[col] }}</th>
               }
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (row of rows; track $index; let i = $index) {
+              <tr>
+                <td class="td-num">{{ i + 1 }}</td>
+                @for (col of currentColumns; track col) {
+                  <td>
+                    @if (col === 'statut' || col === 'appreciation') {
+                      <span class="status-pill" [ngClass]="statutClass(row[col])">
+                        {{ row[col] }}
+                      </span>
+                    } @else if (col === 'progression') {
+                      <div class="progress-cell">
+                        <div class="progress-bar-wrap">
+                          <div class="progress-bar-fill"
+                            [style.width]="row[col]"
+                            [class.fill-success]="+(row[col] + '').replace('%','') === 100"
+                            [class.fill-warning]="+(row[col] + '').replace('%','') < 40"
+                            [class.fill-danger]="+(row[col] + '').replace('%','') < 20">
+                          </div>
+                        </div>
+                        <span class="progress-val">{{ row[col] }}</span>
+                      </div>
+                    } @else {
+                      {{ row[col] }}
+                    }
+                  </td>
+                }
+              </tr>
+            }
+
+            @if (rows.length === 0) {
+              <tr>
+                <td [attr.colspan]="currentColumns.length + 1" class="empty-row">
+                  <i class="ti ti-database-off me-2"></i>Aucune donnée disponible
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+
+  }
 
 </div>

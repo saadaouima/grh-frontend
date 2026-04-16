@@ -120,11 +120,11 @@
                 <td class="fw-bold">#{{ demande.id }}</td>
                 <td>
                   <div class="type-cell">
-                    <i class="ti {{ demande.icon }} {{ demande.iconColor }}"></i>
-                    {{ demande.type }}
+                    <i [class]="typeIcon(demande.type)" [style.color]="typeColor(demande.type)"></i>
+                    {{ typeLabel(demande.type) }}
                   </div>
                 </td>
-                <td>{{ demande.dateDemande | date:'dd/MM/yyyy' }}</td>
+                <td>{{ demande.dateCreation | date:'dd/MM/yyyy' }}</td>
                 <td>
                   @if (demande.dateDebut && demande.dateFin) {
                     <small>{{ demande.dateDebut | date:'dd/MM/yyyy' }} - {{ demande.dateFin | date:'dd/MM/yyyy' }}</small>
@@ -133,9 +133,8 @@
                   }
                 </td>
                 <td>
-                  <span class="status-badge status-{{ demande.statut }}">
-                    <i class="ti {{ demande.statutIcon }}"></i>
-                    {{ demande.statutLabel }}
+                  <span class="status-badge" [ngClass]="statutBg(demande.statut)">
+                    <span [ngClass]="statutColor(demande.statut)">{{ statutLabel(demande.statut) }}</span>
                   </span>
                 </td>
                 <td>

@@ -6,8 +6,7 @@ import {
     getStatistiques,
     updateProfil,
     ajouterDocument,
-    supprimerDocument,
-    nextDocId
+    supprimerDocument
 } from '../data/employe-profile.mock';
 import { UpdateProfilDTO } from 'src/app/gerai/models/employe-profile.model';
 
@@ -146,6 +145,21 @@ export const profilEmployeHandlers = [
         const stats = getStatistiques();
         console.log('[MSW] 📊 GET /api/employe/statistiques');
         return HttpResponse.json(stats);
+    }),
+
+    /**
+     * GET /api/employe/performance
+     * Métriques de performance individuelle
+     */
+    http.get('/api/employe/performance', () => {
+        console.log('[MSW] 🏅 GET /api/employe/performance');
+        return HttpResponse.json({
+            tachesCompletees: 24,
+            tauxCompletion: 80,
+            tempsResolutionBugs: 2.3,
+            documentationCompletion: 72,
+            codeQuality: 88
+        });
     })
 ];
 

@@ -186,7 +186,101 @@
 
   </div>
 
-  <!-- ── Row 3 : Charge de travail + Tâches en retard ── -->
+  <!-- ── Ligne 3 : Métriques de performance ── -->
+  @if (performance) {
+    <div class="dash-card mb-4">
+      <div class="card-head mb-4">
+        <h6 class="card-title-custom">
+          <i class="ti ti-award me-2" style="color:#6366F1"></i>
+          Métriques de performance
+        </h6>
+        <span class="count-badge">Ce trimestre</span>
+      </div>
+
+      <div class="perf-grid">
+
+        <!-- Livraison des projets -->
+        <div class="perf-card">
+          <div class="perf-icon" style="background:#EEF2FF; color:#6366F1">
+            <i class="ti ti-rocket"></i>
+          </div>
+          <div class="perf-body">
+            <span class="perf-label">Livraison des projets</span>
+            <span class="perf-value">{{ performance.tauxLivraisonProjet }}<span class="perf-unit">%</span></span>
+            <div class="perf-track">
+              <div class="perf-fill" [style.width.%]="performance.tauxLivraisonProjet" style="background:#6366F1"></div>
+            </div>
+            <span class="perf-sub">Taux de livraison à temps</span>
+          </div>
+        </div>
+
+        <!-- Satisfaction client -->
+        <div class="perf-card">
+          <div class="perf-icon" style="background:#ECFDF5; color:#059669">
+            <i class="ti ti-star"></i>
+          </div>
+          <div class="perf-body">
+            <span class="perf-label">Satisfaction client</span>
+            <span class="perf-value">{{ performance.satisfactionClient }}<span class="perf-unit">/5</span></span>
+            <div class="perf-track">
+              <div class="perf-fill" [style.width.%]="(performance.satisfactionClient / 5) * 100" style="background:#059669"></div>
+            </div>
+            <span class="perf-sub">Note moyenne</span>
+          </div>
+        </div>
+
+        <!-- Collaboration d'équipe -->
+        <div class="perf-card">
+          <div class="perf-icon" style="background:#F0F9FF; color:#0284C7">
+            <i class="ti ti-users-group"></i>
+          </div>
+          <div class="perf-body">
+            <span class="perf-label">Collaboration d'équipe</span>
+            <span class="perf-value">{{ performance.collaborationEquipe }}<span class="perf-unit">/100</span></span>
+            <div class="perf-track">
+              <div class="perf-fill" [style.width.%]="performance.collaborationEquipe" style="background:#0284C7"></div>
+            </div>
+            <span class="perf-sub">Score de collaboration</span>
+          </div>
+        </div>
+
+        <!-- Qualité du code -->
+        <div class="perf-card">
+          <div class="perf-icon" style="background:#FFFBEB; color:#D97706">
+            <i class="ti ti-code"></i>
+          </div>
+          <div class="perf-body">
+            <span class="perf-label">Qualité du code</span>
+            <span class="perf-value">{{ performance.qualiteCode }}<span class="perf-unit">/100</span></span>
+            <div class="perf-track">
+              <div class="perf-fill" [style.width.%]="performance.qualiteCode" style="background:#D97706"></div>
+            </div>
+            <span class="perf-sub">Score moyen de l'équipe</span>
+          </div>
+        </div>
+
+        <!-- Résolution des bugs -->
+        <div class="perf-card">
+          <div class="perf-icon" style="background:#FEF2F2; color:#EF4444">
+            <i class="ti ti-bug"></i>
+          </div>
+          <div class="perf-body">
+            <span class="perf-label">Résolution des bugs</span>
+            <span class="perf-value">{{ performance.tempsResolutionBugs }}<span class="perf-unit">j</span></span>
+            <div class="perf-track">
+              <div class="perf-fill"
+                   [style.width.%]="100 - (performance.tempsResolutionBugs / 10) * 100"
+                   style="background:#EF4444"></div>
+            </div>
+            <span class="perf-sub">Moy. jours (équipe)</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ── Ligne 4 : Charge de travail + Tâches en retard ── -->
   <div class="row g-3">
 
     <!-- Charge de travail par membre -->

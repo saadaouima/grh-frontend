@@ -85,9 +85,10 @@ export interface TypeDemandeConfig {
 }
 
 export const TYPES_DEMANDE_CONFIG: TypeDemandeConfig[] = [
-  { type: 'CONGE', label: 'Congé', icon: 'ti ti-beach', color: '#3B82F6', requiresDates: true },
-  { type: 'FORMATION', label: 'Formation', icon: 'ti ti-school', color: '#10B981', requiresDates: true },
-  { type: 'DOCUMENT_ADMINISTRATIF', label: 'Document administratif', icon: 'ti ti-file-text', color: '#8B5CF6', requiresDates: false },
-  { type: 'PRET', label: 'Prêt', icon: 'ti ti-coin', color: '#F59E0B', requiresDates: false },
-  { type: 'AUTRE', label: 'Autre', icon: 'ti ti-dots', color: '#64748B', requiresDates: false }
+  { type: 'CONGE',                  label: 'Congé annuel',           icon: 'ti ti-beach',       color: '#3B82F6', requiresDates: true  },
+  { type: 'MALADIE',                label: 'Congé maladie',          icon: 'ti ti-stethoscope', color: '#EF4444', requiresDates: true  },
+  { type: 'FORMATION',              label: 'Formation',              icon: 'ti ti-school',      color: '#10B981', requiresDates: true  },
+  { type: 'DOCUMENT_ADMINISTRATIF', label: 'Document administratif', icon: 'ti ti-file-text',   color: '#8B5CF6', requiresDates: false },
+  { type: 'PRET',                   label: 'Prêt',                   icon: 'ti ti-coin',        color: '#F59E0B', requiresDates: false },
+  { type: 'AUTRE',                  label: 'Autre',                  icon: 'ti ti-dots',        color: '#64748B', requiresDates: false }
 ];

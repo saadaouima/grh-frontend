@@ -28,9 +28,11 @@ export class DemandeService {
     return this.http.put<Demande>(`${this.API_URL}/${id}/refuser`, { motif });
   }
 
-// ✅ Récupérer une demande par ID
   getDemandeById(id: number): Observable<Demande> {
     return this.http.get<Demande>(`${this.API_URL}/${id}`);
   }
 
+  annulerDemande(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${id}`);
+  }
 }

@@ -11,6 +11,8 @@ import { Demande } from 'src/app/gerai/models/demande.model';
 import { Tache } from 'src/app/gerai/models/tache.model';
 import { Projet, StatutProjet } from 'src/app/gerai/models/projet.model';
 import { MembreEquipe } from 'src/app/gerai/models/equipe.model';
+import { PerformanceChef } from 'src/app/gerai/models/chef.model';
+import { RapportService } from 'src/app/gerai/services/rapport-chef.service';
 import Keycloak from 'keycloak-js';
 
 export interface ChargeItem {
@@ -42,6 +44,7 @@ export class DashboardChefComponent implements OnInit {
   private tacheService   = inject(TacheService);
   private projetService  = inject(ProjetService);
   private equipeService  = inject(EquipeApiService);
+  private rapportService = inject(RapportService);
 
   // ── Auth ────────────────────────────────────────────
   userName  = '';
@@ -52,6 +55,9 @@ export class DashboardChefComponent implements OnInit {
   tachesEnRetardCount = 0;
   absencesAujourdhui  = 0;
   projetsARisqueCount = 0;
+
+  // ── Performance ──────────────────────────────────────
+  performance: PerformanceChef | null = null;
 
   // ── Widget data ──────────────────────────────────────
   demandesAValider: Demande[]    = [];
@@ -85,13 +91,15 @@ export class DashboardChefComponent implements OnInit {
   // ── Data loading ─────────────────────────────────────
   private _loadData(): void {
     forkJoin({
-      demandes: this.demandeService.getDemandes(),
-      taches:   this.tacheService.getTaches(),
-      projets:  this.projetService.getProjets(),
-      membres:  this.equipeService.getMembres()
+      demandes   : this.demandeService.getDemandes(),
+      taches     : this.tacheService.getTaches(),
+      projets    : this.projetService.getProjets(),
+      membres    : this.equipeService.getMembres(),
+      performance: this.rapportService.getPerformanceChef()
     }).subscribe({
-      next: ({ demandes, taches, projets, membres }) => {
+      next: ({ demandes, taches, projets, membres, performance }) => {
         this._computeAll(demandes, taches, projets, membres);
+        this.performance = performance;
         this.loading = false;
         this.cdr.markForCheck();
       },

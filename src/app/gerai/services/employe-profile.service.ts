@@ -9,6 +9,7 @@ import {
     DocumentEmploye,
     ActiviteEmploye,
     StatistiquesEmploye,
+    PerformanceEmploye,
     UpdateProfilDTO,
     ProfilComplet
 } from 'src/app/gerai/models/employe-profile.model';
@@ -126,4 +127,11 @@ export class ProfilEmployeService {
             `${this.baseUrl}/statistiques`
         );
     }
+
+    getPerformance(): Observable<PerformanceEmploye> {
+        return this.http.get<PerformanceEmploye>(
+            `${this.baseUrl}/performance`
+        );
+    }
+
 }

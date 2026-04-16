@@ -391,6 +391,270 @@
     100% { background-position: -200% 0; }
   }
 
+  // ── Circular Progress Charts ───────────────────────
+  .project-circles {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 28px 36px !important;
+    align-items: flex-start !important;
+  }
+
+  // Compact 2×2 grid for col-4
+  .project-circles-sm {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .circle-sm {
+    width: 76px !important;
+    height: 76px !important;
+
+    .circular-chart { width: 76px !important; height: 76px !important; }
+    .circle-value    { font-size: 12px !important; }
+  }
+
+  .project-circle-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: transform 0.2s !important;
+    &:hover { transform: translateY(-3px) !important; }
+  }
+
+  .circle-wrap {
+    position: relative !important;
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  .circular-chart {
+    width: 100px !important;
+    height: 100px !important;
+    transform: rotate(-90deg) !important;
+  }
+
+  .circle-bg {
+    fill: none !important;
+    stroke: #F1F5F9 !important;
+    stroke-width: 2.8 !important;
+  }
+
+  .circle-fill {
+    fill: none !important;
+    stroke-width: 2.8 !important;
+    stroke-linecap: round !important;
+    transition: stroke-dasharray 1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .circle-value {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+  }
+
+  .circle-label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1E293B !important;
+    text-align: center !important;
+    max-width: 100px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  .circle-tasks {
+    font-size: 11px !important;
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+  }
+
+  // ── Next-task banner ───────────────────────────────
+  .next-task-banner {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: white !important;
+    border: 1px solid rgba(99,102,241,0.20) !important;
+    border-radius: 100px !important;
+    padding: 7px 16px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(30,41,59,0.06) !important;
+    transition: box-shadow 0.2s !important;
+    i:first-child { color: #6366F1 !important; }
+    strong { color: #1E293B !important; }
+    &:hover { box-shadow: 0 4px 16px rgba(30,41,59,0.12) !important; }
+    &.next-task-late {
+      border-color: rgba(239,68,68,0.25) !important;
+      i:first-child { color: #EF4444 !important; }
+      strong { color: #EF4444 !important; }
+    }
+  }
+
+  // ── Solde Congés Card ──────────────────────────────
+  .conge-solde-card {
+    transition: box-shadow 0.25s, transform 0.25s !important;
+    &:hover { transform: translateY(-3px) !important; box-shadow: 0 12px 32px rgba(30,41,59,0.12) !important; }
+  }
+
+  .cs-title {
+    font-size: 14px !important; font-weight: 700 !important; color: #1E293B !important;
+    display: flex !important; align-items: center !important; gap: 6px !important;
+    i { color: #3B82F6 !important; }
+  }
+
+  .cs-year { font-size: 12px !important; color: #94A3B8 !important; font-weight: 500 !important; }
+
+  .conge-numbers {
+    display: flex !important; align-items: baseline !important; gap: 4px !important;
+    margin: 16px 0 10px !important;
+  }
+
+  .cn-restants { font-size: 44px !important; font-weight: 800 !important; color: #3B82F6 !important; line-height: 1 !important; }
+  .cn-sep      { font-size: 24px !important; color: #CBD5E1 !important; font-weight: 300 !important; }
+  .cn-total    { font-size: 22px !important; color: #94A3B8 !important; font-weight: 600 !important; }
+  .cn-unit     { font-size: 13px !important; color: #94A3B8 !important; font-weight: 500 !important; margin-left: 4px !important; }
+
+  .conge-track {
+    height: 8px !important; background: #F1F5F9 !important;
+    border-radius: 100px !important; overflow: hidden !important; margin-bottom: 10px !important;
+  }
+
+  .conge-fill {
+    height: 100% !important; border-radius: 100px !important;
+    background: linear-gradient(90deg, #3B82F6, #1D4ED8) !important;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+
+  .conge-legend {
+    display: flex !important; gap: 16px !important;
+    font-size: 12px !important; color: #64748B !important; font-weight: 500 !important;
+    .dot { display: inline-block !important; width: 8px !important; height: 8px !important; border-radius: 50% !important; margin-right: 4px !important; }
+    .dot-restant { background: #3B82F6 !important; }
+    .dot-pris    { background: #E2E8F0 !important; }
+  }
+
+  // ── Status pill (inline dans item-list) ───────────
+  .status-pill {
+    font-size: 11px !important; font-weight: 600 !important;
+    padding: 3px 9px !important; border-radius: 100px !important; flex-shrink: 0 !important;
+  }
+
+  // ── Project progress variants ──────────────────────
+  .prog-fill-done { background: linear-gradient(90deg, #10B981, #059669) !important; }
+  .prog-fill-mid  { background: linear-gradient(90deg, #6366F1, #8B5CF6) !important; }
+  .prog-fill-low  { background: linear-gradient(90deg, #F59E0B, #D97706) !important; }
+
+  .proj-meta { font-size: 11px !important; color: #94A3B8 !important; }
+
+  // ── Demandes statut grid ───────────────────────────
+  .ds-grid {
+    display: grid !important; grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important; margin-bottom: 4px !important;
+  }
+
+  .ds-item {
+    border-radius: 12px !important; padding: 16px 10px !important;
+    display: flex !important; flex-direction: column !important;
+    align-items: center !important; gap: 6px !important;
+    cursor: pointer !important; transition: transform 0.2s, opacity 0.2s !important;
+    &:hover { transform: translateY(-2px) !important; opacity: 0.88 !important; }
+  }
+
+  .ds-icon { font-size: 20px !important; }
+  .ds-count { font-size: 22px !important; font-weight: 800 !important; line-height: 1 !important; }
+  .ds-label { font-size: 11px !important; font-weight: 600 !important; text-align: center !important; }
+
+  .ds-pending  { background: #FFFBEB !important; .ds-icon, .ds-count, .ds-label { color: #D97706 !important; } }
+  .ds-approved { background: #F0FDF4 !important; .ds-icon, .ds-count, .ds-label { color: #059669 !important; } }
+  .ds-rejected { background: #FEF2F2 !important; .ds-icon, .ds-count, .ds-label { color: #EF4444 !important; } }
+
+  // ── Empty state (small, inline) ────────────────────
+  .empty-state-sm {
+    display: flex !important; flex-direction: column !important;
+    align-items: center !important; justify-content: center !important;
+    padding: 24px 0 !important; gap: 8px !important;
+    i { font-size: 28px !important; color: #CBD5E1 !important; }
+    p { font-size: 13px !important; color: #94A3B8 !important; margin: 0 !important; }
+  }
+
+  // ── Prio dot (small circle in urgent tasks) ────────
+  .prio-dot {
+    width: 10px !important; height: 10px !important;
+    border-radius: 50% !important; flex-shrink: 0 !important;
+  }
+
+  // ── Performance Metrics ────────────────────────────
+  .perf-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  .perf-card {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    padding: 16px !important;
+    border: 1px solid #F1F5F9 !important;
+    border-radius: 14px !important;
+    transition: box-shadow 0.2s !important;
+    &:hover { box-shadow: 0 4px 18px rgba(30,41,59,0.08) !important; }
+  }
+
+  .perf-icon {
+    width: 44px !important; height: 44px !important;
+    border-radius: 12px !important; flex-shrink: 0 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 20px !important;
+  }
+
+  .perf-body {
+    flex: 1 !important; min-width: 0 !important;
+    display: flex !important; flex-direction: column !important; gap: 4px !important;
+  }
+
+  .perf-label {
+    font-size: 11px !important; font-weight: 600 !important;
+    color: #94A3B8 !important; text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+  }
+
+  .perf-value {
+    font-size: 22px !important; font-weight: 800 !important;
+    color: #1E293B !important; line-height: 1 !important;
+  }
+
+  .perf-unit {
+    font-size: 13px !important; font-weight: 500 !important;
+    color: #94A3B8 !important; margin-left: 2px !important;
+  }
+
+  .perf-track {
+    height: 5px !important; background: #F1F5F9 !important;
+    border-radius: 100px !important; overflow: hidden !important;
+    margin: 4px 0 !important;
+  }
+
+  .perf-fill {
+    height: 100% !important; border-radius: 100px !important;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+
+  .perf-sub {
+    font-size: 11px !important; color: #94A3B8 !important; font-weight: 500 !important;
+  }
+
   // ── Responsive ─────────────────────────────────────
   @media (max-width: 768px) {
     .welcome-banner { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
@@ -526,7 +790,52 @@ body.dark & {
     &.text-primary { background: rgba(99, 102, 241, 0.12) !important; color: #818cf8 !important; }
   }
 
-  // --- 9. SKELETONS ---
+  // --- 9. CIRCULAR CHARTS ---
+  .circle-bg { stroke: rgba(255,255,255,0.08) !important; }
+  .circle-label { color: #e2e8f0 !important; }
+  .circle-tasks { color: #475569 !important; }
+
+  // --- 10. NEW ELEMENTS ---
+  .next-task-banner {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(99,102,241,0.25) !important;
+    color: #94a3b8 !important;
+    i:first-child { color: #818cf8 !important; }
+    strong { color: #e2e8f0 !important; }
+    &.next-task-late {
+      border-color: rgba(239,68,68,0.3) !important;
+      i:first-child { color: #f87171 !important; }
+      strong { color: #f87171 !important; }
+    }
+  }
+
+  .conge-solde-card { background: #1a2340 !important; }
+  .cs-title { color: #f1f5f9 !important; i { color: #60a5fa !important; } }
+  .cs-year { color: #64748b !important; }
+  .cn-restants { color: #60a5fa !important; }
+  .cn-sep { color: #334155 !important; }
+  .cn-total { color: #64748b !important; }
+  .cn-unit { color: #64748b !important; }
+  .conge-track { background: rgba(255,255,255,0.08) !important; }
+  .conge-fill { background: linear-gradient(90deg, #3b82f6, #2563eb) !important; }
+  .conge-legend { color: #64748b !important; .dot-pris { background: #334155 !important; } }
+
+  .ds-pending  { background: rgba(245,158,11,0.10) !important; .ds-icon, .ds-count, .ds-label { color: #fbbf24 !important; } }
+  .ds-approved { background: rgba(16,185,129,0.10) !important; .ds-icon, .ds-count, .ds-label { color: #34d399 !important; } }
+  .ds-rejected { background: rgba(239,68,68,0.10) !important;  .ds-icon, .ds-count, .ds-label { color: #f87171 !important; } }
+
+  .proj-meta { color: #475569 !important; }
+  .empty-state-sm { i { color: #334155 !important; } p { color: #475569 !important; } }
+
+  // --- 10. PERFORMANCE ---
+  .perf-card { background: rgba(255,255,255,0.02) !important; border-color: rgba(255,255,255,0.06) !important; }
+  .perf-label { color: #475569 !important; }
+  .perf-value { color: #F1F5F9 !important; }
+  .perf-unit { color: #475569 !important; }
+  .perf-track { background: rgba(255,255,255,0.08) !important; }
+  .perf-sub { color: #475569 !important; }
+
+  // --- 11. SKELETONS ---
   .skel-name, .skel-email, .skel-bar {
     background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%) !important;
     background-size: 200% 100% !important;

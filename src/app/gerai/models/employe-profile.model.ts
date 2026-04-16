@@ -124,6 +124,15 @@ export interface StatistiquesEmploye {
     congesTotal: number;
 }
 
+// ── Performance Metrics ───────────────────────────────────
+export interface PerformanceEmploye {
+    tachesCompletees: number;          // Tasks Completed (count)
+    tauxCompletion: number;            // % tasks completed vs assigned
+    tempsResolutionBugs: number;       // Bug Resolution Time (avg days)
+    documentationCompletion: number;   // Documentation Completion (%)
+    codeQuality: number;               // Code Quality score (0–100)
+}
+
 // ── Aggregate ─────────────────────────────────────────────
 export interface ProfilComplet {
     profil: ProfilEmploye;

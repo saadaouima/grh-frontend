@@ -24,6 +24,21 @@ export const RapportsHandlers = [
     }),
 
     /**
+     * GET /api/chef/performance
+     * Métriques de performance du chef d'équipe
+     */
+    http.get('/api/chef/performance', () => {
+        console.log('[MSW] 🏅 GET /api/chef/performance');
+        return HttpResponse.json({
+            tauxLivraisonProjet: 78,
+            satisfactionClient: 4.2,
+            collaborationEquipe: 85,
+            qualiteCode: 91,
+            tempsResolutionBugs: 3.1
+        });
+    }),
+
+    /**
      * Simulation de l'export PDF
      */
     http.get('/api/rapports/export/:type', async ({ params }) => {

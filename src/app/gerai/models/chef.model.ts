@@ -2,6 +2,14 @@
  * Interfaces pour le Dashboard Chef
  */
 
+export interface PerformanceChef {
+    tauxLivraisonProjet: number;    // Project Delivery — % on time (0–100)
+    satisfactionClient: number;     // Client Satisfaction (0–5)
+    collaborationEquipe: number;    // Team Collaboration score (0–100)
+    qualiteCode: number;            // Code Quality team avg (0–100)
+    tempsResolutionBugs: number;    // Bug Resolution Time avg (days)
+}
+
 export type StatutDemande = 'EN_ATTENTE' | 'VALIDEE' | 'REFUSEE';
 
 export interface DemandeChef {

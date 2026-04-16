@@ -1,261 +1,295 @@
-// Angular Import
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import Keycloak from 'keycloak-js';
 
-// Project import
-import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { SharedModule }  from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
+import {
+  ProfilEmploye, DocumentEmploye, ActiviteEmploye,
+  StatistiquesEmploye, ProfilComplet, UpdateProfilDTO, Langue
+} from '../../models/employe-profile.model';
+import { ProfilEmployeService } from '../../services/employe-profile.service';
 
-// ─── Interfaces ─────────────────────────────────────────────────────────────
-export interface UserInfo {
-  nom: string;
-  prenom: string;
-  photo: string;
-  poste: string;
-  departement: string;
-  email: string;
-  telephone: string;
-  dateNaissance: Date;
-  lieuNaissance: string;
-  adresse: string;
-  ville: string;
-  codePostal: string;
-  anciennete: string;
-  congesRestants: number;
-  tachesCompletes: number;
-}
-
-export interface DocumentFile {
-  id: number;
-  nom: string;
-  type: 'pdf' | 'excel' | 'word';
-  taille: string;
-  dateAjout: Date;
-  url?: string;
-}
-
-export interface Activity {
-  id: number;
-  titre: string;
-  description: string;
-  date: Date;
-  type: 'demande' | 'tache' | 'formation' | 'document';
-  badge?: string;
-}
+export type ProfileTab = 'infos' | 'contrat' | 'competences' | 'documents';
 
 @Component({
   selector: 'app-profil-employe',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    SharedModule,
-    CardComponent
-  ],
+  imports: [CommonModule, FormsModule, SharedModule, CardComponent],
   templateUrl: './profil-employe.component.html',
-  styleUrls: ['./profil-employe.component.scss']
+  styleUrls: ['./profil-employe.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfilEmployeComponent implements OnInit {
 
-  // ── Edit Mode ───────────────────────────────────────
-  editMode: boolean = false;
+  private profilService = inject(ProfilEmployeService);
+  private keycloak      = inject(Keycloak);
+  private cdr           = inject(ChangeDetectorRef);
 
-  // ── User Info ───────────────────────────────────────
-  userInfo: UserInfo = {
-    nom: 'BOUSSAIDI',
-    prenom: 'Nour El Houda',
-    photo: 'assets/images/user/avatar-1.jpg',
-    poste: 'Développeur Full Stack',
-    departement: 'IT - Développement',
-    email: 'nourelhouda.boussaidi.2023@ihec.ucar.tn',
-    telephone: '+216 12 345 678',
-    dateNaissance: new Date('1995-05-15'),
-    lieuNaissance: 'Tunis',
-    adresse: '123 Avenue Habib Bourguiba',
-    ville: 'Tunis',
-    codePostal: '1000',
-    anciennete: '2 ans',
-    congesRestants: 15,
-    tachesCompletes: 42
-  };
+  // ── State ─────────────────────────────────────────────
+  loading    = true;
+  editMode   = false;
+  isSaving   = false;
+  activeTab  : ProfileTab = 'infos';
+  successMsg : string | null = null;
+  errorMsg   : string | null = null;
 
-  // Backup pour annuler les modifications
-  private userInfoBackup!: UserInfo;
+  // ── New skill input state ─────────────────────────────
+  newCompetence = '';
+  newLangue     : Langue = { langue: '', niveau: 'Intermédiaire' };
 
-  // ── Documents ───────────────────────────────────────
-  documents: DocumentFile[] = [];
 
-  // ── Activities ──────────────────────────────────────
-  activities: Activity[] = [];
+  // ── Data ──────────────────────────────────────────────
+  userInfo! : ProfilEmploye;
+  private backup! : ProfilEmploye;
+  documents  : DocumentEmploye[]  = [];
+  activities : ActiviteEmploye[]  = [];
+  stats!     : StatistiquesEmploye;
 
-  // ── Lifecycle ───────────────────────────────────────
-  ngOnInit(): void {
-    this.loadUserInfo();
-    this.loadDocuments();
-    this.loadActivities();
-  }
+  readonly tabs: { value: ProfileTab; label: string; icon: string }[] = [
+    { value: 'infos',       label: 'Infos personnelles',   icon: 'ti ti-user'             },
+    { value: 'contrat',     label: 'Contrat & RH',          icon: 'ti ti-file-certificate' },
+    { value: 'competences', label: 'Compétences',           icon: 'ti ti-award'            },
+    { value: 'documents',   label: 'Documents & Activité',  icon: 'ti ti-folder'           }
+  ];
 
-  // ── Load Data ───────────────────────────────────────
-  loadUserInfo(): void {
-    // TODO: Appel API pour récupérer les infos utilisateur
-    // this.userService.getMyProfile().subscribe(...)
-    
-    // Sauvegarde pour annulation
-    this.userInfoBackup = { ...this.userInfo };
-  }
+  readonly situationOptions    = ['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf/Veuve'];
+  readonly niveauLangueOptions : Langue['niveau'][] = ['Débutant', 'Intermédiaire', 'Courant', 'Natif'];
+  readonly niveauEtudesOptions = ['Bac', 'Bac+2', 'Licence', 'Master', 'Doctorat', 'Autre'];
+  readonly contactLienOptions  = ['Conjoint(e)', 'Parent', 'Frère/Sœur', 'Ami(e)', 'Autre'];
 
-  loadDocuments(): void {
-    // TODO: Appel API pour récupérer les documents
-    this.documents = [
-      {
-        id: 1,
-        nom: 'CV_NourElHouda_2024.pdf',
-        type: 'pdf',
-        taille: '245 KB',
-        dateAjout: new Date('2024-01-15')
+  // ── Lifecycle ─────────────────────────────────────────
+  ngOnInit(): void { this.load(); }
+
+  private load(): void {
+    this.loading = true;
+    this.profilService.getProfilComplet().subscribe({
+      next: (data: ProfilComplet) => {
+        this.userInfo   = data.profil;
+        this.backup     = this.deepCopy(data.profil);
+        this.documents  = data.documents;
+        this.activities = data.activites;
+        this.stats      = data.statistiques;
+        this.loading    = false;
+        this.cdr.markForCheck();
       },
-      {
-        id: 2,
-        nom: 'Contrat_de_travail.pdf',
-        type: 'pdf',
-        taille: '1.2 MB',
-        dateAjout: new Date('2024-01-10')
-      },
-      {
-        id: 3,
-        nom: 'Attestation_travail.pdf',
-        type: 'pdf',
-        taille: '180 KB',
-        dateAjout: new Date('2024-02-01')
-      },
-      {
-        id: 4,
-        nom: 'Fiche_paie_janvier.pdf',
-        type: 'pdf',
-        taille: '320 KB',
-        dateAjout: new Date('2024-02-05')
+      error: () => {
+        this.showError('Erreur lors du chargement du profil.');
+        this.loading = false;
+        this.cdr.markForCheck();
       }
-    ];
+    });
   }
 
-  loadActivities(): void {
-    // TODO: Appel API pour récupérer l'historique
-    this.activities = [
-      {
-        id: 1,
-        titre: 'Demande de congé validée',
-        description: 'Votre demande de congé du 01/03 au 10/03 a été approuvée par votre manager.',
-        date: new Date('2024-02-20 14:30'),
-        type: 'demande',
-        badge: 'Validée'
-      },
-      {
-        id: 2,
-        titre: 'Tâche terminée',
-        description: 'Vous avez marqué la tâche "Intégration API Spring Boot" comme terminée.',
-        date: new Date('2024-02-19 16:45'),
-        type: 'tache',
-        badge: '100%'
-      },
-      {
-        id: 3,
-        titre: 'Formation inscrite',
-        description: 'Inscription à la formation "Angular Avancé" du 25/02.',
-        date: new Date('2024-02-18 10:15'),
-        type: 'formation',
-        badge: 'Confirmée'
-      },
-      {
-        id: 4,
-        titre: 'Document ajouté',
-        description: 'Vous avez ajouté le document "Fiche_paie_janvier.pdf".',
-        date: new Date('2024-02-05 09:20'),
-        type: 'document'
-      },
-      {
-        id: 5,
-        titre: 'Demande de formation soumise',
-        description: 'Votre demande de formation "React Native" est en attente de validation.',
-        date: new Date('2024-02-01 11:00'),
-        type: 'demande',
-        badge: 'En attente'
-      }
-    ];
-  }
+  // ── Tabs ──────────────────────────────────────────────
+  switchTab(tab: ProfileTab): void { this.activeTab = tab; }
 
-  // ── Edit Mode Toggle ────────────────────────────────
+  // ── Edit / Save ───────────────────────────────────────
   toggleEditMode(): void {
     if (this.editMode) {
-      // Annuler : restaurer les données
-      this.userInfo = { ...this.userInfoBackup };
+      this.userInfo = this.deepCopy(this.backup);
     } else {
-      // Activer : sauvegarder l'état actuel
-      this.userInfoBackup = { ...this.userInfo };
+      this.backup = this.deepCopy(this.userInfo);
     }
     this.editMode = !this.editMode;
+    this.newCompetence = '';
+    this.newLangue = { langue: '', niveau: 'Intermédiaire' };
+    this.clearMessages();
+    this.cdr.markForCheck();
   }
 
-  // ── Save Profile ────────────────────────────────────
   saveProfile(): void {
-    // TODO: Appel API pour sauvegarder
-    // this.userService.updateProfile(this.userInfo).subscribe(...)
-    
-    console.log('Profil sauvegardé:', this.userInfo);
-    
-    // Simuler succès
-    this.userInfoBackup = { ...this.userInfo };
-    this.editMode = false;
-    
-    // TODO: Afficher message de succès avec toast/snackbar
-    alert('Profil mis à jour avec succès !');
-  }
-
-  // ── Document Actions ────────────────────────────────
-  uploadDocument(): void {
-    // TODO: Ouvrir dialog upload de fichier
-    console.log('Ouvrir dialog upload');
-    
-    // Simuler ajout document
-    const newDoc: DocumentFile = {
-      id: this.documents.length + 1,
-      nom: 'nouveau_document.pdf',
-      type: 'pdf',
-      taille: '500 KB',
-      dateAjout: new Date()
+    this.isSaving = true;
+    const updates: UpdateProfilDTO = {
+      telephone         : this.userInfo.telephone,
+      emailPersonnel    : this.userInfo.emailPersonnel,
+      dateNaissance     : this.userInfo.dateNaissance,
+      lieuNaissance     : this.userInfo.lieuNaissance,
+      adresse           : this.userInfo.adresse,
+      ville             : this.userInfo.ville,
+      codePostal        : this.userInfo.codePostal,
+      genre             : this.userInfo.genre,
+      situationFamiliale: this.userInfo.situationFamiliale,
+      nombreEnfants     : this.userInfo.nombreEnfants,
+      nationalite       : this.userInfo.nationalite,
+      cin               : this.userInfo.cin,
+      contactUrgenceNom : this.userInfo.contactUrgenceNom,
+      contactUrgenceTel : this.userInfo.contactUrgenceTel,
+      contactUrgenceLien: this.userInfo.contactUrgenceLien,
+      competences       : this.userInfo.competences,
+      langues           : this.userInfo.langues,
+      niveauEtudes      : this.userInfo.niveauEtudes,
+      diplome           : this.userInfo.diplome,
+      etablissement     : this.userInfo.etablissement
     };
-    
-    this.documents.push(newDoc);
+
+    this.profilService.updateProfil(updates).subscribe({
+      next: updated => {
+        this.userInfo = updated;
+        this.backup   = this.deepCopy(updated);
+        this.editMode = false;
+        this.isSaving = false;
+        this.showSuccess('Profil mis à jour avec succès.');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isSaving = false;
+        this.showError('Échec de la mise à jour. Veuillez réessayer.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  viewDocument(docId: number): void {
-    const doc = this.documents.find(d => d.id === docId);
-    console.log('Voir document:', doc);
-    
-    // TODO: Ouvrir le document dans une nouvelle fenêtre ou modal
-    // window.open(doc?.url, '_blank');
+  // ── Competences ───────────────────────────────────────
+  addCompetence(): void {
+    const val = this.newCompetence.trim();
+    if (!val || this.userInfo.competences.includes(val)) return;
+    this.userInfo.competences = [...this.userInfo.competences, val];
+    this.newCompetence = '';
   }
+
+  removeCompetence(c: string): void {
+    this.userInfo.competences = this.userInfo.competences.filter(x => x !== c);
+  }
+
+  addLangue(): void {
+    if (!this.newLangue.langue.trim()) return;
+    this.userInfo.langues = [...this.userInfo.langues, { ...this.newLangue }];
+    this.newLangue = { langue: '', niveau: 'Intermédiaire' };
+  }
+
+  removeLangue(idx: number): void {
+    this.userInfo.langues = this.userInfo.langues.filter((_, i) => i !== idx);
+  }
+
+  // ── Documents ─────────────────────────────────────────
+  uploadDocument(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = () => {
+      const file = (input.files as FileList)[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      this.profilService.uploadDocument(formData).subscribe({
+        next: doc => {
+          this.documents = [...this.documents, doc];
+          this.showSuccess('Document ajouté.');
+          this.cdr.markForCheck();
+        },
+        error: () => { this.showError('Erreur lors de l\'ajout du document.'); this.cdr.markForCheck(); }
+      });
+    };
+    input.click();
+  }
+
+  viewDocument(docId: number): void     { this.profilService.viewDocument(docId); }
 
   downloadDocument(docId: number): void {
     const doc = this.documents.find(d => d.id === docId);
-    console.log('Télécharger document:', doc);
-    
-    // TODO: Déclencher le téléchargement
-    // const link = document.createElement('a');
-    // link.href = doc?.url || '';
-    // link.download = doc?.nom || 'document.pdf';
-    // link.click();
+    this.profilService.forceDownload(docId, doc?.nom);
   }
 
   deleteDocument(docId: number): void {
-    if (confirm('Voulez-vous vraiment supprimer ce document ?')) {
-      console.log('Supprimer document:', docId);
-      
-      // TODO: Appel API pour supprimer
-      // this.documentService.delete(docId).subscribe(...)
-      
-      this.documents = this.documents.filter(d => d.id !== docId);
-    }
+    const doc = this.documents.find(d => d.id === docId);
+    if (!doc) return;
+    this.profilService.deleteDocument(docId).subscribe({
+      next: () => {
+        this.documents = this.documents.filter(d => d.id !== docId);
+        this.showSuccess(`"${doc.nom}" supprimé.`);
+        this.cdr.markForCheck();
+      },
+      error: () => { this.showError('Erreur lors de la suppression.'); this.cdr.markForCheck(); }
+    });
   }
 
+  // ── Password ──────────────────────────────────────────
+  changePassword(): void { this.keycloak.accountManagement(); }
+
+  // ── Profile completion % ──────────────────────────────
+  get completionPct(): number {
+    if (!this.userInfo) return 0;
+    const u = this.userInfo;
+    const checks = [
+      !!u.telephone, !!u.dateNaissance, !!u.lieuNaissance,
+      !!u.adresse, !!u.cin, !!u.nationalite,
+      !!u.contactUrgenceNom, !!u.contactUrgenceTel,
+      !!u.niveauEtudes, !!u.diplome,
+      u.competences.length > 0, u.langues.length > 0
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }
+
+  get completionColor(): string {
+    if (this.completionPct >= 80) return '#10B981';
+    if (this.completionPct >= 50) return '#F59E0B';
+    return '#EF4444';
+  }
+
+  // ── Role helpers ──────────────────────────────────────
+  get isManagerVisible(): boolean {
+    const roles: string[] = (this.keycloak.tokenParsed as any)?.realm_access?.roles ?? [];
+    const elevated = ['chef', 'CHEF', 'admin', 'ADMIN'];
+    return !elevated.some(r => roles.includes(r));
+  }
+
+  // ── Display helpers ───────────────────────────────────
+  get formationsPct(): number {
+    if (!this.stats?.formationsTotal) return 0;
+    return Math.round((this.stats.formationsSuivies / this.stats.formationsTotal) * 100);
+  }
+
+  get congesPris(): number {
+    return this.stats ? (this.stats.congesTotal - this.stats.congesRestants) : 0;
+  }
+
+  get genreLabel(): string {
+    return this.userInfo?.genre === 'M' ? 'Masculin' : this.userInfo?.genre === 'F' ? 'Féminin' : '—';
+  }
+
+  niveauLangueBadge(n: Langue['niveau']): string {
+    const map: Record<string, string> = {
+      'Natif': 'lng-natif', 'Courant': 'lng-courant',
+      'Intermédiaire': 'lng-inter', 'Débutant': 'lng-debutant'
+    };
+    return map[n] ?? '';
+  }
+
+  categorieLabel(cat: DocumentEmploye['categorie']): string {
+    const map: Record<string, string> = {
+      personnel: 'Personnel', contractuel: 'Contrat',
+      administratif: 'Administratif', formation: 'Formation'
+    };
+    return map[cat] ?? cat;
+  }
+
+  categorieClass(cat: DocumentEmploye['categorie']): string {
+    return { personnel: 'cat-personnel', contractuel: 'cat-contractuel',
+             administratif: 'cat-admin', formation: 'cat-formation' }[cat] ?? '';
+  }
+
+  typeContratBadge(t: ProfilEmploye['typeContrat']): string {
+    return { CDI: 'badge-cdi', CDD: 'badge-cdd', INTERIM: 'badge-interim', STAGE: 'badge-stage' }[t] ?? '';
+  }
+
+  formatSalaire(s: number | undefined): string {
+    if (s == null) return '—';
+    return new Intl.NumberFormat('fr-TN').format(s) + ' DT';
+  }
+
+  // ── Private ───────────────────────────────────────────
+  private showSuccess(msg: string): void {
+    this.successMsg = msg; this.errorMsg = null;
+    setTimeout(() => { this.successMsg = null; this.cdr.markForCheck(); }, 4000);
+  }
+
+  private showError(msg: string): void {
+    this.errorMsg = msg; this.successMsg = null;
+    setTimeout(() => { this.errorMsg = null; this.cdr.markForCheck(); }, 5000);
+  }
+
+  private clearMessages(): void { this.successMsg = null; this.errorMsg = null; }
+
+  private deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
 }

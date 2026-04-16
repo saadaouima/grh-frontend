@@ -98,7 +98,7 @@
     <div class="row g-4">
       @for (projet of projetsFiltres; track projet.id) {
         <div class="col-lg-6 col-xl-4">
-          <div class="projet-card" (click)="voirDetailProjet(projet.id)">
+          <div class="projet-card" (click)="null">
             
             <!-- Header -->
             <div class="projet-header">
@@ -191,7 +191,7 @@
                 <span class="projet-status status-{{ projet.statut }}">
                   {{ getStatutLabel(projet.statut) }}
                 </span>
-                <button class="btn-detail" (click)="voirDetailProjet(projet.id)">
+                <button class="btn-detail" (click)="null">
                   <i class="ti ti-arrow-right"></i>
                 </button>
               </div>

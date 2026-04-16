@@ -1,43 +1,80 @@
-<div class="card">
-  <div class="card-header">
-    <h5>Détail de la demande #{{ demande?.id }}</h5>
-  </div>
-  <div class="card-body">
-    <p><strong>Type :</strong> {{ demande?.type }}</p>
-    <p><strong>Description :</strong> {{ demande?.description }}</p>
-    <p><strong>Période :</strong> {{ demande?.dateDebut | date:'dd/MM/yyyy' }} - {{ demande?.dateFin | date:'dd/MM/yyyy' }}</p>
-    <p><strong>Statut :</strong> {{ demande?.statutLabel }}</p>
+@if (loading) {
+  <div class="card"><div class="card-body text-center py-5">
+    <div class="spinner-border text-primary"></div>
+  </div></div>
+}
 
-    <!-- Timeline -->
-    <div class="timeline">
-      @for (step of timeline; track step) {
-        <div class="timeline-step">
-          <i class="{{ step.icon }}"></i>
-          <span>{{ step.label }}</span>
-        </div>
-      }
+@if (error) {
+  <div class="alert alert-danger">Impossible de charger cette demande.</div>
+}
+
+@if (!loading && !error && demande) {
+  <div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h5 class="mb-0">
+        <i [class]="typeIcon(demande.type)" class="me-2"></i>
+        {{ typeLabel(demande.type) }} — #{{ demande.id }}
+      </h5>
+      <span class="badge" [ngClass]="statutClass(demande.statut)">
+        {{ statutLabel(demande.statut) }}
+      </span>
     </div>
 
-    <!-- Documents joints -->
-    @if (demande?.documents?.length > 0) {
-      <div>
-        <h6>Documents joints</h6>
-        <ul>
-          @for (doc of demande.documents; track doc) {
-            <li>
-              <a [href]="doc.url" target="_blank">{{ doc.nom }}</a>
-            </li>
-          }
-        </ul>
-      </div>
-    }
+    <div class="card-body">
+      <p><strong>Description :</strong> {{ demande.description }}</p>
 
-    <!-- Commentaire RH -->
-    @if (demande?.statut === 'REFUSEE') {
-      <div>
-        <h6>Commentaire RH</h6>
-        <p class="text-danger">{{ demande?.commentaireRh }}</p>
+      @if (demande.dateDebut || demande.dateFin) {
+        <p>
+          <strong>Période :</strong>
+          {{ demande.dateDebut | date:'dd/MM/yyyy' }}
+          @if (demande.dateFin) { — {{ demande.dateFin | date:'dd/MM/yyyy' }} }
+          @if (demande.joursOuvres) { ({{ demande.joursOuvres }} j) }
+        </p>
+      }
+
+      <p><strong>Soumise le :</strong> {{ demande.dateCreation | date:'dd/MM/yyyy' }}</p>
+
+      @if (demande.validateurNom) {
+        <p><strong>Traité par :</strong> {{ demande.validateurNom }}</p>
+      }
+
+      <!-- Timeline -->
+      <div class="timeline mt-4">
+        @for (step of timeline; track step.label) {
+          <div class="timeline-step" [class.active]="step.active">
+            <i [class]="step.icon"></i>
+            <span>{{ step.label }}</span>
+          </div>
+        }
       </div>
-    }
+
+      <!-- Commentaires -->
+      @if (demande.commentaireChef) {
+        <div class="alert alert-info mt-3">
+          <strong>Commentaire chef :</strong> {{ demande.commentaireChef }}
+        </div>
+      }
+      @if (demande.commentaireRh) {
+        <div class="alert" [class.alert-danger]="demande.statut === 'REJETEE'" [class.alert-info]="demande.statut !== 'REJETEE'" class="mt-3">
+          <strong>Commentaire RH :</strong> {{ demande.commentaireRh }}
+        </div>
+      }
+
+      <!-- Pièces jointes -->
+      @if (demande.pieceJointes && demande.pieceJointes.length > 0) {
+        <div class="mt-3">
+          <h6>Pièces jointes</h6>
+          <ul class="list-unstyled">
+            @for (pj of demande.pieceJointes; track pj) {
+              <li><i class="ti ti-paperclip me-1"></i>{{ pj }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <button class="btn btn-outline-secondary mt-3" (click)="goBack()">
+        <i class="ti ti-arrow-left me-1"></i>Retour
+      </button>
+    </div>
   </div>
-</div>
+}

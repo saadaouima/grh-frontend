@@ -1,0 +1,773 @@
+﻿% !TEX root = ./rapport.tex
+\chapter{Sprints 3 à 5~: Demandes RH, Kafka et Communication Temps Réel}
+
+\noindent\textbf{Plan}
+\begin{enumerate}
+  \item Introduction
+  \item Sprint 3~: Workflows de demandes RH
+  \item Sprint 4~: Demandes financières et notifications Kafka
+  \item Sprint 5~: Messagerie temps réel et assistant IA
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+Cette deuxième release constitue le cœur fonctionnel de Synapse. Le sprint~3
+automatise les demandes RH courantes avec un circuit de validation hiérarchique.
+Le sprint~4 étend ce circuit aux demandes financières et introduit Apache Kafka
+pour la diffusion asynchrone des notifications. Le sprint~5 livre la communication
+temps réel~: messagerie interne via WebSocket STOMP et assistant conversationnel RH
+propulsé par l'API Groq.
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 3~: Workflows de demandes RH}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs du sprint}
+
+Le sprint~3 automatise le processus RH le plus fréquent d'Arabsoft~: le dépôt et
+la validation hiérarchique des demandes. L'objectif est d'éliminer le circuit de
+validation par e-mail en implémentant un automate à états finis (Employé →
+Chef → RH) pour cinq types de demandes, avec notification asynchrone Kafka à
+chaque transition de statut. La durée est de \textbf{2 semaines}
+(02--15 mars 2026).
+
+\begin{table}[H]
+\centering
+\caption{Objectifs du sprint 3}
+\label{tab:sprint3_obj}
+\begin{tabularx}{\textwidth}{VlVLVlVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Objectif} & \textbf{US} & \textbf{Estim.} \\
+\hline
+demandes-service (congés) & Implémenter le CRUD et le workflow de validation~: Employé → Chef → RH & US-06, 07, 11, 12 & 3j \\
+\hline
+demandes-service (formations) & Gérer les demandes et le cycle de vie complet des sessions~: demande → approbation → planification → démarrage → complétion + inscriptions & US-10 & 2j \\
+\hline
+demandes-service (documents) & Traiter les demandes de documents administratifs & US-09 & 1j \\
+\hline
+demandes-service (autorisations) & Gérer les autorisations de sortie & US-08 & 1j \\
+\hline
+demandes-service (actifs) & Référencer les actifs de l'entreprise et traiter les demandes d'attribution aux employés & US-13 & 1j \\
+\hline
+Interface Angular & Formulaires de dépôt, liste des demandes, interface de validation chef/RH & US-06 à 13 & 2j \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Conception UML}
+
+\subsubsection*{Cas d’utilisation~: Déposer une demande}
+
+La figure~\ref{fig:uc_demande} ci-dessous présente le diagramme de cas d’utilisation
+raffiné relatif au dépôt et à la validation des demandes RH.
+
+% Insert figure: Diagramme de cas d’utilisation raffiné — Déposer une demande
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uml_uc_demande.png}
+  \caption{Diagramme de cas d’utilisation raffiné~: dépôt et validation d’une demande RH}
+  \label{fig:uc_demande}
+\end{figure}
+
+La figure~\ref{fig:seq_demande} ci-dessous présente le diagramme de séquence du cas
+d’utilisation « Déposer et valider une demande de congé ».
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{diagrams/seq_depot_validation_conge.png}
+\caption{Diagramme de séquence~: dépôt et validation d’une demande de congé}
+\label{fig:seq_demande}
+\end{figure}
+
+
+La table~\ref{tab:uc_conge} ci-dessous présente la description textuelle du cas
+d’utilisation « Déposer une demande de congé ».
+
+\begin{table}[H]
+\centering
+\caption{Description textuelle du cas d’utilisation Déposer une demande de congé}
+\label{tab:uc_conge}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Champ} & \textbf{Description} \\
+\hline
+Cas d’utilisation & Déposer une demande de congé \\
+\hline
+Acteur & Employé (\texttt{EMPLOYE}) \\
+\hline
+Précondition & L’employé est authentifié et dispose de jours de congé disponibles \\
+\hline
+Postcondition & Demande enregistrée (statut \texttt{EN\_ATTENTE})~; chef notifié en temps réel \\
+\hline
+Scénario nominal &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item L’employé sélectionne la date de début, la date de fin et le motif
+  \item Le système calcule le nombre de jours ouvrables et vérifie le solde disponible
+  \item La demande est enregistrée et transmise au chef pour validation
+  \item Le chef reçoit une notification et peut consulter la demande
+\end{enumerate} \\
+\hline
+Scénarios alternatifs &
+\begin{itemize}[leftmargin=*,nosep]
+  \item Solde insuffisant~: avertissement affiché, confirmation explicite requise avant soumission
+  \item Chevauchement de congés~: avertissement et demande de confirmation
+  \item Annulation~: possible tant que la demande est en attente de validation
+\end{itemize} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Diagramme de classes~: domaine des demandes RH}
+
+Le diagramme de la figure~\ref{fig:class_demandes} présente la structure statique
+des entités introduites au sprint~3. La classe abstraite \texttt{AbstractDemande}
+centralise les attributs communs (statut, horodatages, commentaires) et est
+spécialisée par les quatre types de demandes. L'enum \texttt{DemandeStatus} garantit
+que seules les transitions d'état définies par l'automate sont persistées.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/class_sprint3_demandes.png}
+  \caption{Diagramme de classes~: domaine des demandes RH (Sprint 3)}
+  \label{fig:class_demandes}
+\end{figure}
+
+\subsubsection*{Diagramme d'activité~: workflow de validation d'une demande RH}
+
+Le diagramme d'activité de la figure~\ref{fig:activity_validation} modélise le
+flux logique complet du workflow de validation, en distinguant les lanes de chaque
+acteur (Employé, Système, Chef, Administrateur RH). Il illustre les branchements
+conditionnels à chaque niveau de validation et les événements Kafka déclenchés à
+chaque transition de statut.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.80\textwidth,height=0.62\textheight,keepaspectratio]{images/activity_validation_demande.png}
+  \caption{Diagramme d'activité~: workflow de validation d'une demande RH (Employé → Chef → RH)}
+  \label{fig:activity_validation}
+\end{figure}
+
+\subsection{Implémentation backend}
+
+\begin{table}[H]
+\centering
+\caption{Endpoints REST du \textit{demandes-service} — Sprint 3}
+\label{tab:api_demandes_s3}
+\begin{tabularx}{\textwidth}{VlVlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Rôle} \\
+\hline
+POST & \texttt{/api/employe/conges} & Déposer une demande de congé & EMPLOYE \\
+\hline
+GET & \texttt{/api/employe/conges} & Consulter ses demandes de congé & EMPLOYE \\
+\hline
+PUT & \texttt{/api/chef/conges/\{id\}/valider} & Valider au niveau chef & CHEF \\
+\hline
+PUT & \texttt{/api/rh/conges/\{id\}/valider} & Valider au niveau RH & RH, ADMIN\_RH \\
+\hline
+PUT & \texttt{/api/employe/conges/\{id\}/annuler} & Annuler une demande \texttt{EN\_ATTENTE} & EMPLOYE \\
+\hline
+POST & \texttt{/api/employe/formations} & Déposer une demande de formation & EMPLOYE \\
+\hline
+PUT & \texttt{/api/rh/formations/\{id\}/planifier} & Planifier une session de formation & RH, ADMIN\_RH \\
+\hline
+POST & \texttt{/api/employe/autorisations} & Déposer une autorisation de sortie & EMPLOYE \\
+\hline
+\end{tabularx}
+\end{table}
+
+L'automate à états (\texttt{EN\_ATTENTE} → \texttt{VALIDE\_CHEF} → \texttt{VALIDE\_RH})
+est commun à tous les types de demandes~; le rejet déclenche l'état terminal
+\texttt{REJETE} avec commentaire obligatoire. À chaque transition, un
+\texttt{NotificationEvent} est publié sur le topic Kafka \texttt{notification-events}
+pour alerter les parties concernées.
+
+\paragraph{Cycle de vie complet des formations.}
+Le module de formations va au-delà d'une simple demande d'approbation. Le
+\texttt{FormationsController} gère l'intégralité du cycle~:
+\texttt{EN\_ATTENTE} → \texttt{APPROUVE\_CHEF} → \texttt{APPROUVE\_RH} →
+\texttt{PLANIFIE} → \texttt{EN\_COURS} → \texttt{TERMINE}. Une fois la demande
+approuvée, l'administrateur RH planifie la session (\texttt{PUT /{id}/planifier}),
+la démarre (\texttt{PUT /{id}/demarrer}) et la marque comme terminée
+(\texttt{PUT /{id}/completer}). Les tables \texttt{TRAINING\_SESSIONS} et
+\texttt{TRAINING\_ENROLLMENTS} (V3) permettent de créer des sessions collectives
+avec une capacité maximale, d'inscrire plusieurs employés et de suivre leur
+assiduité (statuts \texttt{INSCRIT / PRESENT / ABSENT / ABANDONNE}) et leur
+résultat (score, attestation).
+
+Une décision d'implémentation mérite d'être détaillée~: la résolution de
+l'identité employé depuis le JWT.
+
+\paragraph{Résolution de l'identité employé depuis le JWT.}
+Le claim \texttt{sub} du token Keycloak contient un UUID qui doit être résolu en
+\texttt{employee\_id} Oracle. Pour éviter qu'une erreur SQL isolée (ex.~: doublon
+de données) ne marque la transaction appelante en rollback-only, les lookups sont
+délégués à \texttt{EmployeeInfoHelper}~: chaque méthode s'exécute dans une
+transaction \texttt{NOT\_SUPPORTED} totalement isolée. Le mécanisme de
+\textit{fallback} en trois niveaux assure la compatibilité avec les tokens émis
+avant la migration du schéma.
+
+\subsection{Implémentation frontend}
+
+\begin{table}[H]
+\centering
+\caption{Composants Angular — Sprint 3}
+\label{tab:angular_sprint3}
+\begin{tabularx}{\textwidth}{VlVlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Composant} & \textbf{Route} & \textbf{Rôle} & \textbf{Fonctionnalité} \\
+\hline
+\texttt{DeposerDemandeComponent} & /employe/demandes/new & EMPLOYE & Formulaire multi-type avec validation de solde et confirmation explicite \\
+\hline
+\texttt{MesDemandesComponent} & /employe/demandes & EMPLOYE & Suivi des demandes avec indicateurs de statut \\
+\hline
+\texttt{DemandesChefComponent} & /chef/demandes & CHEF & Liste des demandes en attente de validation par équipe \\
+\hline
+\texttt{DemandesRhComponent} & /rh/demandes & RH, ADMIN\_RH & Tableau de validation niveau RH avec historique \\
+\hline
+\end{tabularx}
+\end{table}
+
+Les formulaires utilisent les \textit{Reactive Forms} d’Angular avec validation côté client.
+Un avertissement s’affiche si le solde est dépassé. \texttt{DemandesService} consomme
+\texttt{GET /api/employe/demandes} et met à jour les statuts en temps réel.
+
+\subsection{Interfaces de l’application}
+
+Les figures ci-dessous présentent les interfaces de dépôt et de validation des demandes RH
+depuis les vues employé et chef. La vue de suivi des demandes de l'employé est présentée
+en Annexe~II (voir figure~\ref{fig:mes_demandes}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth,height=0.46\textheight,keepaspectratio]{images/screenshot_demande_conge_form.png}
+  \caption{Formulaire de dépôt d’une demande de congé~: vue employé}
+  \label{fig:demande_form}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth,height=0.46\textheight,keepaspectratio]{images/screenshot_demandes_chef.png}
+  \caption{Liste des demandes en attente de validation~: vue chef de projet}
+  \label{fig:demandes_chef}
+\end{figure}
+
+\subsection{Sprint review}
+
+\begin{table}[H]
+\centering
+\caption{Sprint 3 review}
+\label{tab:sprint3_review}
+\begin{tabularx}{\textwidth}{VLVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Terminé} & \textbf{À améliorer} & \textbf{Inachevé} \\
+\hline
+Workflow congés (EN\_ATTENTE → VALIDE\_RH) & \faCheckCircle & & \\
+\hline
+Workflow formations + documents & \faCheckCircle & & \\
+\hline
+Workflow autorisations de sortie & \faCheckCircle & & \\
+\hline
+Interfaces Angular~: dépôt + validation & \faCheckCircle & & \\
+\hline
+Annulation de demande (statut EN\_ATTENTE) & \faCheckCircle & & \\
+\hline
+Validation solde~: confirmation explicite si dépassement (\texttt{DeposerDemandeComponent}) & \faCheckCircle & & \\
+\hline
+Gestion des actifs (CRUD + demandes d'attribution) & \faCheckCircle & & \\
+\hline
+\end{tabularx}
+\end{table}
+
+\paragraph{Fonctionnalité complémentaire~: gestion des actifs.}
+Le \textit{demandes-service} expose un \texttt{ActifController} (\texttt{/api/actifs}) permettant à l'administrateur RH de référencer les équipements et de gérer les demandes d'attribution ou de restitution par les employés. Ajoutée hors backlog initial à la demande des parties prenantes, cette évolution a été validée en revue de sprint.
+
+\paragraph{Obstacles rencontrés.}
+Le principal défi du sprint~3 a été la conception du mapping entre l'enum unifié
+\texttt{StatutDemande} (côté Angular) et les valeurs Oracle qui varient selon le
+type de demande~: \texttt{VALIDE\_CHEF} pour les congés, \texttt{APPROUVE\_CHEF}
+pour les formations, \texttt{APPROUVE} pour les autorisations. Ce mapping a été
+implémenté dans la méthode \texttt{toOracleStatus()} du service et validé par
+les tests unitaires du sprint~7 (voir chapitre~7, tests 3 à 8).
+
+\paragraph{Congés médicaux~: circuit de validation spécifique.}
+Le \texttt{CongesController} gère un circuit de validation distinct pour les
+congés médicaux~: après approbation du chef, certains types de congés (longue
+maladie, comité médical) requièrent une décision du service médical via
+\texttt{PUT /api/conges/{id}/decision-medicale} (rôle \texttt{RH} ou
+\texttt{ADMIN\_RH}). L'endpoint \texttt{GET /api/conges/en-attente-medicale}
+liste les dossiers en attente de décision médicale.
+
+\paragraph{Amélioration apportée~: validation du solde de congés côté frontend.}
+La table \texttt{LEAVE\_BALANCES} est définie dans la migration V3 et son administration
+(CRUD via \texttt{AdminSoldesCongesController}) est opérationnelle. La validation
+du solde a été implémentée dans \texttt{DeposerDemandeComponent}~: lorsque la durée
+demandée dépasse le solde disponible (\texttt{congesRestants}), un bloc d'avertissement
+bloquant s'affiche et le bouton de soumission est désactivé. L'employé doit cocher
+explicitement une case de confirmation~:
+\textit{«~Je prends acte du dépassement et accepte que les jours excédentaires soient
+déduits de mon solde de l'année prochaine.~»}
+Ce consentement explicite est requis avant toute soumission, empêchant les dépôts
+accidentels au-delà du solde disponible tout en conservant la règle métier d'avance
+sur congé.
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 4~: Demandes financières et notifications Kafka}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs du sprint}
+
+Le sprint~4 étend le workflow de validation au circuit complexe des prêts
+(Chef → RH → Comité → DG) et introduit Apache Kafka comme bus d'événements
+pour les notifications temps réel. L'objectif technique est de découpler les
+producteurs et consommateurs d'événements~: aucune notification n'est perdue
+même en cas d'indisponibilité temporaire d'un service. La durée est de
+\textbf{2 semaines} (16--29 mars 2026).
+
+\begin{table}[H]
+\centering
+\caption{Objectifs du sprint 4}
+\label{tab:sprint4_obj}
+\begin{tabularx}{\textwidth}{VlVLVlVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Objectif} & \textbf{US} & \textbf{Estim.} \\
+\hline
+Circuit prêts/crédits & Implémenter le workflow étendu~: Chef → RH → DG → vote du comité & US-14, 15, 16 & 4j \\
+\hline
+notification-service & Développer le service de notifications piloté par Kafka & US-17 & 3j \\
+\hline
+Topic Kafka & Configurer le topic \texttt{notification-events} (configurable via \texttt{app.kafka.topic.notifications}) pour la diffusion des événements de statut & US-17 & 1j \\
+\hline
+Interface Angular & Vue comité, vue DG, centre de notifications & US-14 à 17 & 2j \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Conception UML}
+
+\subsubsection*{Cas d’utilisation~: Demande de prêt / crédit}
+
+La figure~\ref{fig:uc_pret} ci-dessous présente le diagramme de cas d’utilisation
+raffiné relatif aux demandes de prêt et crédit.
+
+% Insert figure: Diagramme de cas d’utilisation raffiné — Demande de prêt
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uc_pret_comite.png}
+  \caption{Diagramme de cas d’utilisation raffiné~: demande de prêt et circuit DG/comité}
+  \label{fig:uc_pret}
+\end{figure}
+
+La table~\ref{tab:uc_pret} ci-dessous présente la description textuelle du cas
+d’utilisation « Déposer une demande de prêt ».
+
+\begin{table}[H]
+\centering
+\caption{Description textuelle du cas d’utilisation Déposer une demande de prêt}
+\label{tab:uc_pret}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Champ} & \textbf{Description} \\
+\hline
+Cas d’utilisation & Déposer une demande de prêt \\
+\hline
+Acteur & Employé (\texttt{EMPLOYE}) \\
+\hline
+Précondition & L’employé est authentifié et éligible à un prêt \\
+\hline
+Postcondition & Demande enregistrée et transmise pour validation multi-niveaux \\
+\hline
+Scénario nominal &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item L’employé renseigne le montant, la durée et le motif
+  \item Le chef examine et valide la demande
+  \item Le service RH instruit le dossier et décide du passage en comité si nécessaire
+  \item En cas de vote du comité, chaque membre soumet son avis
+  \item Le directeur général prend la décision finale
+  \item Le service RH finalise et l’employé est notifié du résultat
+\end{enumerate} \\
+\hline
+Scénarios alternatifs &
+\begin{itemize}[leftmargin=*,nosep]
+  \item Refus à n’importe quelle étape~: commentaire obligatoire, employé notifié
+  \item Vote du comité non unanime~: la décision finale revient au directeur général
+\end{itemize} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Diagramme de séquence~: circuit de validation d'un prêt}
+
+La figure~\ref{fig:seq_pret} illustre l'enchaînement chronologique des messages
+entre les acteurs et les microservices lors du circuit complet de validation d'un
+prêt~: dépôt par l'employé, validation Chef, instruction RH, vote du comité,
+décision DG et notification finale par Kafka.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{diagrams/seq_demande.png}
+  \caption{Diagramme de séquence~: circuit de validation d'un prêt (Employé → Chef → RH → Comité → DG)}
+  \label{fig:seq_pret}
+\end{figure}
+
+
+\subsection{Implémentation backend}
+
+\begin{table}[H]
+\centering
+\caption{Endpoints REST du \textit{demandes-service} — Sprint 4}
+\label{tab:api_prets_s4}
+\begin{tabularx}{\textwidth}{VlVlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Rôle} \\
+\hline
+POST & \texttt{/api/employe/prets} & Déposer une demande de prêt & EMPLOYE \\
+\hline
+PUT & \texttt{/api/chef/prets/\{id\}/valider} & Validation niveau chef & CHEF \\
+\hline
+PUT & \texttt{/api/rh/prets/\{id\}/instruire} & Instruction RH (passage en comité si montant élevé) & RH, ADMIN\_RH \\
+\hline
+PUT & \texttt{/api/dg/prets/\{id\}/approuver} & Décision finale du Directeur Général & DG \\
+\hline
+PUT & \texttt{/api/comite/prets/\{id\}/voter} & Vote du membre du comité de crédit & COMITE \\
+\hline
+GET & \texttt{/api/notifications} & Lister les notifications de l'utilisateur & Tous \\
+\hline
+PUT & \texttt{/api/notifications/\{id\}/lu} & Marquer une notification comme lue & Tous \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le circuit prêt suit cinq niveaux~: Chef → RH → (Comité si montant élevé) → DG →
+RH finalisation. Le \textit{notification-service} consomme \texttt{notification-events}
+via \texttt{@KafkaListener}, persiste l'alerte dans \texttt{NOTIFICATIONS} puis la
+pousse en WebSocket via \texttt{SimpMessagingTemplate}.
+
+
+La figure~\ref{fig:kafka_topology} ci-dessous illustre la topologie du topic Kafka de Synapse.
+
+% Insert figure: Topologie Kafka — topics, producteurs et consommateurs
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth,height=0.52\textheight,keepaspectratio]{images/kafka_topology.png}
+  \caption{Topologie Apache Kafka~: topics, producteurs et consommateurs dans Synapse}
+  \label{fig:kafka_topology}
+\end{figure}
+
+\subsection{Implémentation frontend}
+
+\begin{table}[H]
+\centering
+\caption{Composants Angular — Sprint 4}
+\label{tab:angular_sprint4}
+\begin{tabularx}{\textwidth}{VlVlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Composant} & \textbf{Route} & \textbf{Rôle} & \textbf{Fonctionnalité} \\
+\hline
+\texttt{PretFormComponent} & /employe/prets/new & EMPLOYE & Formulaire de demande de prêt \\
+\hline
+\texttt{DgPretListComponent} & /dg/prets & DG & Dossiers en attente d'approbation finale \\
+\hline
+\texttt{ComitePretComponent} & /comite/prets & COMITE & Interface de vote sur les dossiers de crédit \\
+\hline
+\texttt{NotificationsComponent} & En-tête (global) & Tous & Badge temps réel, liste et marquage lu via WebSocket \\
+\hline
+\end{tabularx}
+\end{table}
+
+\texttt{NotificationService} ouvre une connexion STOMP sur \texttt{/ws-notifications}
+dès la connexion et met à jour le badge en temps réel. Chaque vue de validation
+est protégée par \texttt{requireRoleGuard} selon le rôle cible (DG, COMITE, CHEF).
+
+\subsection{Interfaces de l'application}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth,height=0.46\textheight,keepaspectratio]{images/screenshot_notifications.png}
+  \caption{Centre de notifications~: alertes en temps réel transmises via Kafka et WebSocket}
+  \label{fig:notifications_center}
+\end{figure}
+
+\subsection{Sprint review}
+
+\begin{table}[H]
+\centering
+\caption{Sprint 4 review}
+\label{tab:sprint4_review}
+\begin{tabularx}{\textwidth}{VLVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Terminé} & \textbf{À améliorer} & \textbf{Inachevé} \\
+\hline
+Circuit prêts/crédits + vote comité & \faCheckCircle & & \\
+\hline
+notification-service (Kafka consumer) & \faCheckCircle & & \\
+\hline
+Push WebSocket notifications & \faCheckCircle & & \\
+\hline
+Interface DG + comité & \faCheckCircle & & \\
+\hline
+\end{tabularx}
+\end{table}
+
+\paragraph{Obstacle résolu~: fiabilité des notifications Kafka et sessions WebSocket.}
+La garantie de livraison a nécessité de persister chaque événement Kafka en base Oracle avant le push WebSocket, rendant les alertes disponibles à la reconnexion du client. La gestion des sessions WebSocket par identifiant utilisateur via \texttt{convertAndSendToUser} a par ailleurs requis une configuration explicite du registre de destinations STOMP.
+
+\section{Sprint 5~: Messagerie temps réel et assistant IA}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs du sprint}
+
+Le sprint~5 enrichit Synapse d’une dimension conversationnelle absente des SIRH
+traditionnels~: une messagerie interne bidirectionnelle temps réel (WebSocket/STOMP)
+et un assistant IA (Groq/LLaMA~3.3) capable de répondre aux requêtes RH en langage
+naturel. L’objectif métier est de réduire la charge sur le service RH pour les
+questions courantes (soldes, procédures, formulaires). La durée est de
+\textbf{2 semaines} (30 mars--12 avr. 2026).
+
+\begin{table}[H]
+\centering
+\caption{Objectifs du sprint 5}
+\label{tab:sprint5_obj}
+\begin{tabularx}{\textwidth}{VlVLVlVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Objectif} & \textbf{US} & \textbf{Estim.} \\
+\hline
+chat-service (WebSocket) & Messagerie bidirectionnelle temps réel via STOMP/SockJS & US-18 & 3j \\
+\hline
+Sécurité JWT STOMP & Valider le JWT dans l’intercepteur de canal STOMP & US-18 & 1j \\
+\hline
+Assistant IA Groq & Intégrer l’API Groq pour les requêtes RH conversationnelles & US-19 & 3j \\
+\hline
+Base de connaissance & Charger le fichier \texttt{hr-knowledge.txt} comme contexte système & US-19 & 1j \\
+\hline
+Interface Angular & Widget chatbot flottant, liste des conversations, fenêtre de chat & US-18, 19, 20 & 2j \\
+\hline
+\end{tabularx}
+\end{table}
+
+\input{etude_theorique_ia}
+
+\subsection{Conception UML}
+
+\subsubsection*{Cas d’utilisation~: Envoyer un message}
+
+La figure~\ref{fig:uc_chat} ci-dessous présente le diagramme de cas d’utilisation
+raffiné relatif à la messagerie interne.
+
+% Insert figure: Diagramme de cas d’utilisation raffiné — Messagerie interne
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uc_chat_messagerie.png}
+  \caption{Diagramme de cas d’utilisation raffiné~: messagerie interne temps réel}
+  \label{fig:uc_chat}
+\end{figure}
+
+La figure~\ref{fig:seq_chat} ci-dessous présente le diagramme de séquence du cas
+d’utilisation « Envoyer un message WebSocket ».
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{diagrams/seq_ai_chat_groq.png}
+\caption{Diagramme de séquence~: messagerie WebSocket et assistant IA Groq}
+\label{fig:seq_chat}
+\end{figure}
+
+
+La table~\ref{tab:uc_chat} ci-dessous présente la description textuelle du cas
+d’utilisation « Envoyer un message ».
+
+\begin{table}[H]
+\centering
+\caption{Description textuelle du cas d’utilisation Envoyer un message}
+\label{tab:uc_chat}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Champ} & \textbf{Description} \\
+\hline
+Cas d’utilisation & Envoyer un message interne \\
+\hline
+Acteurs & Tout utilisateur authentifié \\
+\hline
+Précondition & L’utilisateur est connecté et une connexion STOMP est établie avec JWT valide \\
+\hline
+Postcondition & Le message est persisté en base et transmis en temps réel au destinataire \\
+\hline
+Scénario nominal &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item L’utilisateur ouvre une conversation et saisit son message
+  \item Le système vérifie que l’utilisateur est bien authentifié
+  \item Le message est enregistré et transmis instantanément au destinataire
+\end{enumerate} \\
+\hline
+Scénarios alternatifs &
+\begin{itemize}[leftmargin=*,nosep]
+  \item Session expirée~: l’utilisateur est redirigé vers la page de connexion
+  \item Destinataire hors ligne~: le message est conservé et livré à sa prochaine connexion
+\end{itemize} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Implémentation backend}
+
+\begin{table}[H]
+\centering
+\caption{Endpoints REST et WebSocket du \textit{chat-service} — Sprint 5}
+\label{tab:api_chat_s5}
+\begin{tabularx}{\textwidth}{VlVlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Rôle} \\
+\hline
+GET & \texttt{/api/chat/conversations} & Lister les conversations de l’utilisateur & Tous \\
+\hline
+POST & \texttt{/api/chat/conversations} & Créer ou ouvrir une conversation & Tous \\
+\hline
+GET & \texttt{/api/chat/conversations/\{id\}/messages} & Historique des messages paginé & Tous \\
+\hline
+WS & \texttt{/ws/chat} (STOMP) & Envoi et réception de messages temps réel & Tous \\
+\hline
+POST & \texttt{/api/chat/ai} & Question à l’assistant IA Groq & Tous \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le \texttt{WebSocketAuthChannelInterceptor} valide le JWT sur chaque trame STOMP~;
+le token est transmis en paramètre SockJS lors du handshake. L’\texttt{AiChatService}
+construit un prompt système embarquant \texttt{hr-knowledge.txt} et appelle Groq~;
+pour toute question hors périmètre, le modèle renvoie un message de refus standardisé.
+
+\paragraph{Base de connaissances RH.}
+L’assistant conversationnel ne répond qu’aux questions couvertes par la base de
+connaissances RH d’Arabsoft, définie dans le fichier \texttt{hr-knowledge.txt}
+injecté comme system prompt à chaque appel Groq. Le tableau~\ref{tab:hr_knowledge}
+présente les domaines couverts.
+
+\begin{table}[H]
+\centering
+\caption{Domaines couverts par la base de connaissances RH de l’assistant IA}
+\label{tab:hr_knowledge}
+\begin{tabularx}{\textwidth}{VlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Domaine} & \textbf{Contenu} & \textbf{Exemple de question traitée} \\
+\hline
+Types de congés & 14 types (annuel, maladie, maternité, Hajj, allaitement, RTT, etc.) avec conditions et durées & «~Combien de jours de congé annuel ai-je droit~?~» \\
+\hline
+Calcul des soldes & Règle d’acquisition (30 j/an après 12 mois), prorata, décompte des jours fériés & «~Mon solde tient-il compte des jours fériés~?~» \\
+\hline
+Workflows de validation & Circuit de validation par type (Chef + RH, RH seul, Direction) & «~Qui doit valider ma demande de congé maladie~?~» \\
+\hline
+Prêts au personnel & Types de prêt, conditions d’éligibilité, règles de remboursement & «~Puis-je demander un prêt pour un achat immobilier~?~» \\
+\hline
+Documents administratifs & Liste des attestations disponibles et délais de traitement & «~Comment obtenir mon attestation de travail~?~» \\
+\hline
+Jours fériés Tunisie & Calendrier officiel des 10 jours fériés légaux + fêtes islamiques & «~Les jours de l’Aïd comptent-ils dans mon congé annuel~?~» \\
+\hline
+\end{tabularx}
+\end{table}
+
+La figure~\ref{fig:code_ai_chat} ci-dessous présente un extrait de l’\texttt{AiChatService}.
+
+% Insert figure: Extrait AiChatService.java — appel à l'API Groq
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth,height=0.52\textheight,keepaspectratio]{images/code_ai_chat_service.png}
+  \caption{Extrait \texttt{AiChatService.java}~: construction du prompt et appel à l'API Groq}
+  \label{fig:code_ai_chat}
+\end{figure}
+
+\subsection{Interfaces de l'application}
+
+Les figures ci-dessous présentent les deux interfaces du module de messagerie et
+d'assistant IA~: fenêtre de chat temps réel et widget chatbot flottant.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\textwidth,keepaspectratio]{images/screenshot_chat_conversation.png}
+  \caption{Fenêtre de conversation temps réel~: messages bidirectionnels et horodatage}
+  \label{fig:chat_window}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.40\textwidth,keepaspectratio]{images/screendhot_ai_chatbot.png}
+  \caption{Assistant conversationnel RH~: widget flottant propulsé par l'API Groq}
+  \label{fig:chatbot_widget}
+\end{figure}
+
+\subsection{Implémentation frontend}
+
+\begin{table}[H]
+\centering
+\caption{Composants Angular — Sprint 5}
+\label{tab:angular_sprint5}
+\begin{tabularx}{\textwidth}{VlVlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Composant} & \textbf{Route} & \textbf{Rôle} & \textbf{Fonctionnalité} \\
+\hline
+\texttt{ChatComponent} & /chat & Tous & Interface de messagerie temps réel (STOMP/SockJS) \\
+\hline
+\texttt{ChatbotWidgetComponent} & Global (flottant) & Tous & Widget chatbot IA Groq en overlay sur toutes les pages \\
+\hline
+\end{tabularx}
+\end{table}
+
+\texttt{ChatService} établit la connexion STOMP via \texttt{SockJS} et s'abonne au
+topic utilisateur pour la réception. Le token JWT est transmis en paramètre d'URL
+lors du handshake. Le widget chatbot est monté dans \texttt{AppComponent} et rendu
+en overlay via un portal Angular.
+
+\subsection{Sprint review}
+
+\begin{table}[H]
+\centering
+\caption{Sprint 5 review}
+\label{tab:sprint5_review}
+\begin{tabularx}{\textwidth}{VLVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Tâche} & \textbf{Terminé} & \textbf{À améliorer} & \textbf{Inachevé} \\
+\hline
+chat-service (WebSocket STOMP/SockJS) & \faCheckCircle & & \\
+\hline
+Validation JWT dans l’intercepteur STOMP & \faCheckCircle & & \\
+\hline
+Assistant IA Groq + base de connaissance RH & \faCheckCircle & & \\
+\hline
+Interface Angular~: messagerie + chatbot & \faCheckCircle & & \\
+\hline
+\end{tabularx}
+\end{table}
+
+\paragraph{Obstacle résolu~: validation JWT sur le canal WebSocket/STOMP.}
+Le handshake WebSocket ne supportant pas les en-têtes HTTP standards, le token JWT a été transmis en paramètre de connexion SockJS puis validé dans un \texttt{ChannelInterceptor} STOMP, garantissant l'authentification au niveau du canal. Le patron d'intégration Groq établi pour le chatbot (prompt système + base de connaissance) a été directement transposé au \texttt{CvScoringService} du sprint~6.
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+Cette deuxième release consolide le cœur fonctionnel de Synapse~: les cinq types
+de demandes RH avec leurs circuits de validation multi-niveaux, les notifications
+asynchrones via Kafka, la messagerie interne sécurisée par JWT sur WebSocket, et
+l’assistant IA propulsé par l’API Groq. L’architecture événementielle garantit
+l’isolation des pannes et la scalabilité indépendante de chaque microservice.

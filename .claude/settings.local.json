@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/marie/Documents/GRH_PFE/gerai-backend/gerai/demandes-service/**)",
+      "Bash(mvn compile *)",
+      "Read(//c/Users/marie/Documents/GRH_PFE/gerai-backend/gerai/projets-service/**)",
+      "Bash(xargs grep -l \"datasource\\\\|url\")",
+      "Bash(find \"c:\\\\Users\\\\marie\\\\Documents\\\\GRH_PFE\\\\gerai-backend\" -name \"*.java\" | grep -E \"\\(model|entity|entities\\)\" | grep -v test | head -80)",
+      "Read(//c/Users/marie/Documents/GRH_PFE/gerai-backend/**)"
+    ]
+  }
+}

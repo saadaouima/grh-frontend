@@ -1,0 +1,48 @@
+﻿@startuml uc_chat_messagerie
+title Diagramme de cas d'utilisation - Messagerie interne et Assistant IA
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Employe"        as emp
+actor "Chef de projet" as chef
+actor "Admin RH"       as admin
+
+rectangle "Synapse - Module Messagerie et Assistant IA" {
+
+  package "Messagerie interne" {
+    usecase "Envoyer un message"                as UC_SEND
+    usecase "Creer une conversation"            as UC_CONV
+    usecase "Recevoir un message en temps reel" as UC_RECV
+    usecase "Marquer un message comme lu"       as UC_READ
+    usecase "Consulter l'historique"            as UC_HIST
+  }
+
+  package "Assistant IA" {
+    usecase "Interroger l'assistant IA"          as UC_AI
+    usecase "Obtenir une reponse contextualisee" as UC_RESP
+  }
+}
+
+emp   --> UC_SEND
+emp   --> UC_HIST
+emp   --> UC_AI
+emp   --> UC_RECV
+chef  --> UC_SEND
+chef  --> UC_HIST
+chef  --> UC_RECV
+admin --> UC_SEND
+admin --> UC_HIST
+admin --> UC_RECV
+
+UC_AI   ..> UC_RESP : <<include>>
+
+UC_CONV ..> UC_SEND : <<extend>>\n[condition : premiere conversation]
+UC_READ ..> UC_HIST : <<extend>>\n[condition : message non lu]
+
+@enduml

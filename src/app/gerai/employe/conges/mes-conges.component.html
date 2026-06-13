@@ -6,10 +6,45 @@
 
     <!-- ── Loading State ── -->
     @if (isLoading) {
-    <div class="loading-overlay">
-        <div class="spinner-modern"></div>
-        <p>Chargement de vos congés...</p>
-    </div>
+      <div class="page-header mb-4">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="sk sk-xl" style="width:200px"></span>
+          <span class="sk sk-md" style="width:300px"></span>
+        </div>
+      </div>
+      <div class="solde-grid mb-4">
+        @for (_ of [1,2,3,4]; track $index) {
+          <div style="background:#fff;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;border:1px solid #E2E8F0">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="sk sk-av" style="width:36px;height:36px"></span>
+              <span class="sk sk-md" style="width:110px"></span>
+            </div>
+            <span class="sk sk-xl" style="width:64px;height:28px"></span>
+            <span class="sk sk-md" style="width:140px"></span>
+          </div>
+        }
+      </div>
+      <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid #F1F5F9">
+          <span class="sk sk-xl" style="width:160px"></span>
+        </div>
+        <div style="padding:0 16px">
+          <table class="table align-middle mb-0">
+            <tbody>
+              @for (_ of [1,2,3,4]; track $index) {
+                <tr>
+                  <td><span class="sk sk-pill"></span></td>
+                  <td><span class="sk sk-md" style="width:80px"></span></td>
+                  <td><span class="sk sk-md" style="width:80px"></span></td>
+                  <td><span class="sk sk-md" style="width:80px"></span></td>
+                  <td><span class="sk sk-pill"></span></td>
+                  <td><span class="sk sk-btn"></span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
     }
 
     <!-- ── Content ── -->
@@ -223,8 +258,9 @@
 
                         <!-- Statut -->
                         <td>
-                            <span class="badge-statut" [ngClass]="getStatutClass(demande.statut)">
-                                {{ getStatutLabel(demande.statut) }}
+                            <span class="status-chip" [ngClass]="statutChip(demande.statut).cls">
+                                <i [class]="statutChip(demande.statut).icon" aria-hidden="true"></i>
+                                {{ statutChip(demande.statut).label }}
                             </span>
                         </td>
 
@@ -258,10 +294,10 @@
         </div>
         } @else {
         <div class="empty-state">
-            <i class="ti ti-calendar-off"></i>
-            <h4>Aucune demande</h4>
-            <p>Vous n'avez pas encore de demandes de congés</p>
-            <button class="btn-empty-action" [routerLink]="['/employe/demandes/deposer']">
+            <i class="ti ti-calendar-off empty-state__icon"></i>
+            <p class="empty-state__title">Aucune demande de congé</p>
+            <p class="empty-state__subtitle">Vous n'avez pas encore soumis de demande de congé.</p>
+            <button class="btn-empty-action" [routerLink]="['/employe/demandes/deposer']" style="margin-top:8px">
                 <i class="ti ti-plus"></i>
                 Créer ma première demande
             </button>
@@ -272,3 +308,38 @@
     }
 
 </div>
+
+<!-- ── Error banner ── -->
+@if (cancelError) {
+  <div class="cancel-error-bar">
+    <i class="ti ti-alert-circle"></i>
+    {{ cancelError }}
+    <button class="cancel-error-close" (click)="cancelError = ''"><i class="ti ti-x"></i></button>
+  </div>
+}
+
+<!-- ── Cancel Modal ── -->
+@if (cancelTarget) {
+  <div class="cancel-overlay" (click)="closeCancelModal()">
+    <div class="cancel-box" (click)="$event.stopPropagation()">
+      <div class="cancel-head">
+        <div class="cancel-icon"><i class="ti ti-trash"></i></div>
+        <h6>Annuler la demande</h6>
+      </div>
+      <div class="cancel-body">
+        <p>
+          Voulez-vous vraiment annuler cette demande de
+          <strong>{{ getTypeLabel(cancelTarget.type) }}</strong>
+          du <strong>{{ formatDate(cancelTarget.dateDebut) }}</strong> ?
+        </p>
+        <p class="cancel-warn"><i class="ti ti-info-circle me-1"></i>Cette action est irréversible.</p>
+      </div>
+      <div class="cancel-foot">
+        <button class="btn-modal-secondary" (click)="closeCancelModal()">Garder la demande</button>
+        <button class="btn-modal-danger" (click)="confirmAnnuler()">
+          <i class="ti ti-trash me-1"></i>Oui, annuler
+        </button>
+      </div>
+    </div>
+  </div>
+}

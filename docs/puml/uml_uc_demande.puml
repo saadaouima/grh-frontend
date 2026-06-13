@@ -1,0 +1,49 @@
+﻿@startuml uml_uc_demande
+title Diagramme de cas d'utilisation - Depot et validation d'une demande de conge
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Employe"  as emp
+actor "Chef"     as chef
+actor "Admin RH" as admin
+
+rectangle "Synapse - Module Demandes de conge" {
+
+  usecase "Deposer une demande de conge" as UC1
+  usecase "Calculer les jours ouvrables" as UC2
+  usecase "Verifier le solde de conges"  as UC3
+  usecase "Enregistrer la demande"       as UC4
+  usecase "Notifier les responsables"    as UC5
+  usecase "Consulter ses demandes"       as UC6
+  usecase "Annuler une demande"          as UC7
+  usecase "Valider la demande (Chef)"    as UC8
+  usecase "Commenter et rejeter"         as UC9
+  usecase "Valider la demande (RH)"      as UC10
+  usecase "Notifier l'employe"           as UC11
+}
+
+emp   --> UC1
+emp   --> UC6
+emp   --> UC7
+chef  --> UC8
+admin --> UC10
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+
+UC8  ..> UC11 : <<include>>
+UC10 ..> UC11 : <<include>>
+
+UC7 ..> UC6  : <<extend>>\n[condition : statut = EN_ATTENTE]
+UC9 ..> UC8  : <<extend>>\n[condition : decision = REJET]
+UC9 ..> UC10 : <<extend>>\n[condition : decision = REJET]
+
+@enduml

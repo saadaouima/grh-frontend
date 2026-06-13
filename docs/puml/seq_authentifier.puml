@@ -1,0 +1,40 @@
+﻿@startuml seq_authentifier
+title Diagramme de séquence  -  Flux d'authentification OAuth2/OIDC avec PKCE
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Utilisateur" as user
+participant "Angular\n(Frontend)" as angular
+participant "Keycloak\n(IAM)" as kc
+participant "API Backend" as api
+
+== Détection de session ==
+user -> angular : Accède à l'application
+angular -> angular : Aucune session active
+
+== Authentification PKCE ==
+angular -> kc : Redirige vers la page de connexion
+user -> kc : Saisit ses identifiants
+kc -> angular : Retourne l'authorization code
+angular -> kc : Échange le code contre un JWT
+kc -> angular : access_token + refresh_token
+
+== Chargement du profil ==
+angular -> angular : Extrait les rôles depuis le JWT
+angular -> api : GET /api/employes/me
+api -> angular : Profil employé
+
+== Redirection ==
+angular -> user : Tableau de bord (selon rôle)
+
+== Rafraîchissement automatique ==
+...
+angular -> kc : Renouvelle avec le refresh_token
+kc -> angular : Nouveau access_token
+
+@enduml

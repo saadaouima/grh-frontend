@@ -82,7 +82,17 @@
           <option value="">Tous</option>
           <option value="EN_COURS">En cours</option>
           <option value="EN_PAUSE">En pause</option>
+          <option value="EN_RETARD">En retard</option>
           <option value="TERMINE">Terminé</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Trier :</label>
+        <select [(ngModel)]="sortBy" (change)="filterProjets()" class="filter-select">
+          <option value="deadline">Échéance</option>
+          <option value="progression">Progression</option>
+          <option value="nom">Nom A→Z</option>
         </select>
       </div>
 
@@ -98,16 +108,24 @@
     <div class="row g-4">
       @for (projet of projetsFiltres; track projet.id) {
         <div class="col-lg-6 col-xl-4">
-          <div class="projet-card" (click)="null">
-            
+          <div class="projet-card {{ urgencyClass(projet) }}" (click)="goToTaches(projet)">
+
             <!-- Header -->
             <div class="projet-header">
               <div class="projet-icon" [style.background]="projet.couleur + '20'" [style.color]="projet.couleur">
                 <i class="ti ti-briefcase"></i>
               </div>
-              <span class="projet-status status-{{ projet.statut }}">
-                {{ getStatutLabel(projet.statut) }}
-              </span>
+              <div class="header-badges">
+                @if (urgencyLabel(projet)) {
+                  <span class="urgency-chip chip-{{ urgencyClass(projet) }}">
+                    <i class="ti ti-clock"></i>
+                    {{ urgencyLabel(projet) }}
+                  </span>
+                }
+                <span class="projet-status status-{{ projet.statut }}">
+                  {{ getStatutLabel(projet.statut) }}
+                </span>
+              </div>
             </div>
 
             <!-- Title & Description -->
@@ -120,7 +138,8 @@
                 <i class="ti ti-checkbox"></i>
                 <span>{{ projet.tachesCompletees }}/{{ projet.totalTaches }} tâches</span>
               </div>
-              <div class="stat-item">
+              <div class="stat-item" [class.deadline-late]="daysLeft(projet.dateEcheance) < 0 && projet.statut !== 'TERMINE'"
+                                   [class.deadline-soon]="daysLeft(projet.dateEcheance) >= 0 && daysLeft(projet.dateEcheance) <= 7 && projet.statut !== 'TERMINE'">
                 <i class="ti ti-calendar"></i>
                 <span>{{ projet.dateEcheance | date:'dd/MM/yyyy' }}</span>
               </div>
@@ -142,19 +161,31 @@
             <!-- Team -->
             <div class="projet-team">
               <div class="team-avatars">
-                @for (membre of projet.equipe.slice(0, 3); track membre.id) {
-                  <div class="team-avatar" [title]="membre.nom">
+                @for (membre of (projet.membres || []).slice(0, 3); track membre.id) {
+                  <div class="team-avatar" [title]="membre.nomComplet || membre.nom">
                     {{ membre.initiales }}
                   </div>
                 }
-                @if (projet.equipe.length > 3) {
+                @if ((projet.membres?.length || 0) > 3) {
                   <div class="team-avatar team-more">
-                    +{{ projet.equipe.length - 3 }}
+                    +{{ (projet.membres?.length || 0) - 3 }}
                   </div>
                 }
               </div>
-              <span class="team-label">{{ projet.equipe.length }} membres</span>
+              <span class="team-label">{{ projet.membres?.length || 0 }} membres</span>
             </div>
+
+            <!-- Chef -->
+            @if (projet.chefProjet) {
+              <div class="d-flex align-items-center gap-2 mt-2" style="font-size:12px; color:#6c757d;">
+                <span class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold"
+                      style="width:28px;height:28px;font-size:11px;flex-shrink:0;"
+                      [title]="projet.chefProjet">
+                  {{ chefInitials(projet.chefProjet) }}
+                </span>
+                <span>{{ projet.chefProjet }}</span>
+              </div>
+            }
 
           </div>
         </div>
@@ -176,7 +207,7 @@
     <div class="row g-4">
       @for (projet of projetsFiltres; track projet.id) {
         <div class="col-12">
-          <app-card class="projet-list-card">
+          <app-card class="projet-list-card {{ urgencyClass(projet) }}" (click)="goToTaches(projet)">
             <div class="list-header">
               <div class="list-left">
                 <div class="projet-icon" [style.background]="projet.couleur + '20'" [style.color]="projet.couleur">
@@ -191,7 +222,13 @@
                 <span class="projet-status status-{{ projet.statut }}">
                   {{ getStatutLabel(projet.statut) }}
                 </span>
-                <button class="btn-detail" (click)="null">
+                @if (urgencyLabel(projet)) {
+                  <span class="urgency-chip chip-{{ urgencyClass(projet) }}">
+                    <i class="ti ti-clock"></i>
+                    {{ urgencyLabel(projet) }}
+                  </span>
+                }
+                <button class="btn-detail" (click)="goToTaches(projet); $event.stopPropagation()">
                   <i class="ti ti-arrow-right"></i>
                 </button>
               </div>
@@ -208,20 +245,30 @@
               </div>
               <div class="list-stat">
                 <i class="ti ti-users"></i>
-                <span>{{ projet.equipe.length }} membres</span>
+                <span>{{ projet.membres?.length || 0 }} membres</span>
               </div>
+              @if (projet.chefProjet) {
+                <div class="list-stat">
+                  <span class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold"
+                        style="width:24px;height:24px;font-size:10px;flex-shrink:0;"
+                        [title]="projet.chefProjet">
+                    {{ chefInitials(projet.chefProjet) }}
+                  </span>
+                  <span>{{ projet.chefProjet }}</span>
+                </div>
+              }
             </div>
 
             <div class="list-footer">
               <div class="team-avatars">
-                @for (membre of projet.equipe.slice(0, 5); track membre.id) {
-                  <div class="team-avatar" [title]="membre.nom">
+                @for (membre of (projet.membres || []).slice(0, 5); track membre.id) {
+                  <div class="team-avatar" [title]="membre.nomComplet || membre.nom">
                     {{ membre.initiales }}
                   </div>
                 }
-                @if (projet.equipe.length > 5) {
+                @if ((projet.membres?.length || 0) > 5) {
                   <div class="team-avatar team-more">
-                    +{{ projet.equipe.length - 5 }}
+                    +{{ (projet.membres?.length || 0) - 5 }}
                   </div>
                 }
               </div>

@@ -1,5 +1,5 @@
 import { Projet } from 'src/app/gerai/models/projet.model';
-import { Employe } from 'src/app/gerai/models/employe.model';
+import { Employe } from 'src/app/theme/shared/interfaces/employe';
 import { StatutProjet } from 'src/app/gerai/models/projet.model';
 
 // ── RÉFÉRENTIEL EMPLOYÉS ──────────────────────────────────

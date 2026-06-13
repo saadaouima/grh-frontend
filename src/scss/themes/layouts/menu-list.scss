@@ -11,7 +11,20 @@
 
   .navbar-wrapper {
     width: $sidebar-width;
+    height: 100%;
     background: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .navbar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 2px; }
   }
 
   ul {

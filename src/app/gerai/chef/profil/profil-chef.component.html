@@ -19,18 +19,6 @@
     }
   </div>
 
-  <!-- ── Feedback banners ─────────────────────────────── -->
-  @if (successMsg) {
-    <div class="feedback-banner feedback-success">
-      <i class="ti ti-circle-check"></i>{{ successMsg }}
-    </div>
-  }
-  @if (errorMsg) {
-    <div class="feedback-banner feedback-error">
-      <i class="ti ti-alert-circle"></i>{{ errorMsg }}
-    </div>
-  }
-
   <!-- ── Loading skeleton ─────────────────────────────── -->
   @if (loading) {
     <div class="row g-4">

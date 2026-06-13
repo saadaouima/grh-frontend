@@ -1,0 +1,366 @@
+@startuml class_diagram_principal
+!theme plain
+skinparam classBackgroundColor #EEF4FF
+skinparam classBorderColor #3498DB
+skinparam classArrowColor #2C3E50
+skinparam classFontSize 11
+skinparam packageBackgroundColor #F8F9FA
+skinparam packageBorderColor #BDC3C7
+hide empty members
+
+title Diagramme de classes — Entités principales de Synapse
+
+' ══════════════════════════════════════════
+' PACKAGE : CORE RH
+' ══════════════════════════════════════════
+package "Core RH (employe-service)" #FAFBFF {
+
+  class Department {
+    + dept_id : Long <<PK IDENTITY>>
+    + name : String
+    + code : String <<UNIQUE>>
+    + manager_id : Long <<FK>>
+    + parent_dept_id : Long <<FK self>>
+    + is_active : boolean
+    + created_at : LocalDateTime
+  }
+
+  class Position {
+    + position_id : Long <<PK IDENTITY>>
+    + title : String
+    + code : String <<UNIQUE>>
+    + dept_id : Long <<FK>>
+    + grade : String
+    + min_salary : BigDecimal
+    + max_salary : BigDecimal
+    + is_active : boolean
+  }
+
+  class Employee {
+    + employee_id : Long <<PK IDENTITY>>
+    + user_id : String <<UNIQUE — Keycloak UUID>>
+    + employee_code : String <<UNIQUE — EMP-XXXX>>
+    + first_name : String
+    + last_name : String
+    + email : String <<UNIQUE>>
+    + phone : String
+    + birth_date : LocalDate
+    + national_id : String <<UNIQUE>>
+    + gender : String <<M|F|AUTRE>>
+    + address : String
+    + photo_url : String
+    + dept_id : Long <<FK>>
+    + position_id : Long <<FK>>
+    + manager_id : Long <<FK auto-ref>>
+    + hire_date : LocalDate
+    + status : String <<ACTIF|INACTIF|SUSPENDU|DEMISSION>>
+    + created_at : LocalDateTime
+    + updated_at : LocalDateTime
+  }
+
+  class Contract {
+    + contract_id : Long <<PK>>
+    + employee_id : Long <<FK>>
+    + type : String <<CDI|CDD|STAGE|INTERIM>>
+    + start_date : LocalDate
+    + end_date : LocalDate
+    + gross_salary : BigDecimal
+    + net_salary : BigDecimal
+    + currency : String
+    + status : String <<ACTIF|EXPIRE|RESILIE>>
+  }
+
+  note bottom of Contract
+    <b>Types de contrat :</b>
+    CDI / CDD / STAGE / INTERIM
+    (source : employe-profile.model.ts)
+  end note
+}
+
+' ══════════════════════════════════════════
+' PACKAGE : DEMANDES RH
+' ══════════════════════════════════════════
+package "Demandes RH (demandes-service)" #FFFAF0 {
+
+  class LeaveRequest {
+    + request_id : Long <<PK>>
+    + employee_id : Long <<FK>>
+    + leave_type_id : Long <<FK>>
+    + start_date : LocalDate
+    + end_date : LocalDate
+    + days_count : BigDecimal
+    + reason : String
+    + status : String <<voir note>>
+    + approved_by : Long <<FK Chef>>
+    + approved_by_rh : Long <<FK RH>>
+    + med_approved : boolean
+    + half_salary : boolean
+    + created_at : LocalDateTime
+  }
+
+  note right of LeaveRequest
+    <b>Statuts (DB / Oracle V3) :</b>
+    EN_ATTENTE → VALIDE_CHEF
+    → VALIDE_RH | REFUSE | ANNULE
+    <b>Statuts workflow API :</b>
+    EN_ETUDE_MEDICALE (longue maladie)
+    VALIDEE (documents administratifs)
+  end note
+
+  class LoanRequest {
+    + request_id : Long <<PK>>
+    + employee_id : Long <<FK>>
+    + amount : BigDecimal
+    + currency : String
+    + duration_months : Integer
+    + monthly_payment : BigDecimal
+    + needs_commission : boolean
+    + montant_approuve : BigDecimal
+    + nb_tranches : Integer
+    + dg_approved_by : Long
+    + status : String <<voir note>>
+    + created_at : LocalDateTime
+  }
+
+  note right of LoanRequest
+    <b>Statuts workflow multi-niveaux :</b>
+    EN_ATTENTE
+    → VALIDEE_CHEF
+    → EN_ETUDE_COMMISSION (si needs_commission)
+    → VALIDEE_COMMISSION
+    → EN_ETUDE_DG
+    → VALIDEE_DG
+    → VALIDEE_RH | REJETEE | REMBOURSE
+  end note
+
+  class TrainingRequest {
+    + request_id : Long <<PK>>
+    + employee_id : Long <<FK>>
+    + training_title : String
+    + provider : String
+    + cost : BigDecimal
+    + status : String <<EN_ATTENTE|APPROUVE_CHEF|APPROUVE_RH|REJETE>>
+    + created_at : LocalDateTime
+  }
+
+  class DocumentRequest {
+    + request_id : Long <<PK>>
+    + employee_id : Long <<FK>>
+    + document_type : String
+    + status : String <<EN_ATTENTE|TRAITEE|REFUSE>>
+    + created_at : LocalDateTime
+  }
+
+  class ComiteVote {
+    + vote_id : Long <<PK>>
+    + loan_request_id : Long <<FK>>
+    + member_id : String <<Keycloak UUID>>
+    + decision : String <<APPROUVE|REFUSE|ABSTENTION>>
+    + comment : String
+    + voted_at : LocalDateTime
+  }
+}
+
+' ══════════════════════════════════════════
+' PACKAGE : PROJETS & TÂCHES
+' ══════════════════════════════════════════
+package "Projets & Tâches (projets-service / taches-service)" #F0FFF0 {
+
+  class Project {
+    + project_id : Long <<PK IDENTITY>>
+    + name : String
+    + description : String <<CLOB>>
+    + code : String
+    + created_by : Long <<FK — Chef>>
+    + dept_id : Long <<FK>>
+    + start_date : LocalDate
+    + end_date : LocalDate
+    + priority : String <<BASSE|NORMALE|HAUTE|CRITIQUE>>
+    + status : String <<EN_COURS|EN_PAUSE|TERMINE|EN_RETARD>>
+    + progress_pct : Integer
+    + created_at : LocalDateTime
+  }
+
+  note bottom of Project
+    <b>Statuts (source : projet.model.ts) :</b>
+    EN_COURS / EN_PAUSE / TERMINE / EN_RETARD
+    progress_pct recalculé automatiquement
+    à chaque changement de statut de tâche
+  end note
+
+  class Task {
+    + task_id : Long <<PK>>
+    + project_id : Long <<FK>>
+    + title : String
+    + description : String
+    + assigned_to : Long <<FK — Employé>>
+    + priority : String <<BASSE|NORMALE|HAUTE|CRITIQUE>>
+    + status : String <<A_FAIRE|EN_COURS|TERMINEE>>
+    + due_date : LocalDate
+    + created_at : LocalDateTime
+  }
+
+  class ProjectMember {
+    + id : Long <<PK>>
+    + project_id : Long <<FK>>
+    + employee_id : Long <<FK>>
+    + role : String <<CHEF|LEAD|MEMBRE|OBSERVATEUR>>
+    + joined_at : LocalDateTime
+  }
+}
+
+' ══════════════════════════════════════════
+' PACKAGE : ÉVALUATIONS
+' ══════════════════════════════════════════
+package "Évaluations (projets-service)" #FFF8F0 {
+
+  class CampagneEvaluation {
+    + id : Long <<PK>>
+    + titre : String
+    + periode : String <<T1|T2|T3|T4|ANNUEL>>
+    + annee : Integer
+    + dateDebut : LocalDate
+    + dateFin : LocalDate
+    + statut : String <<BROUILLON|ACTIVE|CLOTUREE>>
+    + creePar : String <<Keycloak UUID>>
+    + departements : String[] <<null = tous>>
+    + description : String
+  }
+
+  class Evaluation {
+    + id : Long <<PK>>
+    + campagneId : Long <<FK>>
+    + employeId : Long <<FK — Employé évalué>>
+    + chefId : Long <<FK — Évaluateur>>
+    + statut : String <<EN_ATTENTE|AUTO_SOUMISE|VALIDEE_CHEF|VALIDEE_RH|CLOTUREE>>
+    + scoreFinal : Integer <<0–100>>
+    + mention : String <<INSUFFISANT|A_AMELIORER|SATISFAISANT|BIEN|EXCELLENT>>
+    + recommandation : String <<AUGMENTATION|PROMOTION|FORMATION|RAS|PIP>>
+    + dateAutoEval : LocalDate
+    + dateEvalChef : LocalDate
+    + dateValidationRh : LocalDate
+    + tauxPresence : Double
+    + formationsRealisees : Integer
+  }
+
+  note right of Evaluation
+    <b>Calcul du score final /100 :</b>
+    Objectifs /40 + Compétences /30
+    + Formations /20 + Présence /10
+    Calibration possible par le RH
+  end note
+}
+
+' ══════════════════════════════════════════
+' PACKAGE : RECRUTEMENT
+' ══════════════════════════════════════════
+package "Recrutement (projets-service)" #F5F0FF {
+
+  class Candidate {
+    + id : Long <<PK>>
+    + jobId : Long <<FK — Offre d'emploi>>
+    + nom : String
+    + prenom : String
+    + email : String
+    + telephone : String
+    + experience : Integer <<années>>
+    + competences : String[]
+    + statut : String <<voir pipeline>>
+    + score : Integer <<scoring IA Groq>>
+    + screeningScore : Integer
+    + cvUrl : String
+    + shortliste : boolean
+    + datePostulation : LocalDate
+    + noteRecruteur : String
+  }
+
+  note bottom of Candidate
+    <b>Pipeline de recrutement :</b>
+    NOUVEAU → EN_REVUE → SHORTLISTE
+    → INTERVIEWE → OFFRE_ENVOYEE
+    → EMBAUCHE | REJETE
+    Score CV calculé par Groq Llama 3.3 70B
+  end note
+}
+
+' ══════════════════════════════════════════
+' PACKAGE : COMMUNICATION
+' ══════════════════════════════════════════
+package "Communication (chat-service / notification-service)" #FFF0FF {
+
+  class Conversation {
+    + conversation_id : Long <<PK>>
+    + title : String
+    + is_group : boolean
+    + type : String <<DIRECT|GROUPE|ANNONCE>>
+    + created_by : String <<Keycloak UUID>>
+    + created_at : LocalDateTime
+  }
+
+  class Message {
+    + message_id : Long <<PK>>
+    + conversation_id : Long <<FK>>
+    + sender_id : String <<Keycloak UUID>>
+    + content : String <<CLOB>>
+    + type : String <<TEXTE|IMAGE|FICHIER|SYSTEME>>
+    + statut : String <<ENVOYE|LU>>
+    + reply_to_id : Long <<FK self — optionnel>>
+    + sent_at : LocalDateTime
+  }
+
+  note right of Message
+    <b>Types de message (chat.model.ts) :</b>
+    TEXTE / IMAGE / FICHIER / SYSTEME
+    Les réponses de l'IA sont stockées
+    via AiChatService (endpoint dédié)
+  end note
+
+  class Notification {
+    + notification_id : Long <<PK>>
+    + user_id : String <<Keycloak UUID — nullable>>
+    + role : String <<broadcast par rôle>>
+    + title : String
+    + message : String
+    + type : String <<DEMANDE|TACHE|PROJET|EMPLOYE|INFO>>
+    + reference_type : String
+    + reference_id : String
+    + action_url : String
+    + read_status : boolean
+    + created_at : LocalDateTime
+  }
+}
+
+' ══════════════════════════════════════════
+' RELATIONS — CORE RH
+' ══════════════════════════════════════════
+Employee "N" --o "1" Department : appartient à
+Employee "N" --o "1" Position   : occupe
+Employee "0..1" --o "0..1" Employee : manager de
+Employee "1" -- "0..*" Contract : est lié par
+
+' ── RELATIONS — DEMANDES RH ────────────────────────────────────
+Employee "1" -- "0..*" LeaveRequest     : soumet
+Employee "1" -- "0..*" LoanRequest      : demande
+Employee "1" -- "0..*" TrainingRequest  : demande
+Employee "1" -- "0..*" DocumentRequest  : demande
+
+LoanRequest "1" -- "0..*" ComiteVote : est évalué par
+
+' ── RELATIONS — PROJETS & TÂCHES ───────────────────────────────
+Project "1" *-- "0..*" Task          : contient
+Project "1" *-- "0..*" ProjectMember : inclut
+Employee "1" -- "0..*" ProjectMember : participe à
+Employee "1" -- "0..*" Task          : exécute
+
+' ── RELATIONS — ÉVALUATIONS ────────────────────────────────────
+CampagneEvaluation "1" *-- "0..*" Evaluation : génère
+Employee "1" -- "0..*" Evaluation : est évalué dans
+
+' ── RELATIONS — RECRUTEMENT ────────────────────────────────────
+Department "1" -- "0..*" Candidate : cible le recrutement
+
+' ── RELATIONS — COMMUNICATION ──────────────────────────────────
+Conversation "1" *-- "0..*" Message : contient
+Employee "1" -- "0..*" Notification : reçoit
+
+@enduml

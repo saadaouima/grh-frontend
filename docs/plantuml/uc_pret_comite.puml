@@ -1,0 +1,54 @@
+@startuml uc_pret_comite
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FFF0F0
+  BorderColor #C0392B
+}
+skinparam actor {
+  BackgroundColor #C0392B
+  FontColor #FFFFFF
+  BorderColor #922B21
+}
+left to right direction
+
+title Cas d'utilisation -- Demande de pret (circuit multi-niveaux)
+
+actor "Employe\n[EMPLOYE]" as Emp
+actor "Chef\n[CHEF]" as Chef
+actor "RH\n[ADMIN_RH]" as RH
+actor "DG\n[DIRECTEUR_GENERAL]" as DG
+actor "Comite\n[COMITE]" as Comite
+
+rectangle "Demandes de Pret -- demandes-service" {
+  usecase "Soumettre une\ndemande de pret\n(montant, duree, motif)" as UC_SUBMIT
+  usecase "Donner son avis\n(Chef 48-72h)" as UC_CHEF
+  usecase "Valider ou Refuser\n(RH -- etude)" as UC_RH
+  usecase "Voter (Comite\ncredit -- si eligible)" as UC_VOTE
+  usecase "Approuver ou Refuser\n(Directeur General)" as UC_DG
+  usecase "Finaliser\n(RH -- validation finale)" as UC_FINAL
+  usecase "Consulter le statut\nde son pret" as UC_STATUS
+}
+
+Emp    --> UC_SUBMIT
+Emp    --> UC_STATUS
+Chef   --> UC_CHEF
+RH     --> UC_RH
+RH     --> UC_FINAL
+Comite --> UC_VOTE
+DG     --> UC_DG
+
+UC_SUBMIT ..> UC_CHEF   : <<notifie>>
+UC_CHEF   ..> UC_RH     : <<notifie>>
+UC_RH     ..> UC_VOTE   : <<extend>>\n[si needs_commission=true]
+UC_VOTE   ..> UC_DG     : <<précède>>
+UC_DG     ..> UC_FINAL  : <<notifie>>
+
+note right of UC_VOTE
+  needsCommission = true
+  Workflow : Employe > Chef > Commission > DG > RH
+  needsCommission = false
+  Workflow : Employe > Chef > RH
+end note
+
+@enduml

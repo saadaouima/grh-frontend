@@ -1,0 +1,702 @@
+﻿% !TEX root = ./rapport.tex
+% ══════════════════════════════════════════════════════════════════════
+%  ÉTUDE ET JUSTIFICATION DES CHOIX TECHNOLOGIQUES
+%  Inclure dans chapitre 2 via : \input{choix_technologiques}
+% ══════════════════════════════════════════════════════════════════════
+
+\section{Étude et justification des choix technologiques}
+
+Chaque décision technologique de Synapse est documentée en deux temps~:
+d'abord la justification de la \textbf{catégorie} de technologie retenue
+(pourquoi ce type d'outil est nécessaire, et quelle alternative naïve a été
+écartée et pourquoi), puis la justification du \textbf{produit spécifique}
+choisi au sein de cette catégorie, étayée par une comparaison explicite
+d'alternatives sur des critères mesurables.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Architecture applicative~: microservices vs monolithique}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Synapse couvre sept domaines fonctionnels aux exigences hétérogènes~: l'\textit{analytics-service} est intensif en I/O de lecture, le \textit{chat-service} maintient des connexions WebSocket persistantes, les demandes RH publient des événements Kafka asynchrones. Regrouper ces domaines dans un seul déployable forcerait un couplage structurel rendant tout déploiement partiel impossible et toute modification d'un module risquée pour l'ensemble de l'application.
+
+\subsubsection*{Présentation}
+
+L'\textbf{architecture microservices} décompose une application en services
+autonomes, faiblement couplés, chacun exposant une API REST, gérant sa propre
+logique métier et déployable indépendamment. L'\textbf{architecture monolithique}
+regroupe l'ensemble des fonctionnalités dans un seul déployable, tandis que
+l'\textbf{architecture orientée services (SOA)} propose un découpage plus grossier
+reposant sur un bus d'intégration (ESB).
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des styles architecturaux}
+\label{tab:cmp_architecture}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Monolithique} & \textbf{SOA} & \textbf{Microservices} \\
+\hline
+Scalabilité indépendante     & Faible   & Moyen    & \textbf{Excellent} \\
+\hline
+Isolation des pannes         & Faible   & Moyen    & \textbf{Excellent} \\
+\hline
+Déploiement indépendant      & Non      & Partiel  & \textbf{Oui} \\
+\hline
+Hétérogénéité technologique  & Non      & Partiel  & \textbf{Oui} \\
+\hline
+Complexité opérationnelle    & \textbf{Faible} & Moyenne & Élevée \\
+\hline
+Adapté à un domaine découpé  & Moyen    & Bon      & \textbf{Excellent} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Justification du choix}
+
+Les sept domaines de Synapse ont des exigences incompatibles dans un seul déployable~: l'\textit{analytics-service} est intensif en I/O, le \textit{chat-service} maintient des connexions persistantes. L'architecture microservices permet de scaler et de faire évoluer chaque service indépendamment, et garantit que la défaillance d'un service n'affecte pas les autres.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Framework frontend~: Angular 21}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Les notifications temps réel et les mises à jour de tableaux de bord sans rechargement sont structurellement incompatibles avec un rendu côté serveur (Thymeleaf, JSP)~: chaque action impliquerait un rechargement complet de la page. Une \textbf{Single-Page Application} (SPA) maintient l'état en mémoire et communique avec le backend via API REST et WebSocket, ce qui est indispensable pour la messagerie instantanée et le push de notifications de Synapse.
+
+\subsubsection*{Présentation}
+
+\textbf{Angular}\textsuperscript{[4]} est un framework SPA de Google basé sur TypeScript. Il impose
+une architecture MVC stricte avec injection de dépendances intégrée, un système de
+composants standalone (depuis Angular~14), un compilateur Ivy et des outils de
+routage, de formulaires réactifs et d'intercepteurs HTTP inclus nativement.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des frameworks SPA frontend}
+\label{tab:cmp_frontend}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{React 18} & \textbf{Vue 3} & \textbf{Angular 21} \\
+\hline
+Typage TypeScript natif       & Partiel  & Partiel  & \textbf{Natif} \\
+\hline
+Architecture structurée       & Libre    & Libre    & \textbf{Imposée} \\
+\hline
+Intégration Keycloak officielle & Communauté & Communauté & \textbf{keycloak-angular} \\
+\hline
+Injection de dépendances      & Externe  & Externe  & \textbf{Intégrée} \\
+\hline
+Guards de routage             & Manuel   & Manuel   & \textbf{Natif} \\
+\hline
+Adapté aux SPA multi-rôles   & Moyen    & Moyen    & \textbf{Excellent} \\
+\hline
+Courbe d'apprentissage        & \textbf{Faible} & \textbf{Faible} & Élevée \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: architecture opinionated adaptée aux grandes équipes,
+        bibliothèque \texttt{keycloak-angular} officielle, guards de routage natifs
+        pour le RBAC, détection de changement OnPush pour les tableaux de bord, lazy
+        loading des modules par rôle.
+  \item \textbf{Inconvénients}~: courbe d'apprentissage plus élevée que React/Vue,
+        bundle initial plus lourd sans tree-shaking agressif.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Le RBAC multi-rôles de Synapse est implémenté en un \texttt{requireRoleGuard} réutilisable sur chaque route, grâce à l'intégration native \texttt{keycloak-angular}. Les intercepteurs HTTP centralisent l'injection du Bearer token pour tous les services, et la stratégie \texttt{OnPush} des composants de tableaux de bord évite les rendus inutiles sans gestionnaire d'état externe.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Framework backend~: Spring Boot 3.5}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Les sept microservices doivent exposer des API REST, valider des tokens JWT, persister en Oracle, publier des événements Kafka et, pour certains, envoyer des e-mails ou maintenir des connexions WebSocket. Sans framework, chaque service devrait implémenter manuellement le serveur HTTP, la désérialisation JSON, la gestion des transactions et le pool de connexions~; un \textbf{framework de microservices} industrialise ces préoccupations transversales et garantit la cohérence de configuration sur l'ensemble des services.
+
+\subsubsection*{Présentation}
+
+\textbf{Spring Boot}\textsuperscript{[6]} est un framework Java/JVM qui simplifie la création de
+microservices REST via une auto-configuration et un serveur embarqué Tomcat. Il
+fédère l'écosystème Spring~: Security, Data JPA, Kafka, Mail, Cache, Validation,
+WebSocket.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des frameworks backend Java}
+\label{tab:cmp_backend}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Node.js/Express} & \textbf{Quarkus} & \textbf{Spring Boot 3.5} \\
+\hline
+Écosystème JVM/Java          & N/A      & Excellent & \textbf{Excellent} \\
+\hline
+Intégration Keycloak OAuth2  & Externe  & Bon       & \textbf{Natif (starter)} \\
+\hline
+Support JPA + Oracle OJDBC   & Non      & Bon       & \textbf{Excellent} \\
+\hline
+spring-kafka natif           & Non      & Bon       & \textbf{Natif} \\
+\hline
+Temps de démarrage           & Très rapide & Très rapide & Moyen \\
+\hline
+Maturité / documentation     & Excellente & Moyenne  & \textbf{Très élevée} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: couverture fonctionnelle complète en un seul écosystème
+        (sécurité, persistance, messaging, cache, email), annotation
+        \texttt{@PreAuthorize} pour le RBAC déclaratif, starter
+        \texttt{oauth2-resource-server} pour la validation JWT Keycloak.
+  \item \textbf{Inconvénients}~: temps de démarrage plus long que Quarkus en mode
+        JVM, empreinte mémoire plus élevée.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Chaque microservice utilise un sous-ensemble de l'écosystème Spring (\texttt{spring-kafka}, \texttt{spring-websocket}, \texttt{spring-mail}, \texttt{spring-cache}) sans changer de framework. Tous partagent un unique Bean \texttt{JwtAuthenticationConverter} pour l'extraction des rôles Keycloak, garantissant un comportement d'authentification homogène sur les sept services.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Base de données relationnelle transactionnelle~: Oracle 23ai}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Les données RH de Synapse sont structurellement relationnelles~: clés étrangères entre employés, demandes et soldes~; transactions ACID indispensables pour les workflows multi-étapes (valider un congé met à jour deux tables atomiquement)~; requêtes analytiques multi-tables pour le module d'attrition. Une base documentaire (MongoDB) déléguerait l'intégrité référentielle au code applicatif et rendrait les agrégations analytiques coûteuses à exprimer.
+
+\subsubsection*{Présentation}
+
+\textbf{Oracle Database 23ai}\textsuperscript{[9]} est un SGBD relationnel de niveau industriel proposant
+des vues matérialisées, des CTEs récursives, des contraintes CHECK complexes, des
+colonnes IDENTITY et, depuis la version 23c, des fonctionnalités d'IA natives
+(vector search, SQL AI). Il est déployable localement via l'image Docker officielle
+\texttt{gvenzl/oracle-free}, ce qui le rend utilisable dans un environnement de
+développement standard sans infrastructure dédiée.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des SGBD relationnels}
+\label{tab:cmp_sgbd}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{MySQL 8} & \textbf{PostgreSQL 16} & \textbf{Oracle 23ai} \\
+\hline
+Vues complexes (V\_ALL\_DEMANDES) & Moyen & Excellent & \textbf{Excellent} \\
+\hline
+Fonctions analytiques (NVL, ADD\_MONTHS) & Partiel & Bon & \textbf{Natif} \\
+\hline
+Contraintes avancées (CHECK multi-colonnes) & Limité & Excellent & \textbf{Excellent} \\
+\hline
+Interopérabilité OJDBC11/JPA & Moyen & Bon & \textbf{Natif} \\
+\hline
+Colonnes IDENTITY sans séquence & Non & Non & \textbf{Oui} \\
+\hline
+Maturité en contexte enterprise & Moyen & Bon & \textbf{Référence} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: syntaxe analytique riche (\texttt{NVL},
+        \texttt{ADD\_MONTHS}, \texttt{ROWNUM}, \texttt{TRUNC}), colonnes
+        \texttt{IDENTITY} sans séquence explicite, image Docker
+        \texttt{gvenzl/oracle-free} pour le développement local.
+  \item \textbf{Inconvénients}~: empreinte mémoire plus élevée que PostgreSQL,
+        syntaxe propriétaire réduisant la portabilité vers d'autres SGBD.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+La vue \texttt{V\_ALL\_DEMANDES} exploite des fonctions Oracle natives (\texttt{NVL}, \texttt{ADD\_MONTHS}, \texttt{ROWNUM}) sans équivalent direct en PostgreSQL, rendant le portage coûteux. L'image Docker \texttt{gvenzl/oracle-free:23-slim} rend Oracle utilisable localement sans infrastructure dédiée.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Serveur d'identité centralisé~: Keycloak 26}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Synapse gère six rôles distincts et sept microservices qui doivent tous appliquer le même contrôle d'accès. Implémenter l'authentification dans chaque service produirait sept copies divergentes de logique de sécurité critique~; un \textbf{serveur d'identité} (IAM) externalise cette responsabilité vers un composant unique audité, et ouvre la voie au SSO pour d'autres applications internes d'Arabsoft.
+
+\subsubsection*{Présentation}
+
+\textbf{Keycloak}\textsuperscript{[8]} est une solution IAM (\textit{Identity and Access Management})
+open-source supportant OAuth2, OpenID Connect et SAML 2.0. Il fournit un serveur
+d'autorisation centralisé, une console d'administration, la gestion des rôles et
+attributs personnalisés des utilisateurs.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des solutions IAM}
+\label{tab:cmp_iam}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Spring Security seul} & \textbf{Auth0 / Okta} & \textbf{Keycloak 26} \\
+\hline
+Déploiement on-premise       & Oui      & Non (cloud) & \textbf{Oui} \\
+\hline
+Console d'administration     & Non      & Oui         & \textbf{Oui} \\
+\hline
+RBAC granulaire avec attributs & Manuel & Bon         & \textbf{Excellent} \\
+\hline
+Admin Client Java            & Non      & SDK restreint  & \textbf{Intégré (keycloak-admin-client)} \\
+\hline
+Sync Oracle $\leftrightarrow$ IAM & Manuel & Complexe & \textbf{Via Admin Client Java} \\
+\hline
+SSO multi-applications       & Non      & Oui         & \textbf{Oui} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: déploiement on-premise sans dépendance cloud, client Java
+        \texttt{keycloak-admin-client} pour la synchronisation bidirectionnelle lors
+        de la création d'employés, claims JWT personnalisables pour le RBAC métier,
+        intégration directe avec \texttt{spring-boot-starter-oauth2-resource-server}.
+  \item \textbf{Inconvénients}~: configuration initiale plus complexe qu'un SaaS,
+        haute disponibilité requiert un clustering (hors scope actuel).
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+La synchronisation bidirectionnelle Oracle\,$\leftrightarrow$\,Keycloak lors des créations et désactivations d'employés repose sur le \texttt{keycloak-admin-client} Java, absent des solutions SaaS. Le déploiement on-premise est une contrainte d'Arabsoft qu'Auth0/Okta ne peuvent pas satisfaire.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Système de messagerie asynchrone publish/subscribe~: Apache Kafka}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Le \textit{demandes-service} doit notifier simultanément le \textit{notification-service} et l'\textit{analytics-service} à chaque validation~; des appels HTTP synchrones créeraient un couplage fort (le producteur connaîtrait les URLs des consommateurs) et toute indisponibilité temporaire ferait perdre l'événement définitivement. Un \textbf{bus de messages publish/subscribe} découple producteurs et consommateurs~: le producteur publie une fois, chaque consommateur lit indépendamment, et les événements sont persistés jusqu'à leur traitement.
+
+\subsubsection*{Présentation}
+
+\textbf{Apache Kafka}\textsuperscript{[11]} est une plateforme de streaming distribuée basée sur un modèle
+publication/souscription. Les messages sont persistés sur disque avec une durée de
+rétention configurable et peuvent être relus, ce qui le distingue fondamentalement
+des brokers de messages éphémères.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des brokers de messages publish/subscribe}
+\label{tab:cmp_kafka}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Redis Pub/Sub} & \textbf{RabbitMQ} & \textbf{Apache Kafka} \\
+\hline
+Persistance des messages     & Non      & Optionnelle & \textbf{Oui} \\
+\hline
+Replay des événements        & Non      & Non         & \textbf{Oui} \\
+\hline
+Débit (\textit{throughput})  & Très élevé & Moyen     & \textbf{Très élevé} \\
+\hline
+Découplage temporel          & Non      & Moyen       & \textbf{Excellent} \\
+\hline
+Intégration Spring (\texttt{spring-kafka}) & Bon & Bon & \textbf{Natif/Officiel} \\
+\hline
+Complexité de mise en place  & \textbf{Faible} & Moyen & Moyen (+Zookeeper) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: persistance garantissant qu'aucun événement RH n'est
+        perdu si un service est temporairement hors ligne, découplage fort entre
+        producteur et consommateurs, intégration \texttt{spring-kafka} officielle
+        avec annotation \texttt{@KafkaListener}.
+  \item \textbf{Inconvénients}~: dépendance à Zookeeper (remplacé par KRaft en mode
+        natif dans les versions récentes), complexité opérationnelle supérieure à
+        RabbitMQ pour de petits volumes.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Le \textit{demandes-service} publie vers deux consommateurs indépendants~; si l'un d'eux redémarre, il reprend à son dernier \textit{offset} sans perte d'événement, ce qui est impossible avec Redis Pub/Sub. La complexité de Zookeeper est encapsulée dans Docker et invisible au code applicatif.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Protocole de communication temps réel~: WebSocket avec STOMP/SockJS}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+La messagerie instantanée exige que le serveur pousse les messages vers le client sans que celui-ci les sollicite~; HTTP, protocole requête/réponse, ne permet ce push que via polling (requêtes inutiles toutes les N secondes) ou long polling (overhead de reconnexion TLS répété). Un canal \textbf{WebSocket} TCP persistant élimine cette latence et cet overhead~: le serveur envoie instantanément dès qu'un message est disponible.
+
+\subsubsection*{Présentation}
+
+\textbf{WebSocket}\textsuperscript{[12]} établit un canal TCP bidirectionnel persistant entre le navigateur
+et le serveur. \textbf{STOMP} (\textit{Simple Text Oriented Messaging Protocol})
+structure les messages en trames avec destinations nommées, et \textbf{SockJS}\textsuperscript{[13]}
+fournit un mécanisme de repli (\textit{fallback}) en HTTP pour les environnements
+réseau restrictifs.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des mécanismes de communication temps réel}
+\label{tab:cmp_websocket}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Long Polling} & \textbf{SSE} & \textbf{WebSocket/\allowbreak STOMP} \\
+\hline
+Communication bidirectionnelle & Simulée & Non (S\textrightarrow C) & \textbf{Oui (native)} \\
+\hline
+Latence par message          & Élevée   & Faible      & \textbf{Très faible} \\
+\hline
+Overhead HTTP par message    & Élevé    & Faible      & \textbf{Minimal} \\
+\hline
+Authentification JWT         & Via header & Via header & \textbf{Via STOMP header} \\
+\hline
+Repli navigateurs restrictifs & Natif   & Natif       & \textbf{SockJS fallback} \\
+\hline
+Intégration Spring (\texttt{@MessageMapping}) & Non & Non & \textbf{Natif} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: canal persistant éliminant le polling HTTP, STOMP
+        structure les destinations (\texttt{/topic/conversation/\{id\}},
+        \texttt{/user/queue/messages}) permettant un routage côté serveur sans logique
+        applicative supplémentaire, \texttt{WebSocketAuthChannelInterceptor} valide
+        le JWT à la connexion STOMP avant d'ouvrir le canal.
+  \item \textbf{Inconvénients}~: une connexion WebSocket par utilisateur connecté
+        consomme un descripteur de fichier côté serveur, SockJS ajoute une dépendance
+        JavaScript supplémentaire côté client.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+La messagerie est bidirectionnelle, ce qu'une connexion SSE (serveur→client uniquement) ne peut fournir. STOMP est retenu sur WebSocket brut pour le routage natif vers des destinations nommées via \texttt{@EnableWebSocketMessageBroker}, sans dispatcher applicatif à écrire.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{API d'intelligence artificielle générative~: Groq (Llama 3.3)}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+L'assistant RH et le scoring de CV nécessitent de comprendre le langage naturel~: une approche par mots-clés échoue face aux reformulations («~mon solde~» vs «~mes jours disponibles~») et aux équivalences sémantiques («~React/Node.js 10 ans~» satisfait «~développeur senior JavaScript~»). Seul un \textbf{grand modèle de langage} (LLM) généralise nativement à travers les paraphrases sans base de règles exhaustive à maintenir.
+
+\subsubsection*{Présentation}
+
+\textbf{Groq}\textsuperscript{[17]} est un fournisseur d'inférence LLM proposant une API compatible avec
+la spécification OpenAI, optimisée pour des temps de réponse extrêmement faibles
+grâce à une architecture matérielle propriétaire (LPU~--- \textit{Language Processing
+Unit}). Il héberge des modèles open-source tels que Llama~3.3\textsuperscript{[18]} et Mixtral.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des solutions d'inférence LLM}
+\label{tab:cmp_llm}
+\begin{tabularx}{\textwidth}{VlVCVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Ollama (local)} & \textbf{OpenAI GPT-4} & \textbf{Gemini} & \textbf{Groq} \\
+\hline
+Vitesse de réponse           & GPU dépendant & Moyen & Moyen & \textbf{Très élevée} \\
+\hline
+GPU local requis             & \textbf{Oui}  & Non   & Non   & \textbf{Non} \\
+\hline
+Compatibilité API OpenAI     & Non      & \textbf{Natif} & Non  & \textbf{Oui} \\
+\hline
+Latence conversationnelle    & Variable & Moyenne & Moyenne & \textbf{$<$ 1 seconde} \\
+\hline
+Modèle open-source hébergé   & Oui      & Non     & Non     & \textbf{Oui (Llama 3.3)} \\
+\hline
+Ré-utilisation même client   & Non      & Oui     & Non     & \textbf{Oui} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: latence de réponse inférieure à 1 seconde pour les
+        requêtes conversationnelles, compatibilité API OpenAI permettant de réutiliser
+        le même client \texttt{RestClient} Spring pour le chatbot et le scoring de CV,
+        sans GPU local requis.
+  \item \textbf{Inconvénients}~: les données soumises transitent par les serveurs Groq
+        (non on-premise), ce qui implique une dépendance à la disponibilité du service
+        externe et une contrainte de confidentialité pour les données sensibles en production.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Ollama nécessite un GPU local ($\geq$40~Go VRAM) absent en développement. La compatibilité API OpenAI de Groq permet de réutiliser le même \texttt{RestClient} Spring pour le chatbot et le scoring de CV, en changeant uniquement le prompt système.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Moteur de génération de rapports~: JasperReports}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Les utilisateurs de Synapse doivent exporter les mêmes rapports en PDF et en Excel~; sans moteur de rapports, cela nécessiterait deux bibliothèques distinctes (iText pour PDF, Apache POI pour Excel) et couplerait la mise en page à la logique de données. Un \textbf{moteur de rapports} sépare le template de l'extraction des données et génère les deux formats depuis un seul fichier.
+
+\subsubsection*{Présentation}
+
+\textbf{JasperReports}\textsuperscript{[14]} est le moteur de reporting Java open-source de référence. Il
+compile des templates \texttt{.jrxml} (XML) en rapports exportables dans de
+multiples formats~: PDF, Excel (XLSX), CSV, HTML. Il s'intègre nativement à Spring
+Boot via une dépendance Maven.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des bibliothèques de génération de rapports}
+\label{tab:cmp_reporting}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Apache POI seul} & \textbf{iText 7} & \textbf{JasperReports} \\
+\hline
+Export PDF + Excel simultané & Non (Excel seul) & Non (PDF seul) & \textbf{Oui} \\
+\hline
+Templates visuels réutilisables & Non & Non & \textbf{Oui (JRXML)} \\
+\hline
+Séparation mise en page / données & Non & Non & \textbf{Oui} \\
+\hline
+Filtrage par rôle via paramètres & Manuel & Manuel & \textbf{Via paramètres JRXML} \\
+\hline
+Graphiques intégrés           & Non      & Partiel  & \textbf{Oui} \\
+\hline
+Intégration Spring Boot      & Manuelle & Manuelle & \textbf{Native (starter)} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: génération simultanée PDF et Excel depuis un seul template
+        \texttt{.jrxml}, séparation stricte mise en page / logique de données, intégration
+        Maven native, paramétrage du filtrage par rôle sans modifier le code Java.
+  \item \textbf{Inconvénients}~: syntaxe XML des templates complexe pour les mises en
+        page avancées~; toute modification visuelle nécessite d'éditer le fichier JRXML.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Un seul template \texttt{.jrxml} génère PDF et Excel, et la mise en page est modifiable sans toucher au code Java. Les paramètres JRXML filtrent les données selon le rôle (admin RH~: tous les départements~; chef~: son équipe uniquement) sans duplication dans les endpoints.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Gestion des migrations de schéma~: Flyway}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Le schéma Oracle de Synapse évolue à chaque sprint~; sans outil de migration, chaque développeur devrait appliquer manuellement les scripts SQL dans le bon ordre, produisant des incohérences impossibles à reproduire entre environnements. Un \textbf{outil de migration versionné} enregistre les scripts déjà appliqués et ne rejoue que les nouvelles migrations au démarrage, garantissant la cohérence sur toutes les machines.
+
+\subsubsection*{Présentation}
+
+\textbf{Flyway}\textsuperscript{[15]} est un outil de gestion des migrations de base de données par
+convention~: chaque fichier SQL versionné (\texttt{V1\_\_...sql}, \texttt{V2\_\_...sql})
+est exécuté dans l'ordre croissant et son état est tracé dans la table
+\texttt{flyway\_schema\_history}.
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des outils de migration de schéma}
+\label{tab:cmp_flyway}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Scripts manuels} & \textbf{Liquibase} & \textbf{Flyway} \\
+\hline
+Versionning garanti          & Non      & \textbf{Oui} & \textbf{Oui} \\
+\hline
+SQL Oracle natif (NVL, IDENTITY) & Oui  & Partiel      & \textbf{Oui} \\
+\hline
+Courbe d'apprentissage       & Nulle    & Élevée (XML/YAML) & \textbf{Très faible} \\
+\hline
+Idempotence garantie         & Non      & \textbf{Oui} & \textbf{Oui} \\
+\hline
+Intégration Maven            & Non      & \textbf{Oui} & \textbf{Oui} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Avantages et inconvénients}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Avantages}~: migrations en SQL Oracle natif sans couche d'abstraction,
+        journal versionné dans \texttt{flyway\_schema\_history} garantissant l'idempotence,
+        exécution automatique au démarrage Spring Boot via \texttt{spring.flyway.enabled=true}.
+  \item \textbf{Inconvénients}~: les scripts appliqués sont immuables~; toute correction
+        doit faire l'objet d'un nouveau fichier versionné, ce qui alourdit l'historique
+        en cas d'erreurs fréquentes.
+\end{itemize}
+
+\subsubsection*{Justification du choix}
+
+Flyway accepte le SQL Oracle natif tel quel (\texttt{IDENTITY}, \texttt{CHECK}, vues analytiques), sans couche d'abstraction XML/YAML. Sa simplicité le rend préférable à Liquibase dans un contexte de délai contraint.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Cache applicatif en mémoire JVM~: Caffeine}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+Les requêtes analytiques de Synapse agrègent cinq tables (200--500~ms par appel Oracle), mais les données sous-jacentes ne changent que quelques fois par heure. Répéter ces requêtes à chaque chargement de tableau de bord est un gaspillage inutile~; un \textbf{cache applicatif} avec TTL et invalidation événementielle réduit la latence à moins de 1~ms pour tous les accès après le premier.
+
+\subsubsection*{Présentation}
+
+\textbf{Caffeine}\textsuperscript{[16]} est une bibliothèque de cache Java haute performance en mémoire
+JVM, implémentant l'interface \texttt{CacheManager} de Spring. Elle utilise
+l'algorithme \textit{W-TinyLFU} pour maximiser le taux de succès (\textit{hit rate}).
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des solutions de cache applicatif}
+\label{tab:cmp_cache}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Ehcache} & \textbf{Redis} & \textbf{Caffeine} \\
+\hline
+Performances (latence)       & Bon      & Bon (réseau) & \textbf{Excellent (JVM)} \\
+\hline
+Infrastructure externe       & Non      & \textbf{Requise} & \textbf{Non} \\
+\hline
+Invalidation \texttt{@CacheEvict} & Oui & Oui & \textbf{Oui} \\
+\hline
+TTL configurable             & Oui      & Oui          & \textbf{Oui} \\
+\hline
+Cache distribué multi-instances & Non   & \textbf{Oui} & Non \\
+\hline
+Adapté à un service unique   & Bon      & Surdimensionné & \textbf{Excellent} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Justification du choix}
+
+Les données analytiques sont stables sur 10 minutes~; un cache JVM évite le surcoût réseau de Redis, justifié uniquement en cache distribué multi-instances (hors périmètre). L'invalidation via \texttt{@CacheEvict} sur événements Kafka garantit la fraîcheur des indicateurs.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Environnement de conteneurisation~: Docker Compose}
+% ──────────────────────────────────────────────────────────────────────
+
+\subsubsection*{Pourquoi cette catégorie~?}
+
+L'infrastructure de Synapse comprend quatre composants hétérogènes (Oracle, Keycloak, Kafka, Zookeeper) aux procédures d'installation distinctes selon l'OS. Sans conteneurisation, les divergences de versions entre développeurs produisent des bugs impossibles à reproduire~; un fichier déclaratif \textbf{Docker Compose} recrée l'environnement complet identiquement sur toute machine en une seule commande.
+
+\subsubsection*{Présentation}
+
+\textbf{Docker Compose}\textsuperscript{[19]} orchestre un ensemble de conteneurs Docker via un fichier
+YAML déclaratif, gérant leur démarrage, leur réseau interne partagé et leurs
+dépendances de démarrage (\texttt{depends\_on}).
+
+\subsubsection*{Comparaison}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des outils de déploiement et d'orchestration}
+\label{tab:cmp_docker}
+\begin{tabularx}{\textwidth}{VlVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Scripts Bash} & \textbf{Kubernetes} & \textbf{Docker Compose} \\
+\hline
+Reproductibilité de l'environnement & Non & \textbf{Oui} & \textbf{Oui} \\
+\hline
+Démarrage en une commande    & Non      & Complexe     & \textbf{Oui (\texttt{docker compose up})} \\
+\hline
+Auto-scaling horizontal      & Non      & \textbf{Excellent} & Non \\
+\hline
+Ressources machines requises & \textbf{Faibles} & Élevées & \textbf{Faibles} \\
+\hline
+Courbe d'apprentissage       & \textbf{Nulle} & Très élevée & \textbf{Faible} \\
+\hline
+Adapté au développement local & Moyen   & Non          & \textbf{Excellent} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Justification du choix}
+
+\texttt{docker compose up} démarre l'intégralité de l'infrastructure en une commande, garantissant la reproductibilité entre machines. Kubernetes est plus puissant mais nécessite des ressources et une expertise opérationnelle dépassant le cadre de ce projet.
+
+% ──────────────────────────────────────────────────────────────────────
+\subsection{Récapitulatif des choix technologiques}
+% ──────────────────────────────────────────────────────────────────────
+
+Le tableau~\ref{tab:recap_tech} synthétise l'ensemble des décisions, en distinguant
+la justification de la \textbf{catégorie} de celle du \textbf{produit} retenu.
+
+\begin{table}[H]
+\centering
+\caption{Récapitulatif des technologies retenues pour Synapse}
+\label{tab:recap_tech}
+\begin{tabularx}{\textwidth}{VlVlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Catégorie} & \textbf{Technologie} & \textbf{Pourquoi cette catégorie~?} & \textbf{Pourquoi ce produit~?} \\
+\hline
+Architecture    & Microservices       & 7 domaines aux besoins hétérogènes & Scalabilité et isolation par domaine \\
+\hline
+SPA frontend    & Angular 21          & Notifications temps réel + état client & RBAC natif, keycloak-angular officiel \\
+\hline
+Framework back  & Spring Boot 3.5     & Préoccupations transversales mutualisées & Écosystème Spring complet et homogène \\
+\hline
+SGBD            & Oracle 23ai         & ACID, FK, agrégations analytiques & Syntaxe analytique Oracle native \\
+\hline
+IAM             & Keycloak 26         & Externaliser auth, SSO potentiel & On-premise + Admin Client Java \\
+\hline
+Pub/Sub         & Apache Kafka        & Découplage producteurs/consommateurs & Persistance et replay des événements \\
+\hline
+Temps réel      & WebSocket/STOMP     & Push serveur sans polling & Bidirectionnel + routage STOMP natif \\
+\hline
+LLM / IA        & Groq (Llama 3.3)   & Compréhension sémantique du langage & Pas de GPU requis, API OpenAI-compatible \\
+\hline
+Reporting       & JasperReports       & Séparer mise en page et données & PDF + Excel depuis un seul template \\
+\hline
+Migrations      & Flyway              & Versionning reproductible du schéma & SQL Oracle natif, simplicité \\
+\hline
+Cache           & Caffeine            & Réduire I/O Oracle sur données stables & JVM in-process, sans infrastructure \\
+\hline
+Conteneurisation & Docker Compose     & Environnement reproductible en 1 cmd & Adapté dev/staging, faibles ressources \\
+\hline
+\end{tabularx}
+\end{table}

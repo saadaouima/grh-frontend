@@ -15,8 +15,7 @@ export class EmployeService {
     //Injection du HttpClient (pour faire des appels HTTP
     private http = inject(HttpClient);
 
-    //URL de base de l'API (définie dans environment.ts)
-    private apiUrl = `${environment.apiUrl}/employes`;
+    private apiUrl = '/api/employes';
 
     //METHODES PUBLIQUES
 

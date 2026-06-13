@@ -1,15 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import Keycloak from 'keycloak-js';
+import { Subscription } from 'rxjs';
 
-import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from './navigation';
-
-const ROLES_SYSTEME = [
-  'offline_access', 'uma_authorization', 'manage-account',
-  'manage-account-links', 'view-profile', 'default-roles-gerai',
-  'default-roles-master', 'create-realm', 'broker'
-];
+import { NavigationItem, NAV_ADMIN, NAV_CHEF, NAV_EMPLOYE, NAV_COMITE, NAV_DG } from './navigation';
+import { AuthService } from 'src/app/gerai/services/auth.service';
+import { NotificationService } from 'src/app/gerai/services/notification.service';
 
 @Component({
   selector: 'app-navigation',
@@ -18,35 +14,44 @@ const ROLES_SYSTEME = [
   templateUrl: './navigation.component.html',
   styleUrls: ['./navigation.component.scss']
 })
-export class NavigationComponent implements OnInit {
+export class NavigationComponent implements OnInit, OnDestroy {
 
-  private keycloak = inject(Keycloak);
+  private auth         = inject(AuthService);
+  private notifService = inject(NotificationService);
+  private sub?: Subscription;
 
   navItems: NavigationItem[] = [];
-  userRole: string = '';
+  unreadCount = 0;
+  private unreadLiens = new Set<string>();
 
   ngOnInit(): void {
-    this.loadNavigation();
+    const map: Record<string, NavigationItem[]> = {
+      admin:   NAV_ADMIN,
+      chef:    NAV_CHEF,
+      employe: NAV_EMPLOYE,
+      comite:  NAV_COMITE,
+      dg:      NAV_DG
+    };
+    this.navItems = map[this.auth.role] ?? [];
+    this.sub = this.notifService.notifications$.subscribe(ns => {
+      const unread = ns.filter(n => !n.lue);
+      this.unreadCount = unread.length;
+      this.unreadLiens = new Set(unread.filter(n => n.lien).map(n => n.lien!));
+    });
   }
 
-  logout(): void {
-    this.keycloak.logout({ redirectUri: window.location.origin });
-  }
+  ngOnDestroy(): void { this.sub?.unsubscribe(); }
 
-  private loadNavigation(): void {
-    console.log('🔍 Token parsed:', this.keycloak.tokenParsed);
-    const realmRoles = this.keycloak.tokenParsed?.realm_access?.roles ?? [];
-    const allRoles = [...realmRoles];
-    const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
+  logout(): void { this.auth.logout(); }
 
-    console.log('🔍 Rôles extraits du token:', allRoles);
-    console.log('🔍 Rôles meta:', metaRoles);
-
-    if (metaRoles.includes('chef')) this.userRole = 'chef';
-    else if (metaRoles.includes('employe')) this.userRole = 'employe';
-    else this.userRole = 'employe';
-
-    this.navItems = this.userRole === 'chef' ? NAV_CHEF : NAV_EMPLOYE;
-    console.log('🧭 Navigation chargée pour le rôle:', this.userRole);
+  hasActivity(item: NavigationItem): boolean {
+    // Notifications item already shows a count badge — no dot needed there
+    if (!item.url || item.id?.includes('notifications') || item.id?.includes('chat')) return false;
+    const url = item.url;
+    for (const lien of this.unreadLiens) {
+      // Require exact match or lien goes deeper (proper path boundary, not substring)
+      if (lien === url || lien.startsWith(url + '/')) return true;
+    }
+    return false;
   }
 }

@@ -1,0 +1,395 @@
+\chapter{Analyse, Conception et Choix Technologiques}
+
+\noindent\textbf{Plan du chapitre}
+\begin{enumerate}[nosep]
+  \item Introduction
+  \item Spécification des besoins
+  \item Identification des acteurs
+  \item Diagramme de cas d'utilisation global
+  \item Architecture microservices
+  \item Schéma de base de données
+  \item Environnement de développement
+  \item Choix technologiques justifiés
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+Avant toute ligne de code, trois questions structurantes exigent une réponse
+documentée~: \textit{quoi} construire (besoins fonctionnels et non fonctionnels)~;
+\textit{comment} le décomposer (architecture)~; et \textit{avec quoi} (choix
+technologiques comparés). Ce chapitre répond à ces trois questions en s'appuyant
+sur des critères objectifs propres aux contraintes de GerAI~: budget zéro de
+licences, déploiement on-premise, équipe réduite, calendrier de quatre mois.
+
+% ─────────────────────────────────────────────────────────────
+\section{Spécification des besoins}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Besoins fonctionnels~: Product Backlog}
+
+\begin{table}[H]
+\centering
+\caption{Extrait représentatif du Product Backlog GerAI}
+\label{tab:pbl}
+\begin{tabularx}{\textwidth}{|C|l|L|l|C|}
+\hline
+\rowcolor{headerblue!25}\textbf{ID} & \textbf{Rôle} & \textbf{User Story} & \textbf{Priorité} & \textbf{Sprint} \\\hline
+\rowcolor{rowgray}
+US-01 & ADMIN\_RH & En tant qu'admin, je veux créer un employé avec code \texttt{EMP-NNNN} auto-incrémenté et provisioning Keycloak & Haute & 2 \\\hline
+US-02 & EMPLOYE & En tant qu'employé, je veux déposer 12 types de congés avec vérification de solde & Haute & 3 \\\hline
+\rowcolor{rowgray}
+US-03 & CHEF & En tant que chef, je veux valider ou rejeter les demandes de mon équipe avec commentaire & Haute & 3 \\\hline
+US-04 & EMPLOYE & En tant qu'employé, je veux connaître ma capacité d'endettement automatiquement & Haute & 4 \\\hline
+\rowcolor{rowgray}
+US-05 & COMITE & En tant que membre de la commission, je veux voter FAVORABLE/DÉFAVORABLE et suggérer un montant & Haute & 4 \\\hline
+US-06 & EMPLOYE & En tant qu'employé, je veux soumettre des demandes par message à l'assistant IA & Moyenne & 5 \\\hline
+\rowcolor{rowgray}
+US-07 & CHEF & En tant que chef, je veux créer un projet, affecter des membres et voir l'avancement calculé & Haute & 6 \\\hline
+US-08 & ADMIN\_RH & En tant qu'admin, je veux générer un rapport PDF/Excel de congés filtré par département & Haute & 7 \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Besoins non fonctionnels}
+
+\begin{itemize}
+  \item \textbf{Sécurité}~: chaque endpoint REST valide le JWT via
+        \texttt{JwtAuthenticationConverter}~; la vérification des droits est
+        déclarative via \texttt{@PreAuthorize} au niveau méthode.
+  \item \textbf{Performance}~: les tableaux analytiques sont servis depuis le cache
+        Spring Cache / Caffeine (TTL configurable)~; le frontend utilise la stratégie
+        \texttt{ChangeDetectionStrategy.OnPush}.
+  \item \textbf{Résilience}~: la défaillance d'un microservice n'affecte pas les
+        autres~; les appels inter-services sont découplés par Kafka.
+  \item \textbf{Reproductibilité}~: le schéma Oracle est versionné par 11 migrations
+        Flyway~; \texttt{docker compose up} reconstruit l'intégralité de l'infrastructure.
+  \item \textbf{Traçabilité}~: chaque transition de statut d'une demande est
+        horodatée et associée à un valideur identifié par son \texttt{EMPLOYEE\_ID}.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────
+\section{Identification des acteurs}
+% ─────────────────────────────────────────────────────────────
+
+\begin{table}[H]
+\centering
+\caption{Acteurs du système et rôles Keycloak correspondants (realm \texttt{gerai})}
+\label{tab:acteurs}
+\begin{tabularx}{\textwidth}{|l|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Acteur} & \textbf{Rôle Keycloak} & \textbf{Responsabilités} \\\hline
+\rowcolor{rowgray}
+Administrateur RH & \texttt{ADMIN\_RH} & Cycle de vie employés, provisioning Keycloak, validation finale, rapports, attrition \\\hline
+Chef de projet & \texttt{CHEF} & Avis hiérarchique, projets/tâches, recrutement, évaluations \\\hline
+\rowcolor{rowgray}
+Employé & \texttt{EMPLOYE} & Dépôt demandes, messagerie, assistant IA, profil \\\hline
+Membre comité & \texttt{COMITE} & Vote sur les demandes de prêt soumises à la commission \\\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Diagramme de cas d'utilisation global}
+% ─────────────────────────────────────────────────────────────
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[xscale=1.0, yscale=1.0]
+
+  % ── Acteur Admin (gauche) ─────────────────────────────────
+  \draw[thick] (-2.2,8.3) circle(0.3cm);
+  \draw[thick] (-2.2,8.0)--(-2.2,7.2) coordinate(wA);
+  \draw[thick] (wA)++(0,.1)--++(-.4,-.35) (wA)++(0,.1)--++(.4,-.35);
+  \draw[thick] (wA)--++(-.28,-.55) (wA)--++(.28,-.55);
+  \node[font=\small] at (-2.2,6.25) {Admin RH};
+
+  % ── Acteur Chef ──────────────────────────────────────────
+  \draw[thick] (-2.2,5.0) circle(0.3cm);
+  \draw[thick] (-2.2,4.7)--(-2.2,3.9) coordinate(wC);
+  \draw[thick] (wC)++(0,.1)--++(-.4,-.35) (wC)++(0,.1)--++(.4,-.35);
+  \draw[thick] (wC)--++(-.28,-.55) (wC)--++(.28,-.55);
+  \node[font=\small] at (-2.2,3.0) {Chef};
+
+  % ── Acteur Employé ───────────────────────────────────────
+  \draw[thick] (-2.2,1.8) circle(0.3cm);
+  \draw[thick] (-2.2,1.5)--(-2.2,0.7) coordinate(wE);
+  \draw[thick] (wE)++(0,.1)--++(-.4,-.35) (wE)++(0,.1)--++(.4,-.35);
+  \draw[thick] (wE)--++(-.28,-.55) (wE)--++(.28,-.55);
+  \node[font=\small] at (-2.2,-0.15) {Employé};
+
+  % ── Acteur Comité (droite) ───────────────────────────────
+  \draw[thick] (13,2.8) circle(0.3cm);
+  \draw[thick] (13,2.5)--(13,1.7) coordinate(wK);
+  \draw[thick] (wK)++(0,.1)--++(-.4,-.35) (wK)++(0,.1)--++(.4,-.35);
+  \draw[thick] (wK)--++(-.28,-.55) (wK)--++(.28,-.55);
+  \node[font=\small] at (13,0.7) {Comité};
+
+  % ── Frontière système ────────────────────────────────────
+  \begin{scope}[on background layer]
+    \filldraw[draw=headerblue!60, fill=blue!3, rounded corners=6pt, dashed]
+      (0,-0.5) rectangle (11.5,9.5);
+    \node[font=\bfseries\small, headerblue] at (5.75,9.2) {Plateforme GerAI};
+  \end{scope}
+
+  % ── Cas d'utilisation ────────────────────────────────────
+  % Module Employés
+  \draw (4,8.8) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (4,8.8) {Gérer les employés};
+  \draw (8.5,8.8) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (8.5,8.8) {Générer rapports / attrition};
+
+  % Module Demandes
+  \draw (4,7.3) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (4,7.3) {Valider les demandes};
+  \draw (8.5,7.3) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (8.5,7.3) {Gérer projets et tâches};
+
+  \draw (4,5.8) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (4,5.8) {Déposer une demande};
+  \draw (8.5,5.8) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (8.5,5.8) {Recrutement / scoring CV};
+
+  \draw (4,4.3) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (4,4.3) {Consulter suivi (timeline)};
+  \draw (8.5,4.3) ellipse(2.2cm and .45cm);
+  \node[font=\scriptsize] at (8.5,4.3) {Messagerie / assistant IA};
+
+  \draw (6.25,2.5) ellipse(2.4cm and .45cm);
+  \node[font=\scriptsize] at (6.25,2.5) {Voter sur une demande de prêt};
+
+  \draw (6.25,1.0) ellipse(2.4cm and .45cm);
+  \node[font=\scriptsize] at (6.25,1.0) {Consulter son profil};
+
+  % ── Associations ─────────────────────────────────────────
+  \draw[->] (-1.88,8.3) -- (1.8,8.8);
+  \draw[->] (-1.88,8.1) -- (6.3,8.8);
+  \draw[->] (-1.88,7.7) -- (1.8,7.3);
+  \draw[->] (-1.88,4.7) -- (1.8,5.8);
+  \draw[->] (-1.88,4.5) -- (1.8,4.3);
+  \draw[->] (-1.88,4.2) -- (6.3,7.3);
+  \draw[->] (-1.88,3.5) -- (6.3,4.3);
+  \draw[->] (-1.88,1.8) -- (1.8,5.8);
+  \draw[->] (-1.88,1.6) -- (1.8,4.3);
+  \draw[->] (-1.88,1.4) -- (6.3,4.3);
+  \draw[->] (-1.88,1.1) -- (6.3,1.0);
+  \draw[->] (12.7,2.8) -- (8.65,2.5);
+
+\end{tikzpicture}
+\caption{Diagramme de cas d'utilisation global de la plateforme GerAI}
+\label{fig:uc_global}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Architecture microservices}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Vue d'ensemble}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.0cm]
+  % Frontend
+  \node[draw, rounded corners=5pt, fill=green!10, minimum width=11.5cm,
+        minimum height=0.9cm, font=\small\bfseries] (ng) at (5.75,8.5)
+    {Angular — composants \textit{standalone}, stratégie OnPush, \texttt{keycloak-angular}};
+
+  % Services ligne 1
+  \node[component] (emp)  at (0,   6.2) {employe-service\\:8081};
+  \node[component] (dem)  at (2.9, 6.2) {demandes-service\\:8085};
+  \node[component] (ch)   at (5.75,6.2) {chat-service\\:8086};
+  \node[component] (not)  at (8.6, 6.2) {notification-service\\:8084};
+  \node[component] (ana)  at (11.5,6.2) {analytics-service\\:8083};
+
+  % Services ligne 2
+  \node[component] (prj)  at (3.8, 4.6) {projets-service\\:8087};
+  \node[component] (tch)  at (7.7, 4.6) {taches-service\\:8088};
+
+  % Infrastructure
+  \node[infra] (ora) at (0,   2.5) {Oracle 23ai\\:1521};
+  \node[infra] (kc)  at (2.9, 2.5) {Keycloak 26\\:8080};
+  \node[infra] (kaf) at (5.75,2.5) {Kafka\\:9092};
+  \node[infra] (mh)  at (8.6, 2.5) {MailHog\\:1025};
+
+  % Flèches frontend → services
+  \foreach \t in {emp,dem,ch,not,ana,prj,tch}
+    \draw[compArr] (ng.south) -- (\t.north);
+
+  % Flèches services → BDD/Infra
+  \foreach \t in {emp,dem,ch,ana,prj,tch}
+    \draw[compArr] (\t.south) -- (ora.north);
+  \draw[compArr] (emp.south) to[bend right=15] (kc.north);
+  \draw[compArr] (dem.south) -- (kaf.north);
+  \draw[compArr] (not.south) -- (kaf.north);
+  \draw[compArr] (not.south) to[bend left=10] (mh.north);
+
+  % WebSocket et OAuth2
+  \draw[compArr,dashed,blue!60] (ng.east) to[bend right=25]
+    node[midway,right,font=\scriptsize,blue!70]{WebSocket\\STOMP} (ch.north east);
+  \draw[compArr,dashed,red!60] (ng.west) to[bend left=25]
+    node[midway,left,font=\scriptsize,red!70]{OAuth2/OIDC} (kc.north west);
+\end{tikzpicture}
+\caption{Architecture microservices de GerAI~: services, protocoles et infrastructure}
+\label{fig:archi}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Microservices de GerAI~: ports, entités principales et responsabilités}
+\label{tab:services}
+\begin{tabularx}{\textwidth}{|l|C|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Service} & \textbf{Port} & \textbf{Entités principales et responsabilité} \\\hline
+\rowcolor{rowgray}
+\texttt{employe-service} & 8081 & \texttt{Employee}, \texttt{EmployeeDocument}~; cycle de vie, sync Oracle--Keycloak \\\hline
+\texttt{demandes-service} & 8085 & \texttt{LeaveRequest}, \texttt{LoanRequest}, \texttt{DocumentRequest}, \texttt{TrainingRequest}, \texttt{AuthorizationRequest}, \texttt{ComiteVote}~; workflows RH \\\hline
+\rowcolor{rowgray}
+\texttt{chat-service} & 8086 & \texttt{Message}, \texttt{Conversation}, \texttt{ConversationParticipant}~; WebSocket STOMP, assistant Groq \\\hline
+\texttt{notification-service} & 8084 & \texttt{Notification}~; consommateur Kafka, e-mail MailHog, push WebSocket \\\hline
+\rowcolor{rowgray}
+\texttt{analytics-service} & 8083 & \texttt{AttritionPredictionDTO}~; JasperReports (7 templates), scoring attrition \\\hline
+\texttt{projets-service} & 8087 & \texttt{Project}, \texttt{Task}, \texttt{ProjectMember}, \texttt{Candidate}, \texttt{Interview}~; projets, tâches, recrutement \\\hline
+\rowcolor{rowgray}
+\texttt{taches-service} & 8088 & \texttt{Tache}~; gestion individuelle des tâches avec notifications \\\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Schéma de base de données}
+% ─────────────────────────────────────────────────────────────
+
+La base Oracle 23ai comprend les tables suivantes, versionnées par 11 migrations Flyway (V1--V11)~:
+
+\begin{table}[H]
+\centering
+\caption{Tables principales du schéma Oracle~: colonnes clés}
+\label{tab:schema}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Table} & \textbf{Colonnes significatives} \\\hline
+\rowcolor{rowgray}
+\texttt{EMPLOYEES} & \texttt{EMPLOYEE\_ID (PK)}, \texttt{USER\_ID (UNIQUE)} — UUID Keycloak, \texttt{EMPLOYEE\_CODE} — format \texttt{EMP-0042}, \texttt{DEPT\_ID}, \texttt{POSITION\_ID}, \texttt{MANAGER\_ID} (auto-jointure), \texttt{STATUS} (ACTIF/INACTIF/SUSPENDU) \\\hline
+\texttt{LOAN\_REQUESTS} & \texttt{REQUEST\_ID (PK)}, \texttt{AMOUNT NUMBER(12,2)}, \texttt{DURATION\_MONTHS}, \texttt{STATUS} (EN\_ATTENTE/EN\_ETUDE/APPROUVE/REFUSE), \texttt{NEEDS\_COMMISSION NUMBER(1) DEFAULT 1} \\\hline
+\rowcolor{rowgray}
+\texttt{LEAVE\_REQUESTS} & \texttt{REQUEST\_ID (PK)}, \texttt{LEAVE\_TYPE\_ID}, \texttt{START\_DATE}, \texttt{END\_DATE}, \texttt{DAYS\_COUNT}, \texttt{STATUS}, \texttt{MANAGER\_COMMENT} \\\hline
+\texttt{COMITE\_VOTES} & \texttt{VOTE\_ID (PK)}, \texttt{LOAN\_ID (FK)}, \texttt{MEMBER\_ID (FK)}, \texttt{VOTE} (FAVORABLE/DEFAVORABLE), \texttt{MONTANT\_SUGGERE}, \texttt{NB\_TRANCHES\_SUGGERES} \\\hline
+\rowcolor{rowgray}
+\texttt{PROJECTS} & \texttt{PROJECT\_ID (PK)}, \texttt{NAME}, \texttt{STATUS}, \texttt{PROGRESS\_PCT}, \texttt{CREATED\_BY (FK EMPLOYEES)} \\\hline
+\texttt{V\_ALL\_DEMANDES} & Vue Oracle agrégeant les 5 tables de demandes~; utilisée par l'analytics et la requête d'attrition \\\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Environnement de développement}
+% ─────────────────────────────────────────────────────────────
+
+\begin{table}[H]
+\centering
+\caption{Environnement matériel et logiciel}
+\label{tab:env}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Composant} & \textbf{Configuration} \\\hline
+\rowcolor{rowgray}Processeur & Intel Core i7 11\textsuperscript{e} génération, 2,8 GHz \\\hline
+RAM & 16 Go DDR4 \\\hline
+\rowcolor{rowgray}Système & Windows 11 Professionnel 64 bits \\\hline
+IDE backend & IntelliJ IDEA 2024 (Java 21, Spring Boot 3.x) \\\hline
+\rowcolor{rowgray}IDE frontend & Visual Studio Code + Angular Extension Pack \\\hline
+Test API & Postman \\\hline
+\rowcolor{rowgray}Admin BDD & DBeaver (Oracle 23ai) \\\hline
+Conteneurs & Docker Desktop~: \texttt{gvenzl/oracle-free:23-slim}, \texttt{quay.io/keycloak/keycloak:26.5.5}, \texttt{confluentinc/cp-kafka:7.5.3} \\\hline
+\rowcolor{rowgray}Versioning & GitHub \\\hline
+Rapport & Overleaf (compilation \LaTeX) \\\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Choix technologiques justifiés}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Architecture~: microservices vs alternatives}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des styles architecturaux}
+\begin{tabularx}{\textwidth}{|l|C|C|C|}
+\hline
+\rowcolor{headerblue!25}\textbf{Critère} & \textbf{Monolithique} & \textbf{SOA/ESB} & \textbf{Microservices} \\\hline
+\rowcolor{rowgray}Scalabilité indépendante & \ding{55} & Partielle & \checkmark \\\hline
+Isolation des pannes & \ding{55} & Partielle & \checkmark \\\hline
+\rowcolor{rowgray}Déploiement par domaine & \ding{55} & Partiel & \checkmark \\\hline
+Cache différencié par service & Impossible & Difficile & \checkmark \\\hline
+\rowcolor{rowgray}Complexité opérationnelle & \textbf{Faible} & Moyenne & Élevée \\\hline
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Décision}~: l'\textit{analytics-service} (intensif en I/O Oracle)
+doit pouvoir évoluer indépendamment du \textit{chat-service} (intensif en mémoire
+WebSocket). Seule l'architecture microservices rend cette isolation possible sans
+reconfiguration des autres services.
+
+\subsection{Framework backend~: Spring Boot 3.x}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des frameworks backend}
+\begin{tabularx}{\textwidth}{|l|C|C|C|}
+\hline
+\rowcolor{headerblue!25}\textbf{Critère} & \textbf{Spring Boot 3.x} & \textbf{Quarkus} & \textbf{Micronaut} \\\hline
+\rowcolor{rowgray}Intégration Keycloak native & \checkmark & \checkmark & Partielle \\\hline
+Spring Kafka mature & \checkmark & Extension & Extension \\\hline
+\rowcolor{rowgray}Spring Data JPA / Oracle & \checkmark & Hibernate ORM & Hibernate ORM \\\hline
+Écosystème JasperReports & \checkmark & Limité & Limité \\\hline
+\rowcolor{rowgray}Maturité Java 21 & \checkmark & \checkmark & \checkmark \\\hline
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Décision}~: \texttt{spring-security-oauth2-resource-server}
+configure la validation JWT Keycloak en quelques lignes YAML~;
+\texttt{spring-kafka} fournit \texttt{@KafkaListener} et \texttt{KafkaTemplate}
+éprouvés~; \texttt{spring-data-jpa} couvre la totalité des besoins Oracle avec
+les requêtes natives utilisées dans le scoring d'attrition.
+
+\subsection{Framework frontend~: Angular}
+
+Angular est retenu pour sa cohérence architecturale indispensable à une
+application de gestion complexe~: injection de dépendances intégrée, formulaires
+réactifs (\texttt{ReactiveFormsModule}) avec validateurs conditionnels activés
+dynamiquement selon le type de demande, routing déclaratif protégé par rôle
+Keycloak, et stratégie \texttt{ChangeDetectionStrategy.OnPush} réduisant les
+re-rendus dans les vues de listes paginées.
+
+\subsection{Base de données~: Oracle 23ai Free}
+
+Oracle est retenu pour ses fonctions analytiques SQL avancées (fenêtrage,
+requêtes \texttt{WITH} récursives) utilisées dans la requête de scoring
+d'attrition (\texttt{findAttritionRawData()}) et pour son adéquation avec
+le parc technologique Oracle déjà maîtrisé chez Arabsoft. La version Free
+déployée depuis \texttt{gvenzl/oracle-free:23-slim} élimine tout coût.
+
+\subsection{Messagerie asynchrone~: Apache Kafka}
+
+Kafka est préféré à RabbitMQ pour la durabilité des messages sur disque et la
+possibilité de rejouer les événements~: si le \textit{notification-service} est
+temporairement indisponible, les événements publiés sur \texttt{notification-events}
+ne sont pas perdus. Les trois services producteurs (demandes, employe, projets)
+publient des \texttt{NotificationEvent}~; le \textit{notification-service} les
+consomme via \texttt{@KafkaListener} sur le groupe \texttt{notification-group}.
+
+\subsection{Serveur d'identité~: Keycloak 26}
+
+Keycloak est retenu face à Auth0 (coût SaaS) et WSO2 (complexité initiale) pour
+son déploiement on-premise gratuit et son API d'administration REST complète~:
+l'\textit{employe-service} crée les comptes Keycloak (\texttt{POST /admin/realms/gerai/users}),
+affecte les rôles et réinitialise les mots de passe provisoires en trois appels
+REST successifs.
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+Ce chapitre a formalisé les exigences de GerAI, décrit son architecture
+microservices fondée sur sept services aux responsabilités délimitées, présenté
+le schéma Oracle versionné par Flyway, et justifié chaque choix technologique
+par comparaison argumentée d'alternatives. Ces décisions constituent le cadre
+de référence de tous les développements décrits dans les chapitres suivants.

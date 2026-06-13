@@ -1,0 +1,112 @@
+﻿@startuml class_sprint7_analytics
+title Diagramme de classes  -  Analytique, Reporting et Attrition (Sprint 7)
+
+skinparam classBackgroundColor #EAF2FB
+skinparam classBorderColor #2C5F8A
+skinparam arrowColor #1A3A5C
+skinparam classAttributeIconSize 0
+
+class AttritionPrediction {
+  - id : Long
+  - employeeId : Long
+  - scoreAbsences : double
+  - scoreDemandes : double
+  - scoreSalaire : double
+  - scoreAnciennete : double
+  - scoreAttrition : double
+  - computedAt : LocalDateTime
+  --
+  + getId() : Long
+  + getEmployeeId() : Long
+  + getScoreAttrition() : double
+  + setScoreAttrition(s : double) : void
+  + getRiskLevel() : String
+  + computeAggregate() : void
+}
+
+class AbsenceStat {
+  - id : Long
+  - employeeId : Long
+  - mois : String
+  - totalJours : int
+  - totalDemandes : int
+  - departementId : Long
+  --
+  + getId() : Long
+  + getEmployeeId() : Long
+  + getMois() : String
+  + getTotalJours() : int
+  + getTotalDemandes() : int
+}
+
+class AuditLog {
+  - id : Long
+  - action : String
+  - entityType : String
+  - entityId : Long
+  - actorId : String
+  - details : String
+  - timestamp : LocalDateTime
+  --
+  + getId() : Long
+  + getAction() : String
+  + getActorId() : String
+}
+
+class AnalyticsController {
+  + getAttritionStats(deptId : Long) : List<AttritionPredictionDto>
+  + getDepartmentKpis(deptId : Long) : DeptKpiDto
+  + getAbsenceStats(year : int, deptId : Long) : List<AbsenceStatDto>
+  + getTurnoverRate(year : int) : double
+}
+
+class ReportController {
+  + generatePdf(type : String, periode : String, deptId : Long) : ResponseEntity<byte[]>
+  + generateExcel(type : String, periode : String, deptId : Long) : ResponseEntity<byte[]>
+}
+
+class AttritionService {
+  - predictionRepository : AttritionPredictionRepository
+  - absenceStatRepository : AbsenceStatRepository
+  --
+  + computeAttritionForAll() : void
+  + computeForEmployee(employeeId : Long) : AttritionPrediction
+  + scoreAbsences(employeeId : Long) : double
+  + scoreDemandes(employeeId : Long) : double
+  + scoreSalaire(employeeId : Long) : double
+  + scoreAnciennete(dateEmbauche : LocalDate) : double
+}
+
+class ReportService {
+  - jasperService : JasperReportsService
+  --
+  + buildLeaveReport(params : ReportParams) : byte[]
+  + buildLoanReport(params : ReportParams) : byte[]
+  + buildEffectifReport(params : ReportParams) : byte[]
+  + exportAsPdf(jasperPrint : JasperPrint) : byte[]
+  + exportAsXlsx(jasperPrint : JasperPrint) : byte[]
+}
+
+class DeptKpiDto <<DTO>> {
+  + totalEmployes : int
+  + tauxAbsence : double
+  + tauxAttrition : double
+  + demandesEnAttente : int
+  + projetsActifs : int
+}
+
+' Controller → Service
+AnalyticsController --> AttritionService : utilise >
+ReportController    --> ReportService    : utilise >
+
+' Service → Entity
+AttritionService "1" --> "n" AttritionPrediction : gère >
+AttritionService "1" --> "n" AbsenceStat         : agrège >
+
+' Response
+AnalyticsController ..> DeptKpiDto : produit >
+
+' Audit
+AuditLog "n" --> "1" AttritionPrediction : journalise >
+
+@enduml

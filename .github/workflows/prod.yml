@@ -1,45 +1,47 @@
-name: Node - SSH deploy
+name: CD — Deploy to Production
 
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches:
-      - master
+      - main
   pull_request:
     types:
       - closed
     branches:
-      - master
+      - main
 
 jobs:
-  if_merged:
-    if: github.event.pull_request.merged == true
-    name: 🎉 Deploy
+  deploy:
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚚 Get latest code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node.js 24
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
+          cache: 'yarn'
 
-      - name: 🔨 Build Project
-        run: |
-          yarn
-          yarn build-prod
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-      - name: 📂 Deploy to Server
+      - name: Lint
+        run: yarn lint
+
+      - name: Build (production)
+        run: yarn build-prod
+
+      - name: Deploy via SSH
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          # ARGS: "-rltgoDzvO --delete"
           SOURCE: 'dist/'
-          REMOTE_HOST: 145.79.3.173
-          REMOTE_USER: u965251139
-          REMOTE_PORT: "65002"
-          TARGET: domains/berrydashboard.com/public_html/angular/free
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
           EXCLUDE: '/node_modules/'

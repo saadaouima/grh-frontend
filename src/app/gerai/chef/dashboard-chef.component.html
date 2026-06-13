@@ -39,8 +39,7 @@
 
     <!-- KPI 1 : Demandes en attente -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-        style="background: linear-gradient(135deg, #B45309 0%, #D97706 100%);"
+      <div class="kpi-card kpi-amber cursor-pointer"
         (click)="naviguerVersDemandesEnAttente()">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-clipboard-check"></i></div>
@@ -52,8 +51,7 @@
 
     <!-- KPI 2 : Tâches en retard -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-        style="background: linear-gradient(135deg, #991B1B 0%, #DC2626 100%);"
+      <div class="kpi-card kpi-red cursor-pointer"
         (click)="naviguerVers('/chef/taches')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-alert-circle"></i></div>
@@ -65,8 +63,7 @@
 
     <!-- KPI 3 : Absences aujourd'hui -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-        style="background: linear-gradient(135deg, #0F4C8A 0%, #1565C0 100%);"
+      <div class="kpi-card kpi-navy cursor-pointer"
         (click)="naviguerVers('/chef/equipe')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-user-off"></i></div>
@@ -78,8 +75,7 @@
 
     <!-- KPI 4 : Projets à risque -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-        style="background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);"
+      <div class="kpi-card kpi-violet cursor-pointer"
         (click)="naviguerVers('/chef/projets')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-alert-triangle"></i></div>
@@ -186,99 +182,82 @@
 
   </div>
 
-  <!-- ── Ligne 3 : Métriques de performance ── -->
-  @if (performance) {
-    <div class="dash-card mb-4">
-      <div class="card-head mb-4">
-        <h6 class="card-title-custom">
-          <i class="ti ti-award me-2" style="color:#6366F1"></i>
-          Métriques de performance
-        </h6>
-        <span class="count-badge">Ce trimestre</span>
-      </div>
-
-      <div class="perf-grid">
-
-        <!-- Livraison des projets -->
-        <div class="perf-card">
-          <div class="perf-icon" style="background:#EEF2FF; color:#6366F1">
-            <i class="ti ti-rocket"></i>
-          </div>
-          <div class="perf-body">
-            <span class="perf-label">Livraison des projets</span>
-            <span class="perf-value">{{ performance.tauxLivraisonProjet }}<span class="perf-unit">%</span></span>
-            <div class="perf-track">
-              <div class="perf-fill" [style.width.%]="performance.tauxLivraisonProjet" style="background:#6366F1"></div>
-            </div>
-            <span class="perf-sub">Taux de livraison à temps</span>
-          </div>
-        </div>
-
-        <!-- Satisfaction client -->
-        <div class="perf-card">
-          <div class="perf-icon" style="background:#ECFDF5; color:#059669">
-            <i class="ti ti-star"></i>
-          </div>
-          <div class="perf-body">
-            <span class="perf-label">Satisfaction client</span>
-            <span class="perf-value">{{ performance.satisfactionClient }}<span class="perf-unit">/5</span></span>
-            <div class="perf-track">
-              <div class="perf-fill" [style.width.%]="(performance.satisfactionClient / 5) * 100" style="background:#059669"></div>
-            </div>
-            <span class="perf-sub">Note moyenne</span>
-          </div>
-        </div>
-
-        <!-- Collaboration d'équipe -->
-        <div class="perf-card">
-          <div class="perf-icon" style="background:#F0F9FF; color:#0284C7">
-            <i class="ti ti-users-group"></i>
-          </div>
-          <div class="perf-body">
-            <span class="perf-label">Collaboration d'équipe</span>
-            <span class="perf-value">{{ performance.collaborationEquipe }}<span class="perf-unit">/100</span></span>
-            <div class="perf-track">
-              <div class="perf-fill" [style.width.%]="performance.collaborationEquipe" style="background:#0284C7"></div>
-            </div>
-            <span class="perf-sub">Score de collaboration</span>
-          </div>
-        </div>
-
-        <!-- Qualité du code -->
-        <div class="perf-card">
-          <div class="perf-icon" style="background:#FFFBEB; color:#D97706">
-            <i class="ti ti-code"></i>
-          </div>
-          <div class="perf-body">
-            <span class="perf-label">Qualité du code</span>
-            <span class="perf-value">{{ performance.qualiteCode }}<span class="perf-unit">/100</span></span>
-            <div class="perf-track">
-              <div class="perf-fill" [style.width.%]="performance.qualiteCode" style="background:#D97706"></div>
-            </div>
-            <span class="perf-sub">Score moyen de l'équipe</span>
-          </div>
-        </div>
-
-        <!-- Résolution des bugs -->
-        <div class="perf-card">
-          <div class="perf-icon" style="background:#FEF2F2; color:#EF4444">
-            <i class="ti ti-bug"></i>
-          </div>
-          <div class="perf-body">
-            <span class="perf-label">Résolution des bugs</span>
-            <span class="perf-value">{{ performance.tempsResolutionBugs }}<span class="perf-unit">j</span></span>
-            <div class="perf-track">
-              <div class="perf-fill"
-                   [style.width.%]="100 - (performance.tempsResolutionBugs / 10) * 100"
-                   style="background:#EF4444"></div>
-            </div>
-            <span class="perf-sub">Moy. jours (équipe)</span>
-          </div>
-        </div>
-
-      </div>
+  <!-- ── Ligne 3 : Indicateurs RH équipe ── -->
+  <div class="dash-card mb-4">
+    <div class="card-head mb-4">
+      <h6 class="card-title-custom">
+        <i class="ti ti-award me-2 icon-indigo"></i>
+        Indicateurs RH équipe
+      </h6>
+      <span class="count-badge">Données en temps réel</span>
     </div>
-  }
+
+    <div class="perf-grid">
+
+      <!-- Demandes traitées -->
+      <div class="perf-card">
+        <div class="perf-icon pi-indigo">
+          <i class="ti ti-clipboard-check"></i>
+        </div>
+        <div class="perf-body">
+          <span class="perf-label">Demandes traitées</span>
+          <span class="perf-value">{{ demandesTraiteesCount }}<span class="perf-unit">/{{ totalDemandes }}</span></span>
+          <div class="perf-track">
+            <div class="perf-fill pf-indigo" [style.width.%]="tauxTraitementDemandes"></div>
+          </div>
+          <span class="perf-sub">{{ tauxTraitementDemandes }}% de taux de traitement</span>
+        </div>
+      </div>
+
+      <!-- Présence équipe -->
+      <div class="perf-card">
+        <div class="perf-icon pi-green">
+          <i class="ti ti-users"></i>
+        </div>
+        <div class="perf-body">
+          <span class="perf-label">Présence équipe</span>
+          <span class="perf-value">{{ membresPresents }}<span class="perf-unit">/{{ membres.length }}</span></span>
+          <div class="perf-track">
+            <div class="perf-fill pf-green" [style.width.%]="tauxPresenceEquipe"></div>
+          </div>
+          <span class="perf-sub">{{ tauxPresenceEquipe }}% présents aujourd'hui</span>
+        </div>
+      </div>
+
+      <!-- Tâches en retard -->
+      <div class="perf-card">
+        <div class="perf-icon pi-red">
+          <i class="ti ti-clock-exclamation"></i>
+        </div>
+        <div class="perf-body">
+          <span class="perf-label">Tâches en retard</span>
+          <span class="perf-value">{{ tachesEnRetardCount }}</span>
+          <div class="perf-track">
+            <div class="perf-fill pf-red"
+                 [style.width.%]="tachesEnRetardListe.length > 0 ? 100 : 0"></div>
+          </div>
+          <span class="perf-sub">Nécessitent attention</span>
+        </div>
+      </div>
+
+      <!-- Projets à risque -->
+      <div class="perf-card">
+        <div class="perf-icon pi-amber">
+          <i class="ti ti-alert-triangle"></i>
+        </div>
+        <div class="perf-body">
+          <span class="perf-label">Projets à risque</span>
+          <span class="perf-value">{{ projetsARisqueCount }}</span>
+          <div class="perf-track">
+            <div class="perf-fill pf-amber"
+                 [style.width.%]="projetsARisqueCount > 0 ? 100 : 0"></div>
+          </div>
+          <span class="perf-sub">Délais à surveiller</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ── Ligne 4 : Charge de travail + Tâches en retard ── -->
   <div class="row g-3">
@@ -335,7 +314,7 @@
             <i class="ti ti-clock me-2 text-danger"></i>
             Tâches en retard
           </h6>
-          <span class="pending-count" style="background:#FEE2E2; color:#DC2626;">
+          <span class="pending-count pending-count--danger">
             {{ tachesEnRetardCount }}
           </span>
         </div>

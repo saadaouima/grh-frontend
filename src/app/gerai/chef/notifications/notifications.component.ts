@@ -1,189 +1,134 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SharedModule }        from 'src/app/theme/shared/shared.module';
+import { Router } from '@angular/router';
+import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-//import { Client } from '@stomp/stompjs';
-
-export interface Notification {
-  id: number;
-  titre: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'danger';
-  icone: string;
-  heure: Date;
-  lue: boolean;
-  lien?: string;
-}
+import { ConfirmModalComponent } from 'src/app/theme/shared/components/confirm-modal/confirm-modal.component';
+import { Notification } from 'src/app/gerai/models/notification.model';
+import { NotificationService } from 'src/app/gerai/services/notification.service';
+import { NotificationWebSocketService } from 'src/app/gerai/services/notification-websocket.service';
+import { tempsRelatif } from 'src/app/gerai/utils/temps-relatif';
+import { Subscription } from 'rxjs';
+import { UserRole } from 'src/app/gerai/models/user-role.type';
+import Keycloak from 'keycloak-js';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, SharedModule, BreadcrumbComponent],
+  imports: [CommonModule, SharedModule, BreadcrumbComponent, ConfirmModalComponent],
   templateUrl: './notifications.component.html',
-  styleUrls: ['./notifications.component.scss']
+  styleUrls: ['./notifications-chef.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
 
-  // private client!: Client;
+  private keycloak     = inject(Keycloak);
+  private notifService  = inject(NotificationService);
+  private wsService    = inject(NotificationWebSocketService);
+  private router       = inject(Router);
+  private cdr          = inject(ChangeDetectorRef);
+  private subs: Subscription[] = [];
+
+  readonly role: UserRole = this._detectRole();
 
   notifications: Notification[] = [];
-  filtreActif: 'toutes' | 'non-lues' | 'info' | 'success' | 'warning' | 'danger' = 'toutes';
+  filtreActif = 'toutes';
+  afficherToast = false;
+  derniereNotification: Notification | null = null;
+  deleteAllConfirm = false;
 
   filtres = [
-    { value: 'toutes',   label: 'Toutes',     icone: 'ti ti-bell'          },
-    { value: 'non-lues', label: 'Non lues',   icone: 'ti ti-bell-ringing'  },
-    { value: 'success',  label: 'Succès',     icone: 'ti ti-circle-check'  },
-    { value: 'warning',  label: 'Alertes',    icone: 'ti ti-alert-triangle' },
-    { value: 'danger',   label: 'Urgentes',   icone: 'ti ti-alert-circle'  }
+    { value: 'toutes',   label: 'Toutes',   icone: 'ti ti-bell'           },
+    { value: 'non-lues', label: 'Non lues', icone: 'ti ti-bell-ringing'   },
+    { value: 'success',  label: 'Succès',   icone: 'ti ti-circle-check'   },
+    { value: 'warning',  label: 'Alertes',  icone: 'ti ti-alert-triangle' },
+    { value: 'danger',   label: 'Urgentes', icone: 'ti ti-alert-circle'   }
   ];
 
   ngOnInit(): void {
-    this.loadFakeData();
-    // this.connectStomp();
+    this.notifService.load(this.role);
+    this.subs.push(
+      this.notifService.notifications$.subscribe(ns => {
+        this.notifications = ns;
+        this.cdr.markForCheck();
+      })
+    );
+    // admin.component.ts already bridges WS→NotificationService; only subscribe here for the toast
+    this.subs.push(
+      this.wsService.nouvelleNotification$.subscribe((notif: Notification) => {
+        this.derniereNotification = notif;
+        this.afficherToast = true;
+        this.cdr.markForCheck();
+        setTimeout(() => { this.afficherToast = false; this.cdr.markForCheck(); }, 5000);
+      })
+    );
   }
 
-  /*
-  connectStomp(): void {
-    this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws',
-      reconnectDelay: 5000
-    });
-    this.client.onConnect = () => {
-      this.client.subscribe('/topic/notifications', (msg) => {
-        const notif: Notification = JSON.parse(msg.body);
-        this.notifications.unshift(notif);
-      });
-    };
-    this.client.activate();
-  }
-  */
-
-  loadFakeData(): void {
-    const now = new Date();
-    const h = (minus: number) => new Date(now.getTime() - minus * 60000);
-
-    this.notifications = [
-      {
-        id: 1,
-        titre: 'Demande de congé soumise',
-        message: 'Sami Ben Ali a soumis une demande de congé du 01/03 au 05/03.',
-        type: 'info',
-        icone: 'ti ti-calendar-event',
-        heure: h(5),
-        lue: false,
-        lien: '/chef/demandes'
-      },
-      {
-        id: 2,
-        titre: 'Projet terminé avec succès',
-        message: 'Le projet "Portail Fournisseurs" est marqué comme terminé à 100%.',
-        type: 'success',
-        icone: 'ti ti-circle-check',
-        heure: h(30),
-        lue: false,
-        lien: '/chef/projets'
-      },
-      {
-        id: 3,
-        titre: 'Tâche en retard',
-        message: 'La tâche "Config infrastructure" est en retard de 3 jours.',
-        type: 'warning',
-        icone: 'ti ti-alert-triangle',
-        heure: h(60),
-        lue: false,
-        lien: '/chef/taches'
-      },
-      {
-        id: 4,
-        titre: 'Nouveau message de Ines Trabelsi',
-        message: 'Les maquettes Figma sont finalisées et prêtes pour révision.',
-        type: 'info',
-        icone: 'ti ti-message-circle',
-        heure: h(90),
-        lue: true,
-        lien: '/chat'
-      },
-      {
-        id: 5,
-        titre: 'Délai projet critique dépassé',
-        message: 'Le projet "Tableau de Bord Analytics" dépasse son délai prévu.',
-        type: 'danger',
-        icone: 'ti ti-alert-circle',
-        heure: h(120),
-        lue: false,
-        lien: '/chef/projets'
-      },
-      {
-        id: 6,
-        titre: 'Rapport sprint validé',
-        message: 'Le rapport du sprint 3 a été validé et archivé.',
-        type: 'success',
-        icone: 'ti ti-file-check',
-        heure: h(180),
-        lue: true
-      },
-      {
-        id: 7,
-        titre: 'Demande de formation soumise',
-        message: 'Mohamed Gharbi a soumis une demande de formation Angular avancé.',
-        type: 'info',
-        icone: 'ti ti-school',
-        heure: h(240),
-        lue: true,
-        lien: '/chef/demandes'
-      },
-      {
-        id: 8,
-        titre: 'Pipeline déployé avec succès',
-        message: 'Youssef Hammami a déployé la version 2.3.1 en production.',
-        type: 'success',
-        icone: 'ti ti-rocket',
-        heure: h(300),
-        lue: true
-      }
-    ];
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
-  // ── Filtres ────────────────────────────────────────────
-  setFiltre(f: string): void {
-    this.filtreActif = f as 'toutes' | 'non-lues' | 'info' | 'success' | 'warning' | 'danger';
-  }
-
-  get notificationsFiltrees(): Notification[] {
-    if (this.filtreActif === 'toutes')    return this.notifications;
-    if (this.filtreActif === 'non-lues')  return this.notifications.filter(n => !n.lue);
-    return this.notifications.filter(n => n.type === this.filtreActif);
+  private _detectRole(): UserRole {
+    const roles: string[] = this.keycloak.tokenParsed?.['realm_access']?.['roles'] ?? [];
+    if (roles.some(r => r === 'admin' || r === 'admin_rh')) return 'ADMIN';
+    if (roles.includes('chef')) return 'CHEF';
+    return 'EMPLOYE';
   }
 
   get totalNonLues(): number {
     return this.notifications.filter(n => !n.lue).length;
   }
 
-  // ── Actions ────────────────────────────────────────────
+  get notificationsFiltrees(): Notification[] {
+    if (this.filtreActif === 'toutes')   return this.notifications;
+    if (this.filtreActif === 'non-lues') return this.notifications.filter(n => !n.lue);
+    return this.notifications.filter(n => n.type === this.filtreActif);
+  }
+
+  getNombreParFiltre(filtre: string): number {
+    if (filtre === 'toutes')   return this.notifications.length;
+    if (filtre === 'non-lues') return this.totalNonLues;
+    return this.notifications.filter(n => n.type === filtre).length;
+  }
+
+  setFiltre(filtre: string): void { this.filtreActif = filtre; }
+
   marquerLue(notif: Notification): void {
-    notif.lue = true;
+    if (notif.lue) return;
+    this.notifService.markAsRead(notif.id).subscribe();
   }
 
   marquerToutesLues(): void {
-    this.notifications.forEach(n => n.lue = true);
+    if (this.totalNonLues === 0) return;
+    this.notifService.markAllAsRead(this.role).subscribe();
   }
 
   supprimerNotif(notif: Notification, event: Event): void {
     event.stopPropagation();
-    this.notifications = this.notifications.filter(n => n.id !== notif.id);
+    this.notifService.deleteNotification(notif.id).subscribe();
   }
 
   supprimerToutes(): void {
-    if (!confirm('Supprimer toutes les notifications ?')) return;
-    this.notifications = [];
+    if (this.notifications.length === 0) return;
+    this.deleteAllConfirm = true;
+    this.cdr.markForCheck();
   }
 
-  tempsRelatif(date: Date): string {
-    const diff = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (diff < 1)   return 'À l\'instant';
-    if (diff < 60)  return `Il y a ${diff} min`;
-    const h = Math.floor(diff / 60);
-    if (h < 24)    return `Il y a ${h}h`;
-    return `Il y a ${Math.floor(h / 24)}j`;
+  confirmDeleteAll(): void {
+    this.deleteAllConfirm = false;
+    this.notifService.deleteAll(this.role).subscribe();
+    this.cdr.markForCheck();
   }
+
+  ouvrirLien(notif: Notification, event: Event): void {
+    event.stopPropagation();
+    if (!notif.lue) this.marquerLue(notif);
+    if (notif.lien) this.router.navigate([notif.lien]);
+  }
+
+  fermerToast(): void { this.afficherToast = false; }
+
+  tempsRelatif(dateStr: string | Date): string { return tempsRelatif(dateStr); }
+
+  getClasseType(type: string): string { return `notif-${type}`; }
 }

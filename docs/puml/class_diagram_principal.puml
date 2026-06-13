@@ -1,0 +1,184 @@
+﻿@startuml class_diagram_principal
+title Diagramme de classes  -  Entités principales de Synapse
+
+skinparam classBackgroundColor #EAF2FB
+skinparam classBorderColor #2C5F8A
+skinparam arrowColor #1A3A5C
+skinparam classAttributeIconSize 0
+
+class Employee {
+  - id : Long
+  - matricule : String
+  - nom : String
+  - prenom : String
+  - email : String
+  - telephone : String
+  - dateEmbauche : LocalDate
+  - dateNaissance : LocalDate
+  - salaire : BigDecimal
+  - keycloakId : String
+  - actif : boolean
+  - deptId : Long
+  - posteId : Long
+  --
+  + getId() : Long
+  + getMatricule() : String
+  + getNomComplet() : String
+  + isActif() : boolean
+  + setActif(actif : boolean) : void
+  + getKeycloakId() : String
+}
+
+abstract class AbstractDemande {
+  # id : Long
+  # employeeId : Long
+  # statut : DemandeStatus
+  # createdAt : LocalDateTime
+  # updatedAt : LocalDateTime
+  # commentaireChef : String
+  # commentaireRH : String
+  --
+  + getId() : Long
+  + getStatut() : DemandeStatus
+  + setStatut(statut : DemandeStatus) : void
+  + getEmployeeId() : Long
+}
+
+class LeaveRequest {
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
+  - nombreJours : int
+  - motif : String
+  - typeConge : String
+  --
+  + calculerJoursOuvrables() : int
+}
+
+class LoanRequest {
+  - montant : BigDecimal
+  - dureeRemboursement : int
+  - motif : String
+  - needsCommission : boolean
+  - montantAccorde : BigDecimal
+  --
+  + getEcheanceMensuelle() : BigDecimal
+  + isNeedsCommission() : boolean
+}
+
+class Project {
+  - id : Long
+  - nom : String
+  - description : String
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
+  - statut : ProjectStatus
+  - priorite : Priority
+  - progressPct : int
+  - chefId : Long
+  --
+  + getId() : Long
+  + calculerProgression() : int
+  + getProgressPct() : int
+  + setProgressPct(pct : int) : void
+}
+
+class Tache {
+  - id : Long
+  - titre : String
+  - description : String
+  - statut : TacheStatus
+  - priorite : Priority
+  - dateEcheance : LocalDate
+  - assigneeId : Long
+  - projectId : Long
+  --
+  + getId() : Long
+  + estEnRetard() : boolean
+  + getStatut() : TacheStatus
+  + setStatut(s : TacheStatus) : void
+}
+
+class Message {
+  - id : Long
+  - conversationId : Long
+  - senderId : Long
+  - contenu : String
+  - horodatage : LocalDateTime
+  - lu : boolean
+  --
+  + getId() : Long
+  + isLu() : boolean
+  + setLu(lu : boolean) : void
+}
+
+class Notification {
+  - id : Long
+  - employeeId : Long
+  - message : String
+  - lien : String
+  - lue : boolean
+  - type : String
+  - createdAt : LocalDateTime
+  --
+  + getId() : Long
+  + isLue() : boolean
+  + marquerLue() : void
+}
+
+class AttritionPrediction {
+  - id : Long
+  - employeeId : Long
+  - scoreAbsences : double
+  - scoreDemandes : double
+  - scoreSalaire : double
+  - scoreAnciennete : double
+  - scoreAttrition : double
+  - computedAt : LocalDateTime
+  --
+  + getId() : Long
+  + getScoreAttrition() : double
+  + getRiskLevel() : String
+}
+
+enum DemandeStatus {
+  EN_ATTENTE
+  VALIDE_CHEF
+  VALIDE_RH
+  EN_ETUDE_DG
+  APPROUVE_DG
+  APPROUVE
+  REJETE
+}
+
+enum ProjectStatus {
+  EN_COURS
+  SUSPENDU
+  TERMINE
+}
+
+enum TacheStatus {
+  A_FAIRE
+  EN_COURS
+  EN_REVISION
+  TERMINE
+}
+
+' Inheritance
+LeaveRequest   --|> AbstractDemande
+LoanRequest    --|> AbstractDemande
+
+' Associations
+AbstractDemande "n" --> "1" Employee       : concerne >
+Project         "n" --> "1" Employee       : dirigé par (chef) >
+Tache           "n" --> "1" Project        : appartient à >
+Tache           "n" --> "1" Employee       : assignée à >
+Message         "n" --> "1" Employee       : envoyé par >
+Notification    "n" --> "1" Employee       : destinée à >
+AttritionPrediction "1" --> "1" Employee   : calculée pour >
+
+' Enums
+AbstractDemande --> DemandeStatus : statut
+Project         --> ProjectStatus : statut
+Tache           --> TacheStatus   : statut
+
+@enduml

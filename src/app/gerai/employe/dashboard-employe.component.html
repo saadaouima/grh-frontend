@@ -13,6 +13,10 @@
       }
     </div>
     <div class="welcome-right d-flex flex-column align-items-end gap-2">
+      <button class="new-request-btn" (click)="naviguerVers('/employe/demandes/deposer')" type="button">
+        <i class="ti ti-plus"></i>
+        Nouvelle demande
+      </button>
       <div class="date-chip">
         <i class="ti ti-calendar-event"></i>
         <span>{{ currentYear }} — Tableau de bord</span>
@@ -39,8 +43,7 @@
 
     <!-- Available Leaves -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);"
+      <div class="kpi-card kpi-blue cursor-pointer"
            (click)="naviguerVers('/employe/demandes')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-beach"></i></div>
@@ -52,8 +55,7 @@
 
     <!-- Project Assigned -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);"
+      <div class="kpi-card kpi-purple cursor-pointer"
            (click)="naviguerVers('/employe/projets')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-briefcase"></i></div>
@@ -65,8 +67,7 @@
 
     <!-- Active Tasks -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);"
+      <div class="kpi-card kpi-amber cursor-pointer"
            (click)="naviguerVers('/employe/taches')">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-checklist"></i></div>
@@ -78,8 +79,7 @@
 
     <!-- Attendance Rate -->
     <div class="col-xl-3 col-md-6">
-      <div class="kpi-card cursor-pointer"
-           style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+      <div class="kpi-card kpi-green cursor-pointer">
         <div class="kpi-glow"></div>
         <div class="kpi-icon-wrap"><i class="ti ti-chart-arcs"></i></div>
         <div class="kpi-value">{{ tauxPresence }}<span class="kpi-unit">%</span></div>
@@ -211,80 +211,95 @@
   <!-- ── Ligne 3 : Métriques de performance | Tickets résolus ── -->
   <div class="row g-3 mb-4">
 
-    <!-- Métriques de performance -->
-    @if (performance) {
-      <div class="col-xl-7 col-md-12">
-        <div class="dash-card h-100">
-          <div class="card-head mb-4">
-            <h6 class="card-title-custom">
-              <i class="ti ti-award me-2" style="color:#6366F1"></i>
-              Métriques de performance
-            </h6>
-            <span class="count-badge">Ce trimestre</span>
+    <!-- Métriques RH -->
+    <div class="col-xl-7 col-md-12">
+      <div class="dash-card h-100">
+        <div class="card-head mb-4">
+          <h6 class="card-title-custom">
+            <i class="ti ti-award me-2 icon-indigo"></i>
+            Mes indicateurs RH
+          </h6>
+          <span class="count-badge">Cette année</span>
+        </div>
+        <div class="perf-grid">
+          <div class="perf-card">
+            <div class="perf-icon pi-indigo"><i class="ti ti-checkbox"></i></div>
+            <div class="perf-body">
+              <span class="perf-label">Tâches complétées</span>
+              <span class="perf-value">{{ tachesTermineesCount }}</span>
+              <div class="perf-track"><div class="perf-fill pf-indigo" [style.width.%]="tauxCompletionTaches"></div></div>
+              <span class="perf-sub">{{ tauxCompletionTaches }}% de complétion</span>
+            </div>
           </div>
-          <div class="perf-grid">
-            <div class="perf-card">
-              <div class="perf-icon" style="background:#EEF2FF; color:#6366F1"><i class="ti ti-checkbox"></i></div>
-              <div class="perf-body">
-                <span class="perf-label">Tâches complétées</span>
-                <span class="perf-value">{{ performance.tachesCompletees }}</span>
-                <div class="perf-track"><div class="perf-fill" [style.width.%]="performance.tauxCompletion" style="background:#6366F1"></div></div>
-                <span class="perf-sub">{{ performance.tauxCompletion }}% de complétion</span>
-              </div>
+          <div class="perf-card">
+            <div class="perf-icon pi-green"><i class="ti ti-school"></i></div>
+            <div class="perf-body">
+              <span class="perf-label">Formations suivies</span>
+              <span class="perf-value">{{ formationsSuivies }}<span class="perf-unit">/{{ formationsTotal }}</span></span>
+              <div class="perf-track"><div class="perf-fill pf-green" [style.width.%]="formationsPct"></div></div>
+              <span class="perf-sub">{{ formationsPct }}% du plan de formation</span>
             </div>
-            <div class="perf-card">
-              <div class="perf-icon" style="background:#FEF2F2; color:#EF4444"><i class="ti ti-bug"></i></div>
-              <div class="perf-body">
-                <span class="perf-label">Résolution des bugs</span>
-                <span class="perf-value">{{ performance.tempsResolutionBugs }}<span class="perf-unit">j</span></span>
-                <div class="perf-track"><div class="perf-fill" [style.width.%]="100 - (performance.tempsResolutionBugs / 10) * 100" style="background:#EF4444"></div></div>
-                <span class="perf-sub">Moy. jours par bug</span>
-              </div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-icon pi-sky"><i class="ti ti-calendar-stats"></i></div>
+            <div class="perf-body">
+              <span class="perf-label">Taux de présence</span>
+              <span class="perf-value">{{ tauxPresence }}<span class="perf-unit">%</span></span>
+              <div class="perf-track"><div class="perf-fill pf-sky" [style.width.%]="tauxPresence"></div></div>
+              <span class="perf-sub">Présence enregistrée</span>
             </div>
-            <div class="perf-card">
-              <div class="perf-icon" style="background:#ECFDF5; color:#059669"><i class="ti ti-file-check"></i></div>
-              <div class="perf-body">
-                <span class="perf-label">Documentation</span>
-                <span class="perf-value">{{ performance.documentationCompletion }}<span class="perf-unit">%</span></span>
-                <div class="perf-track"><div class="perf-fill" [style.width.%]="performance.documentationCompletion" style="background:#059669"></div></div>
-                <span class="perf-sub">Taux de complétion</span>
-              </div>
-            </div>
-            <div class="perf-card">
-              <div class="perf-icon" style="background:#FFFBEB; color:#D97706"><i class="ti ti-code"></i></div>
-              <div class="perf-body">
-                <span class="perf-label">Qualité du code</span>
-                <span class="perf-value">{{ performance.codeQuality }}<span class="perf-unit">/100</span></span>
-                <div class="perf-track"><div class="perf-fill" [style.width.%]="performance.codeQuality" style="background:#D97706"></div></div>
-                <span class="perf-sub">Score qualité</span>
-              </div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-icon pi-amber"><i class="ti ti-beach"></i></div>
+            <div class="perf-body">
+              <span class="perf-label">Congés pris</span>
+              <span class="perf-value">{{ congesPris }}<span class="perf-unit">/{{ congesTotal }}j</span></span>
+              <div class="perf-track"><div class="perf-fill pf-amber" [style.width.%]="congesTotal > 0 ? (congesPris / congesTotal * 100) : 0"></div></div>
+              <span class="perf-sub">{{ congesRestants }}j restants</span>
             </div>
           </div>
         </div>
       </div>
-    }
+    </div>
 
-    <!-- Tickets résolus — graphique en barres empilées -->
+    <!-- Mes tâches — répartition réelle -->
     <div class="col-xl-5 col-md-12">
       <div class="dash-card h-100">
-        <div class="card-head mb-2">
+        <div class="card-head mb-3">
           <h6 class="card-title-custom">
-            <i class="ti ti-chart-bar-popular me-2" style="color:#10B981"></i>
-            Tickets résolus
+            <i class="ti ti-checklist me-2 icon-green"></i>
+            Mes tâches
           </h6>
-          <span class="count-badge">6 derniers mois</span>
+          <span class="count-badge">{{ tachesTotales }} total</span>
         </div>
-        <apx-chart
-          [series]="ticketsChart.series"
-          [chart]="ticketsChart.chart"
-          [colors]="ticketsChart.colors"
-          [dataLabels]="ticketsChart.dataLabels"
-          [plotOptions]="ticketsChart.plotOptions"
-          [xaxis]="ticketsChart.xaxis"
-          [legend]="ticketsChart.legend"
-          [tooltip]="ticketsChart.tooltip"
-          [grid]="ticketsChart.grid">
-        </apx-chart>
+        <div class="task-stat-grid">
+          <div class="task-stat-item task-stat--total">
+            <span class="task-stat-value">{{ tachesTotales }}</span>
+            <span class="task-stat-label">Total assignées</span>
+          </div>
+          <div class="task-stat-item task-stat--done">
+            <span class="task-stat-value">{{ tachesTermineesCount }}</span>
+            <span class="task-stat-label">Complétées</span>
+          </div>
+          <div class="task-stat-item task-stat--active">
+            <span class="task-stat-value">{{ tachesActives }}</span>
+            <span class="task-stat-label">En cours</span>
+          </div>
+          <div class="task-stat-item task-stat--late">
+            <span class="task-stat-value">{{ tachesEnRetardCount }}</span>
+            <span class="task-stat-label">En retard</span>
+          </div>
+        </div>
+        @if (tachesTotales > 0) {
+          <div class="task-progress-bar mt-3">
+            <div class="task-progress-fill"
+                 [style.width.%]="tachesTotales > 0 ? (tachesTermineesCount / tachesTotales * 100) : 0">
+            </div>
+          </div>
+          <p class="task-progress-label">
+            {{ tachesTotales > 0 ? (tachesTermineesCount / tachesTotales * 100 | number:'1.0-0') : 0 }}% complétées
+          </p>
+        }
       </div>
     </div>
 

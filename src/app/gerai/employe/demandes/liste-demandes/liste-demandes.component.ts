@@ -8,6 +8,14 @@ import { CardComponent } from 'src/app/theme/shared/components/card/card.compone
 import { DemandeService } from 'src/app/gerai/services/demande.service';
 import { Demande, TYPES_DEMANDE_CONFIG } from 'src/app/gerai/models/demande.model';
 
+interface CalendarDay {
+  date: string | null;
+  dayNum: number;
+  absences: { nom: string; type: string; statut: string }[];
+  isToday: boolean;
+  isWeekend: boolean;
+}
+
 @Component({
   selector: 'app-liste-demandes',
   standalone: true,
@@ -22,8 +30,19 @@ export class ListeDemandesComponent implements OnInit {
   private cdr            = inject(ChangeDetectorRef);
   private demandeService = inject(DemandeService);
 
+  activeTab: 'demandes' | 'calendrier' = 'demandes';
+
   demandes        : Demande[] = [];
   demandesFiltrees: Demande[] = [];
+
+  // ── Calendar ───────────────────────────────────────
+  calYear  = new Date().getFullYear();
+  calMonth = new Date().getMonth(); // 0-indexed
+  calDays  : CalendarDay[] = [];
+
+  readonly MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                          'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  readonly DAY_LABELS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
   loading = true;
   error   = false;
@@ -48,7 +67,9 @@ export class ListeDemandesComponent implements OnInit {
   pageSize    = 5;
   totalPages  = 1;
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
 
   private load(): void {
     this.loading = true;
@@ -58,6 +79,7 @@ export class ListeDemandesComponent implements OnInit {
         this.calculateStats();
         this.filterDemandes();
         this.loading = false;
+        this.buildCalendarDays();
         this.cdr.markForCheck();
       },
       error: () => {
@@ -97,6 +119,10 @@ export class ListeDemandesComponent implements OnInit {
     this.filterDemandes();
   }
 
+  refresh(): void {
+    this.load();
+  }
+
   sortBy(column: string, toggle = true): void {
     if (toggle) {
       this.sortDirection = this.sortColumn === column && this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -112,6 +138,68 @@ export class ListeDemandesComponent implements OnInit {
   }
 
   nouvelleDemande(): void { this.router.navigate(['/employe/demandes/deposer']); }
+
+  // ── Calendar ────────────────────────────────────────
+  loadCalendar(): void {
+    this.buildCalendarDays();
+    this.cdr.markForCheck();
+  }
+
+  buildCalendarDays(): void {
+    const today    = new Date();
+    const firstDay = new Date(this.calYear, this.calMonth, 1);
+    const lastDay  = new Date(this.calYear, this.calMonth + 1, 0);
+    const days: CalendarDay[] = [];
+
+    // Demandes with dates that overlap the displayed month
+    const myLeaves = this.demandes.filter(d =>
+      d.dateDebut && d.dateFin &&
+      (d.type === 'CONGE' || d.type === 'MALADIE') &&
+      d.statut !== 'REJETEE'
+    );
+
+    // Leading empty cells (Mon=0 start)
+    let startDow = firstDay.getDay();
+    startDow = startDow === 0 ? 6 : startDow - 1;
+    for (let i = 0; i < startDow; i++) {
+      days.push({ date: null, dayNum: 0, absences: [], isToday: false, isWeekend: false });
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const dateStr = `${this.calYear}-${String(this.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dow = new Date(this.calYear, this.calMonth, d).getDay();
+      const isToday = today.getFullYear() === this.calYear && today.getMonth() === this.calMonth && today.getDate() === d;
+      days.push({
+        date: dateStr,
+        dayNum: d,
+        absences: myLeaves
+          .filter(a => a.dateDebut! <= dateStr && a.dateFin! >= dateStr)
+          .map(a => ({ nom: 'Moi', type: a.type, statut: a.statut })),
+        isToday,
+        isWeekend: dow === 0 || dow === 6
+      });
+    }
+    this.calDays = days;
+  }
+
+  prevMonth(): void {
+    if (this.calMonth === 0) { this.calMonth = 11; this.calYear--; }
+    else this.calMonth--;
+    this.buildCalendarDays();
+    this.cdr.markForCheck();
+  }
+
+  nextMonth(): void {
+    if (this.calMonth === 11) { this.calMonth = 0; this.calYear++; }
+    else this.calMonth++;
+    this.buildCalendarDays();
+    this.cdr.markForCheck();
+  }
+
+  setTab(tab: 'demandes' | 'calendrier'): void {
+    this.activeTab = tab;
+    this.cdr.markForCheck();
+  }
 
   voirDetail(id: number): void { this.router.navigate(['/employe/demandes', id]); }
 
@@ -155,29 +243,18 @@ export class ListeDemandesComponent implements OnInit {
     return TYPES_DEMANDE_CONFIG.find(c => c.type === type)?.color ?? '#64748B';
   }
 
-  statutLabel(statut: string): string {
-    const map: Record<string, string> = {
-      'EN_ATTENTE': 'En attente', 'VALIDEE_CHEF': 'Validée Chef',
-      'VALIDEE_RH': 'Validée RH', 'VALIDEE': 'Validée', 'REJETEE': 'Rejetée'
-    };
-    return map[statut] ?? statut;
-  }
+  private static readonly CHIP_MAP: Record<string, {cls: string; icon: string; label: string}> = {
+    EN_ATTENTE   : { cls: 'sc-pending',   icon: 'ti ti-clock',        label: 'En attente' },
+    VALIDEE_CHEF : { cls: 'sc-chef',      icon: 'ti ti-circle-check', label: 'Validée chef' },
+    VALIDEE_RH   : { cls: 'sc-approved',  icon: 'ti ti-checks',       label: 'Approuvée RH' },
+    VALIDEE      : { cls: 'sc-approved',  icon: 'ti ti-checks',       label: 'Validée' },
+    REJETEE      : { cls: 'sc-rejected',  icon: 'ti ti-circle-x',     label: 'Rejetée' },
+    ANNULEE      : { cls: 'sc-cancelled', icon: 'ti ti-ban',          label: 'Annulée' },
+  };
 
-  statutColor(statut: string): string {
-    const map: Record<string, string> = {
-      'EN_ATTENTE': 'text-warning', 'VALIDEE_CHEF': 'text-success',
-      'VALIDEE_RH': 'text-success',  'VALIDEE': 'text-success', 'REJETEE': 'text-danger'
-    };
-    return map[statut] ?? 'text-secondary';
-  }
-
-  statutBg(statut: string): string {
-    const map: Record<string, string> = {
-      'EN_ATTENTE': 'bg-light-warning', 'VALIDEE_CHEF': 'bg-light-success',
-      'VALIDEE_RH': 'bg-light-success',  'VALIDEE': 'bg-light-success',
-      'REJETEE': 'bg-light-danger'
-    };
-    return map[statut] ?? 'bg-light';
+  statutChip(statut: string) {
+    return ListeDemandesComponent.CHIP_MAP[statut]
+      ?? { cls: 'sc-cancelled', icon: 'ti ti-dots', label: statut };
   }
 
   canCancel(d: Demande): boolean { return d.statut === 'EN_ATTENTE'; }

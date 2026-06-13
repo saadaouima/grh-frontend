@@ -9,9 +9,11 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
 import { ChatWebSocketService } from 'src/app/gerai/services/chat-websocket.service';
+import { ProfilEmployeService } from 'src/app/gerai/services/employe-profile.service';
 import { Subscription } from 'rxjs';
 import Keycloak from 'keycloak-js';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.model';
 
 export interface ChatMessage {
@@ -21,23 +23,25 @@ export interface ChatMessage {
   contenu: string;
   heure: Date;
   estMoi: boolean;
-  typeMessage?: 'TEXTE' | 'IMAGE' | 'FICHIER';
-  fileUrl?: string;
-  fileName?: string;
+  lu?: boolean;
+  typeMessage?: 'TEXTE' | 'IMAGE' | 'FICHIER' | 'SYSTEME';
+  attachmentUrl?: string;
 }
 
 export interface Contact {
-  id: number;
+  id: number;         // conversationId (Oracle)
+  employeeId: number; // Oracle employee_id
+  keycloakId: string; // Keycloak sub UUID
   nom: string;
   initiales: string;
   poste: string;
   statut: 'en-ligne' | 'absent' | 'hors-ligne';
   dernierMessage?: string;
+  lastMessageAt?: string;
   nonLus: number;
-  keycloakId: string;
 }
 
-const BACK_URL = 'http://localhost:8085';
+const BACK_URL = '';
 
 @Component({
   selector: 'app-chat',
@@ -51,11 +55,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @ViewChild('messageInput') messageInput!: ElementRef;
 
-  private wsService = inject(ChatWebSocketService);
-  private keycloak = inject(Keycloak);
-  private http = inject(HttpClient);
-  private zone = inject(NgZone);
-  private cdr = inject(ChangeDetectorRef);
+  private wsService      = inject(ChatWebSocketService);
+  private profilService  = inject(ProfilEmployeService);
+  private keycloak       = inject(Keycloak);
+  private http           = inject(HttpClient);
+  private sanitizer      = inject(DomSanitizer);
+  private zone           = inject(NgZone);
+  private cdr            = inject(ChangeDetectorRef);
+
+  private blobCache    = new Map<string, SafeUrl>();
+  private blobRawUrls  = new Map<string, string>(); // for revokeObjectURL on destroy
   private subs: Subscription[] = [];
 
   contacts: Contact[] = [];
@@ -64,10 +73,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   messages: ChatMessage[] = [];
   tousMessages: Record<number, ChatMessage[]> = {};
   newMessage = '';
-  recherche = '';
+  recherche  = '';
   chargement = false;
-  isTyping = false;
+  isTyping   = false;
   totalNonLus = 0;
+  loadingContacts = true;
+  loadingContactsError = false;
 
   private shouldScroll = false;
   private isSendingTyping = false;
@@ -75,15 +86,21 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private serverTypingTimeout: ReturnType<typeof setTimeout> | null = null;
   private typingThrottle: ReturnType<typeof setTimeout> | null = null;
 
+  // Resolved after ngOnInit via ProfilEmployeService
+  private moiEmployeeId = 0;
+
   readonly moi = {
     nom: this.keycloak.tokenParsed?.['name'] ?? 'Moi',
-    id: this.keycloak.tokenParsed?.['sub'] ?? ''
+    id : this.keycloak.tokenParsed?.['sub'] ?? ''
   };
 
   // ── Lifecycle ─────────────────────────────────────────
   ngOnInit(): void {
-    this._chargerContacts();
     this._connecterWebSocket();
+    this.profilService.getDbProfile().subscribe(profile => {
+      this.moiEmployeeId = profile.dbId;
+      this._chargerContacts();
+    });
   }
 
   ngAfterViewChecked(): void {
@@ -95,91 +112,153 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
-    if (this.stopTypingTimeout) clearTimeout(this.stopTypingTimeout);
-    if (this.serverTypingTimeout) clearTimeout(this.serverTypingTimeout);
-    if (this.typingThrottle) clearTimeout(this.typingThrottle);
-    this.wsService.disconnect();
+    [this.stopTypingTimeout, this.serverTypingTimeout, this.typingThrottle]
+      .forEach(t => { if (t) clearTimeout(t); });
+    // wsService is a root singleton — do not disconnect here so the user stays
+    // online while navigating away from the chat page (disconnect only on logout)
+    this.blobRawUrls.forEach(raw => URL.revokeObjectURL(raw));
+  }
+
+  getBlobUrl(url: string | undefined): SafeUrl | '' {
+    if (!url) return '';
+    if (this.blobCache.has(url)) return this.blobCache.get(url)!;
+    this._preloadBlob(url);
+    return '';
+  }
+
+  private _preloadBlob(url: string): void {
+    this.blobCache.set(url, '' as unknown as SafeUrl); // sentinel to prevent duplicate requests
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        this.blobRawUrls.set(url, objectUrl);
+        this.blobCache.set(url, this.sanitizer.bypassSecurityTrustUrl(objectUrl));
+        this.cdr.detectChanges();
+      },
+      error: () => this.blobCache.delete(url)
+    });
   }
 
   // ── Contacts ──────────────────────────────────────────
   private _chargerContacts(): void {
+    this.loadingContacts      = true;
+    this.loadingContactsError = false;
     this.http.get<any[]>(`${BACK_URL}/api/chat/users`)
       .subscribe({
         next: (users) => {
           this.contacts = users
-            .filter(u => u.id !== this.moi.id)
-            .map(u => ({
-              id: 0,
-              nom: u.nomComplet || u.username,
-              initiales: this._initiales(u.nomComplet || u.username),
-              poste: 'Employé',
-              statut: 'hors-ligne' as const,
-              dernierMessage: '',
-              nonLus: 0,
-              keycloakId: u.id
-            }));
+            .filter(u =>
+              Number(u['employeeId'] ?? 0) > 0 &&
+              Number(u['employeeId']) !== this.moiEmployeeId &&
+              (u['keycloakId'] == null || u['keycloakId'] !== this.moi.id)
+            )
+            .map(u => {
+              const empId   = Number(u['employeeId'] ?? 0);
+              const nomComp = (u['nomComplet'] ?? ((u['prenom'] ?? '') + ' ' + (u['nom'] ?? '')).trim())
+                              || u['username'] || `User #${empId}`;
+              return {
+                id        : 0,
+                employeeId: empId,
+                keycloakId: u['keycloakId'] ?? '',
+                nom       : nomComp,
+                initiales : this._initiales(nomComp),
+                poste     : u['username'] ?? '',
+                statut    : u['enLigne'] ? 'en-ligne' as const : 'hors-ligne' as const,
+                dernierMessage: '',
+                nonLus    : 0
+              };
+            });
 
+          this.loadingContacts = false;
           this._majFiltres();
           this._majNonLus();
-
-          if (this.contacts.length > 0) {
-            setTimeout(() => this.selectContact(this.contacts[0]));
-          }
+          this._chargerConversations();
+          this.cdr.detectChanges();
         },
-        error: (err) => console.error('❌ Erreur chargement users:', err)
+        error: () => {
+          this.loadingContacts      = false;
+          this.loadingContactsError = true;
+          this.cdr.detectChanges();
+        }
       });
   }
 
-  onRechercheChange(): void {
-    this._majFiltres();
+  rechargerContacts(): void { this._chargerContacts(); }
+
+  private _chargerConversations(): void {
+    this.http.get<ConversationDTO[]>(`${BACK_URL}/api/chat/conversations`).subscribe({
+      next: (convs) => {
+        convs.forEach(conv => {
+          const other = conv.participants.find(p => p.employeeId !== this.moiEmployeeId);
+          if (!other) return;
+          const contact = this.contacts.find(c => c.employeeId === other.employeeId);
+          if (!contact) return;
+          contact.id          = conv.conversationId;
+          contact.nonLus      = conv.nombreNonLus;
+          contact.lastMessageAt = conv.lastMessageAt;
+          if (conv.dernierMessage) {
+            const txt = conv.dernierMessage;
+            contact.dernierMessage = txt.length > 30 ? txt.substring(0, 30) + '...' : txt;
+          }
+        });
+        this._majNonLus();
+        this._majFiltres();
+        this.cdr.detectChanges();
+      },
+      error: () => {} // non-critical — contacts still usable without conversation history
+    });
   }
+
+  onRechercheChange(): void { this._majFiltres(); }
 
   // ── WebSocket ─────────────────────────────────────────
   private _connecterWebSocket(): void {
     this.wsService.connect();
 
-    // ── Messages reçus
+    // Messages reçus sur le topic de la conversation active
     this.subs.push(
       this.wsService.messageRecu$.subscribe((msg: MessageDTO) => {
         this.zone.run(() => {
+          const convId = msg.conversationId;
+          if (!this.tousMessages[convId]) this.tousMessages[convId] = [];
+          const conv = this.tousMessages[convId];
 
-          if (!this.tousMessages[msg.conversationId]) {
-            this.tousMessages[msg.conversationId] = [];
-          }
-          const conv = this.tousMessages[msg.conversationId];
-
-          const idxLocal = msg.expediteurId === this.moi.id
-            ? conv.findIndex(m => m.contenu === msg.contenu && m.id < 0)
+          // Remplacer l'optimistic message si c'est le nôtre
+          const idxLocal = msg.senderId === this.moiEmployeeId
+            ? conv.findIndex(m => m.contenu === msg.content && m.id < 0)
             : -1;
 
           if (idxLocal !== -1) {
             conv[idxLocal] = this._toLocalMsg(msg);
-          } else if (!conv.some(m => m.id === msg.id)) {
+          } else if (!conv.some(m => m.id === msg.messageId)) {
             conv.push(this._toLocalMsg(msg));
           }
 
-          this.tousMessages[msg.conversationId] = [...conv];
+          this.tousMessages[convId] = [...conv];
 
-          if (this.contactActif?.id === msg.conversationId) {
+          if (this.contactActif?.id === convId) {
             this.messages = [...conv];
             this.shouldScroll = true;
-            if (msg.expediteurId !== this.moi.id) {
+            if (msg.senderId !== this.moiEmployeeId) {
               this.isTyping = false;
               if (this.serverTypingTimeout) clearTimeout(this.serverTypingTimeout);
+              this._marquerLu(convId);
             }
           } else {
-            const c = this.contacts.find(ct => ct.keycloakId === msg.expediteurId);
+            // Fallback: match by senderId when the conversation hasn't been opened yet
+            const c = this.contacts.find(ct => ct.id === convId)
+                   ?? this.contacts.find(ct => ct.employeeId === msg.senderId);
             if (c) {
+              if (!c.id) c.id = convId; // cache convId for future lookups
               c.nonLus++;
               this._majNonLus();
             }
           }
 
-          const estFichier = msg.typeMessage === 'IMAGE' || msg.typeMessage === 'FICHIER';
+          const estFichier = msg.type === 'IMAGE' || msg.type === 'FICHIER';
           this._majDernierMessage(
-            msg.expediteurId,
-            estFichier ? (msg.fileName ?? 'Fichier') : (msg.contenu ?? ''),
-            estFichier
+            msg.senderId,
+            estFichier ? '📎 Fichier' : (msg.content ?? ''),
           );
 
           this.cdr.detectChanges();
@@ -187,59 +266,49 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       })
     );
 
-    // ── Typing indicator
+    // Typing
     this.subs.push(
       this.wsService.typing$.subscribe(t => {
         this.zone.run(() => {
-          if (t.expediteurId !== this.contactActif?.keycloakId
-            || t.expediteurId === this.moi.id) return;
+          if (t.senderId === this.moiEmployeeId) return;
+          const actifEmpId = this.contacts.find(c => c.id === t.conversationId)?.employeeId;
+          if (actifEmpId !== t.senderId) return;
 
           if (this.serverTypingTimeout) clearTimeout(this.serverTypingTimeout);
-
           this.isTyping = t.typing;
 
           if (this.isTyping) {
             this.cdr.detectChanges();
-            setTimeout(() => {
-              this.shouldScroll = true;
-              this.scrollToBottom();
-            }, 50);
-
+            setTimeout(() => { this.shouldScroll = true; this.scrollToBottom(); }, 50);
             this.serverTypingTimeout = setTimeout(() => {
-              this.zone.run(() => {
-                this.isTyping = false;
-                this.cdr.detectChanges();
-              });
+              this.zone.run(() => { this.isTyping = false; this.cdr.detectChanges(); });
             }, 6000);
           }
-
           this.cdr.detectChanges();
         });
       })
     );
 
-    // ── Présence
+    // Présence (userId may be Oracle employee_id string OR Keycloak UUID)
     this.subs.push(
-      this.wsService.presenceListe$.subscribe(usersConnectes => {
+      this.wsService.presenceListe$.subscribe(presence => {
         this.zone.run(() => {
-          this.contacts.forEach(c => {
-            c.statut = usersConnectes.includes(c.keycloakId)
-              ? 'en-ligne'
-              : 'hors-ligne';
-          });
+          const c = this.contacts.find(
+            ct => ct.employeeId.toString() === presence.userId
+               || (ct.keycloakId && ct.keycloakId === presence.userId)
+          );
+          if (c) c.statut = presence.connecte ? 'en-ligne' : 'hors-ligne';
           this._majFiltres();
           this.cdr.detectChanges();
         });
       })
     );
-
-  } // ✅ ferme _connecterWebSocket
+  }
 
   // ── Sélection contact ─────────────────────────────────
   selectContact(contact: Contact): void {
     this.contactActif = contact;
     contact.nonLus = 0;
-    contact.id = 0;
     this.chargement = true;
     this.messages = [];
     this.isTyping = false;
@@ -247,22 +316,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this._majNonLus();
     this._majFiltres();
 
-    setTimeout(() => {
-      this.http.post<ConversationDTO>(
-        `${BACK_URL}/api/chat/conversations`, null,
-        { params: { user2Id: contact.keycloakId, user2Nom: contact.nom } }
-      ).subscribe({
-        next: (conv) => {
-          contact.id = conv.id;
-          this._chargerMessages(conv.id);
-        },
-        error: (err) => {
-          console.error('❌ Erreur conversation:', err);
-          this.chargement = false;
-          this.cdr.detectChanges();
-        }
-      });
-    }, 0);
+    const convObs = contact.employeeId
+      ? this.http.post<ConversationDTO>(`${BACK_URL}/api/chat/conversations`, { otherEmployeeId: contact.employeeId })
+      : this.http.post<ConversationDTO>(`${BACK_URL}/api/chat/conversations?user2Id=${contact.keycloakId}`, null);
+
+    convObs.subscribe({
+      next: (conv) => {
+        contact.id = conv.conversationId;
+        this.wsService.subscribeToConversation(conv.conversationId);
+        this._chargerMessages(conv.conversationId);
+      },
+      error: (err) => {
+        console.error('[Chat] Erreur conversation:', err);
+        this.chargement = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private _chargerMessages(convId: number): void {
@@ -274,10 +343,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.messages = [...this.tousMessages[convId]];
         this.chargement = false;
         this.shouldScroll = true;
+        this._marquerLu(convId);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Erreur messages:', err);
+        console.error('[Chat] Erreur messages:', err);
         this.chargement = false;
         this.cdr.detectChanges();
       }
@@ -292,32 +362,28 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     if (this.stopTypingTimeout) clearTimeout(this.stopTypingTimeout);
     if (this.typingThrottle) clearTimeout(this.typingThrottle);
-    if (this.isSendingTyping) {
-      this.wsService.envoyerTyping(
-        this.contactActif.id, this.contactActif.keycloakId, false
-      );
+    if (this.isSendingTyping && this.contactActif.employeeId) {
+      this.wsService.envoyerTyping(this.contactActif.id, this.contactActif.employeeId, false);
       this.isSendingTyping = false;
     }
 
     this._ajouterMessageLocal({
-      id: -(Date.now()),
-      auteur: this.moi.nom,
+      id       : -(Date.now()),
+      auteur   : this.moi.nom,
       initiales: this._initiales(this.moi.nom),
       contenu,
-      heure: new Date(),
-      estMoi: true,
+      heure    : new Date(),
+      estMoi   : true,
       typeMessage: 'TEXTE'
     });
 
     this.wsService.envoyerMessage({
       conversationId: this.contactActif.id,
-      destinataireId: this.contactActif.keycloakId,
-      contenu,
-      expediteurNom: this.moi.nom
+      content       : contenu,
+      type          : 'TEXTE'
     });
 
-    this._majDernierMessage(this.moi.id, contenu, false);
-
+    this._majDernierMessage(this.moiEmployeeId, contenu);
     this.newMessage = '';
     this.shouldScroll = true;
     this.cdr.detectChanges();
@@ -334,24 +400,18 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   // ── Typing ────────────────────────────────────────────
   onInputChange(): void {
-    if (!this.contactActif?.id) return;
+    if (!this.contactActif?.id || !this.contactActif.employeeId) return;
 
     if (!this.isSendingTyping) {
       this.isSendingTyping = true;
-      this.wsService.envoyerTyping(
-        this.contactActif.id, this.contactActif.keycloakId, true
-      );
-      this.typingThrottle = setTimeout(() => {
-        this.isSendingTyping = false;
-      }, 1500);
+      this.wsService.envoyerTyping(this.contactActif.id, this.contactActif.employeeId, true);
+      this.typingThrottle = setTimeout(() => { this.isSendingTyping = false; }, 1500);
     }
 
     if (this.stopTypingTimeout) clearTimeout(this.stopTypingTimeout);
     this.stopTypingTimeout = setTimeout(() => {
-      if (this.contactActif?.id) {
-        this.wsService.envoyerTyping(
-          this.contactActif.id, this.contactActif.keycloakId, false
-        );
+      if (this.contactActif?.id && this.contactActif.employeeId) {
+        this.wsService.envoyerTyping(this.contactActif.id, this.contactActif.employeeId, false);
         this.isSendingTyping = false;
       }
     }, 2500);
@@ -362,62 +422,45 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length || !this.contactActif?.id) return;
 
-    const file = input.files[0];
+    const file   = input.files[0];
     const convId = this.contactActif.id;
-    const destId = this.contactActif.keycloakId;
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('conversationId', String(convId));
-    formData.append('destinataireId', destId);
 
     this.http.post<MessageDTO>(`${BACK_URL}/api/chat/upload`, formData)
       .subscribe({
         next: (msg) => {
           this.zone.run(() => {
-            if (!this.tousMessages[msg.conversationId]) {
-              this.tousMessages[msg.conversationId] = [];
-            }
+            if (!this.tousMessages[msg.conversationId]) this.tousMessages[msg.conversationId] = [];
             const conv = this.tousMessages[msg.conversationId];
-
-            if (!conv.some(m => m.id === msg.id)) {
+            if (!conv.some(m => m.id === msg.messageId)) {
               conv.push(this._toLocalMsg(msg));
               this.tousMessages[msg.conversationId] = [...conv];
-
               if (this.contactActif?.id === msg.conversationId) {
                 this.messages = [...conv];
                 this.shouldScroll = true;
               }
-
-              this._majDernierMessage(
-                this.moi.id,
-                msg.fileName ?? 'Fichier',
-                true
-              );
-
               this.cdr.detectChanges();
             }
           });
         },
-        error: (err) => console.error('❌ Erreur upload:', err)
+        error: (err) => console.error('[Chat] Erreur upload:', err)
       });
 
     input.value = '';
   }
 
-  // ── Ouvrir fichier ────────────────────────────────────
-  ouvrirFichier(fileUrl: string): void {
-    if (!fileUrl) return;
-    const url = fileUrl.startsWith('http') ? fileUrl : `${BACK_URL}${fileUrl}`;
+  ouvrirFichier(attachmentUrl: string): void {
+    if (!attachmentUrl) return;
+    const url = attachmentUrl.startsWith('http') ? attachmentUrl : `${BACK_URL}${attachmentUrl}`;
     window.open(url, '_blank');
   }
 
-  // ── Effacer affichage ─────────────────────────────────
   effacerAffichage(): void {
     this.messages = [];
-    if (this.contactActif?.id) {
-      this.tousMessages[this.contactActif.id] = [];
-    }
+    if (this.contactActif?.id) this.tousMessages[this.contactActif.id] = [];
   }
 
   // ── Helpers ───────────────────────────────────────────
@@ -430,35 +473,37 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const liste = q
       ? this.contacts.filter(c => c.nom.toLowerCase().includes(q))
       : [...this.contacts];
-
-    liste.sort((a, b) => b.nonLus - a.nonLus);
+    liste.sort((a, b) => {
+      if (b.nonLus !== a.nonLus) return b.nonLus - a.nonLus;
+      if (a.lastMessageAt && b.lastMessageAt) return b.lastMessageAt.localeCompare(a.lastMessageAt);
+      if (a.lastMessageAt) return -1;
+      if (b.lastMessageAt) return 1;
+      return 0;
+    });
     this.contactsFiltres = liste;
   }
 
-  private _majDernierMessage(expediteurId: string, contenu: string, estFichier = false): void {
-    if (!expediteurId) return;
+  private _majDernierMessage(senderEmployeeId: number, contenu: string): void {
+    const targetEmpId = senderEmployeeId === this.moiEmployeeId
+      ? this.contactActif?.employeeId
+      : senderEmployeeId;
 
-    const texte = estFichier
-      ? '📎 ' + (contenu.length > 20 ? contenu.substring(0, 20) + '...' : contenu)
-      : (contenu.length > 30 ? contenu.substring(0, 30) + '...' : contenu);
+    if (!targetEmpId) return;
 
-    const keycloakId = expediteurId === this.moi.id
-      ? this.contactActif?.keycloakId
-      : expediteurId;
-
-    if (!keycloakId) return;
-
-    const idx = this.contacts.findIndex(c => c.keycloakId === keycloakId);
+    const texte = contenu.length > 30 ? contenu.substring(0, 30) + '...' : contenu;
+    const idx = this.contacts.findIndex(c => c.employeeId === targetEmpId);
     if (idx === -1) return;
 
-    const updated = this.contacts.map((c, i) =>
-      i === idx ? { ...c, dernierMessage: texte } : c
-    );
-
+    const updated = [...this.contacts];
+    updated[idx] = { ...updated[idx], dernierMessage: texte, lastMessageAt: new Date().toISOString() };
     const contact = updated.splice(idx, 1)[0];
     this.contacts = [contact, ...updated];
-
     this._majFiltres();
+  }
+
+  private _marquerLu(convId: number): void {
+    this.http.post(`${BACK_URL}/api/chat/conversations/${convId}/lire`, {})
+      .subscribe({ error: () => {} });
   }
 
   private _ajouterMessageLocal(msg: ChatMessage): void {
@@ -469,18 +514,18 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private _toLocalMsg(dto: MessageDTO): ChatMessage {
-    const estMoi = dto.expediteurId === this.moi.id;
-    const nom = dto.expediteurNom ?? (estMoi ? this.moi.nom : 'Correspondant');
+    const estMoi = dto.senderId === this.moiEmployeeId;
+    const nom = dto.senderNom ?? (estMoi ? this.moi.nom : 'Correspondant');
     return {
-      id: dto.id,
-      auteur: nom,
-      initiales: this._initiales(nom),
-      contenu: dto.contenu ?? '',
-      heure: dto.dateEnvoi ? new Date(dto.dateEnvoi) : new Date(),
+      id        : dto.messageId,
+      auteur    : nom,
+      initiales : this._initiales(nom),
+      contenu   : dto.isDeleted ? 'Message supprimé' : (dto.content ?? ''),
+      heure     : dto.sentAt ? new Date(dto.sentAt) : new Date(),
       estMoi,
-      typeMessage: dto.typeMessage,
-      fileUrl: dto.fileUrl,
-      fileName: dto.fileName
+      lu           : dto.luParMoi ?? false,
+      typeMessage  : dto.type,
+      attachmentUrl: dto.attachmentUrl
     };
   }
 

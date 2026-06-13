@@ -1,0 +1,373 @@
+\chapter{Sprints 3 à 5~: Demandes RH, Kafka et Communication Temps Réel}
+
+\noindent\textbf{Plan du chapitre}
+\begin{enumerate}[nosep]
+  \item Sprint 3~: Workflows de demandes RH
+  \item Sprint 4~: Prêts, commission de crédit et Apache Kafka
+  \item Sprint 5~: Messagerie WebSocket et assistant IA Groq
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+Trois sprints constituent le c\oe{}ur fonctionnel de Synapse. Le premier couvre
+les cinq types de demandes RH ordinaires~: congés, formations, documents
+administratifs, autorisations. Le deuxième ajoute les demandes financières avec
+leur circuit de validation spécifique à la commission de prêt, et introduit Kafka
+comme bus d'événements découplant les producteurs des consommateurs de
+notifications. Le troisième sprint livre la communication bidirectionnelle par
+WebSocket et l'assistant IA conversationnel.
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 3~: Workflows de demandes RH}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre fonctionnel du sprint 3}
+\label{tab:s3}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Type de demande} & \textbf{Spécificités d'implémentation} \\\hline
+\rowcolor{rowgray}
+Congé (12 sous-types) & Calcul des jours ouvrés, vérification du solde,
+  alerte si dépassement, justificatif médical obligatoire pour \texttt{MALADIE} \\\hline
+Formation & Titre, organisme, mode (PRESENTIEL/DISTANCIEL/EN\_LIGNE), budget,
+  durée en jours, date planifiée \\\hline
+\rowcolor{rowgray}
+Document administratif & 8 types (attestation travail, bulletin de paie, CNSS…),
+  sélection du nombre de copies et de la langue \\\hline
+Autorisation d'absence & Horaires de début et de fin, durée calculée en heures
+  par le frontend \\\hline
+\rowcolor{rowgray}
+Circuit de validation & \texttt{EN\_ATTENTE} → \texttt{VALIDEE\_CHEF} → \texttt{VALIDEE\_RH}~;
+  rejet à tout niveau → \texttt{REJETEE} avec commentaire obligatoire \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Diagramme de cas d'utilisation~: dépôt et validation}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+
+  % ─ Acteurs ────────────────────────────────────────────────
+  \foreach \y/\name/\lbl in {7.5/emp/Employé, 4.5/chef/Chef, 1.5/rh/Admin RH}{
+    \draw[thick] (-2,\y+0.28) circle(0.28cm);
+    \draw[thick] (-2,\y) -- (-2,\y-0.7) coordinate(w\name);
+    \draw[thick] (w\name)++(0,0.1)--++(-0.3,-0.3) (w\name)++(0,0.1)--++(0.3,-0.3);
+    \draw[thick] (w\name)--++(-0.2,-0.45) (w\name)--++(0.2,-0.45);
+    \node[font=\small] at (-2,\y-1.4) {\lbl};
+  }
+
+  % ─ Frontière ──────────────────────────────────────────────
+  \begin{scope}[on background layer]
+    \filldraw[umlborder] (0,-0.2) rectangle (10.5,9.5);
+    \node[font=\bfseries\small] at (5.25,9.2) {demandes-service};
+  \end{scope}
+
+  % ─ UCs ────────────────────────────────────────────────────
+  \draw (5,8.5) ellipse(2.3cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,8.5) {Déposer une demande RH};
+  \draw (5,7.1) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,7.1) {Sélectionner le type};
+  \draw (5,5.8) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,5.8) {Joindre un justificatif};
+  \draw (5,4.5) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,4.5) {Annuler (si EN\_ATTENTE)};
+  \draw (5,3.2) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,3.2) {Valider → VALIDEE\_CHEF};
+  \draw (5,1.9) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,1.9) {Valider finale → VALIDEE\_RH};
+  \draw (5,0.7) ellipse(2.5cm and 0.45cm); \node[font=\scriptsize,align=center] at (5,0.7) {Rejeter + commentaire};
+
+  % ─ Relations internes ─────────────────────────────────────
+  \draw[->,dashed,>=stealth] (5,8.05)--(5,7.55) node[midway,right,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (5,5.35)--(5,8.5)  node[pos=0.4,right,font=\scriptsize]{<<extend>> [MALADIE]};
+
+  % ─ Associations acteurs ───────────────────────────────────
+  \draw[->] (-1.65,7.78) -- (2.7,8.5);
+  \draw[->] (-1.65,7.78) -- (2.5,4.5);
+  \draw[->] (-1.65,4.78) -- (2.5,3.2);
+  \draw[->] (-1.65,4.78) -- (2.5,0.7);
+  \draw[->] (-1.65,1.78) -- (2.5,1.9);
+  \draw[->] (-1.65,1.78) -- (2.5,0.7);
+
+\end{tikzpicture}
+\caption{Diagramme de cas d'utilisation raffiné~: dépôt et validation d'une demande RH}
+\label{fig:uc_dem}
+\end{figure}
+
+\subsection{Machine à états~: workflow de validation}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.4cm]
+
+  \node[umlstate_init] (init) at (0,6) {};
+  \node[umlstate] (att)  at (3,6)   {\texttt{EN\_ATTENTE}};
+  \node[umlstate] (chef) at (7.5,6) {\texttt{VALIDEE\_CHEF}};
+  \node[umlstate, fill=green!15] (rh) at (12,6) {\texttt{VALIDEE\_RH}};
+  \node[umlstate, fill=red!15]  (rej) at (7.5,3.5) {\texttt{REJETEE}};
+  \node[umlstate, fill=gray!15] (ann) at (3,3.5)   {\texttt{ANNULEE}};
+
+  \draw[trans] (init) -- (att) node[midway,above]{\scriptsize dépôt};
+  \draw[trans] (att)  -- (chef) node[midway,above]{\scriptsize Chef approuve};
+  \draw[trans] (chef) -- (rh)   node[midway,above]{\scriptsize RH approuve};
+  \draw[trans] (att.south)  -- (ann)  node[midway,right]{\scriptsize annulation};
+  \draw[trans] (att.south)  to[bend right=10] node[pos=0.4,right]{\scriptsize rejet chef}(rej);
+  \draw[trans] (chef.south) -- (rej)  node[midway,right]{\scriptsize rejet RH};
+  \draw[trans] (rh)  to[bend left=20] (rej) node[pos=0.4,above]{\scriptsize rejet RH tardif};
+
+  \node[umlstate_final] at (15.5,6) {};
+  \draw[trans] (rh) -- (15.2,6);
+
+\end{tikzpicture}
+\caption{Machine à états~: cycle de vie d'une demande RH}
+\label{fig:fsm_dem}
+\end{figure}
+
+\subsection{Réalisation~: formulaire réactif multi-type Angular}
+
+Le composant \texttt{DeposerDemandeComponent} gère un unique
+\texttt{FormGroup} dont les validateurs sont activés et désactivés
+dynamiquement selon le type sélectionné~:
+
+\begin{lstlisting}[language=Java,caption={Activation conditionnelle des validateurs}]
+this.form.get('type')!.valueChanges.subscribe(type => {
+  const needsCredit = type === 'CREDIT';
+  if (needsCredit) {
+    montant.setValidators([Validators.required, Validators.min(1)]);
+    dureeMois.setValidators([Validators.required, Validators.max(120)]);
+    rembours.setValidators([Validators.requiredTrue]);
+    description.clearValidators();
+  } else {
+    montant.clearValidators(); // ...
+  }
+  [montant, dureeMois, rembours].forEach(c =>
+    c.updateValueAndValidity({ emitEvent: false }));
+  this.cdr.markForCheck();
+});
+\end{lstlisting}
+
+\subsection{Résultats du sprint 3}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{images/sprint3_formulaire.png}
+  \caption{Formulaire de dépôt d'une demande RH~: champs conditionnels selon le type sélectionné}
+  \label{fig:s3_form}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 4~: Prêts, commission de crédit et Apache Kafka}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre du sprint 4}
+\label{tab:s4}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Résultat attendu} \\\hline
+\rowcolor{rowgray}
+Demandes de prêt & Formulaire avec calcul temps réel de la mensualité et
+  de la capacité d'endettement à 33\,\% du salaire \\\hline
+Routage conditionnel & Si \texttt{NEEDS\_COMMISSION = 1} et pas de manager~:
+  statut initial \texttt{EN\_ETUDE\_DG}~; sinon \texttt{EN\_ATTENTE} \\\hline
+\rowcolor{rowgray}
+Commission de prêt & Interface de vote FAVORABLE/DÉFAVORABLE~;
+  auto-décision au seuil de 2 votes convergents \\\hline
+Direction RH & Validation finale des prêts à statut \texttt{VALIDEE\_DG} → \texttt{APPROUVE} \\\hline
+\rowcolor{rowgray}
+Apache Kafka & Chaque transition de statut publie un \texttt{NotificationEvent}
+  sur le topic \texttt{notifications} \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Machine à états~: workflow de prêt}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm]
+
+  \node[umlstate_init] (init) at (0,4) {};
+  \node[umlstate]            (att)   at (2.8,5.5) {\texttt{EN\_ATTENTE}};
+  \node[umlstate]            (etude) at (6.5,4)   {\texttt{EN\_ETUDE\_DG}};
+  \node[umlstate]            (vdg)   at (10,5.5)  {\texttt{VALIDEE\_DG}};
+  \node[umlstate,fill=green!15](app)  at (13,4)   {\texttt{APPROUVE}};
+  \node[umlstate,fill=red!15] (ref)   at (7.5,1.5){\texttt{REFUSE}};
+
+  \draw[trans] (init) -- (att)   node[midway,above,font=\scriptsize]{avec hiérarchie};
+  \draw[trans] (init) -- (etude) node[midway,below,font=\scriptsize]{sans hiérarchie};
+  \draw[trans] (att)  -- (etude) node[midway,above,font=\scriptsize]{chef ou RH};
+  \draw[trans] (etude)-- (vdg)   node[midway,above,font=\scriptsize]{2 votes FAVORABLE};
+  \draw[trans] (vdg)  -- (app)   node[midway,above,font=\scriptsize]{Direction RH};
+  \draw[trans] (etude.south) -- (ref) node[midway,right,font=\scriptsize]{2 votes DÉFAVORABLE};
+  \draw[trans] (vdg.south)   to[bend right=10] (ref) node[midway,right,font=\scriptsize]{rejet RH};
+
+  \node[umlstate_final] at (16,4) {};
+  \draw[trans] (app) -- (15.7,4);
+
+\end{tikzpicture}
+\caption{Machine à états~: workflow de validation d'une demande de prêt}
+\label{fig:fsm_pret}
+\end{figure}
+
+\subsection{Architecture Kafka~: notifications asynchrones}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm]
+
+  \node[component] (dem) at (0,2) {demandes-service\\:8085};
+  \node[infra]     (kaf) at (5,2) {Apache Kafka\\topic: notifications};
+  \node[component] (not) at (10,3.2) {notification-service\\:8084};
+  \node[component] (ana) at (10,0.8) {analytics-service\\:8083};
+  \node[infra]     (mh)  at (14,3.2) {MailHog / SMTP};
+  \node[component] (ws)  at (14,0.8) {Push WebSocket};
+
+  \draw[compArr] (dem) -- node[above,font=\scriptsize]{KafkaTemplate.send()} (kaf);
+  \draw[compArr] (kaf) -- node[above,font=\scriptsize]{@KafkaListener} (not);
+  \draw[compArr] (kaf) -- node[below,font=\scriptsize]{@KafkaListener} (ana);
+  \draw[compArr] (not) -- node[above,font=\scriptsize]{e-mail} (mh);
+  \draw[compArr] (not) -- node[below,font=\scriptsize]{push} (ws);
+  \draw[compArr,dashed] (ana.west) to[bend left=20]
+    node[midway,below,font=\scriptsize]{invalidation cache Caffeine} (dem.south);
+
+\end{tikzpicture}
+\caption{Pipeline de notifications asynchrones~: demandes-service → Kafka → consommateurs}
+\label{fig:kafka}
+\end{figure}
+
+Chaque événement est sérialisé en \texttt{NotificationEvent} contenant
+\texttt{employeeId}, \texttt{type} (\texttt{VALIDEE\_CHEF}, \texttt{REJETEE}…),
+\texttt{referenceId} et \texttt{actionUrl}. Le \textit{notification-service}
+consomme sur le groupe \texttt{notifications-group} et notifie simultanément par
+WebSocket (destinataire connecté) et par SMTP via MailHog (toujours).
+
+\subsection{Capacité d'endettement~: calcul côté frontend}
+
+\begin{equation}
+  \text{capacité} = \lfloor \text{salaire\_mensuel} \times 0{,}33 \rfloor
+  \qquad
+  \text{taux resultant} = \frac{\text{mensualité}}{\text{salaire\_mensuel}} \times 100
+\end{equation}
+
+Le frontend charge le salaire via \texttt{ProfilEmployeService.getProfil()},
+calcule la mensualité en temps réel (\texttt{Math.ceil(montant / durée)}) et
+affiche un avertissement visuel si la mensualité dépasse la capacité. Le backend
+vérifie par une contrainte stricte que le montant demandé ne dépasse pas
+$3 \times \text{salaire mensuel brut}$.
+
+\subsection{Résultats du sprint 4}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.85\textwidth]{images/sprint4_commission.png}
+  \caption{Interface de la commission de prêt~: vote et suggestion de montant/tranches}
+  \label{fig:s4_comm}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 5~: Messagerie WebSocket et assistant IA Groq}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre du sprint 5}
+\label{tab:s5}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Résultat attendu} \\\hline
+\rowcolor{rowgray}
+Messagerie STOMP & Envoi/réception temps réel~; historique persisté dans
+  \texttt{CHAT\_MESSAGES} \\\hline
+Notifications push & Compteur de non-lus~; pop-up dès réception~;
+  abonnement par rôle (\texttt{/topic/notifications.chef}, …) \\\hline
+\rowcolor{rowgray}
+Assistant IA & Réponses aux questions RH courantes via Groq
+  (\texttt{llama-3.3-70b-versatile})~; affichage différencié IA/humain \\\hline
+Mode simulation & \texttt{mockWs: true} dans \texttt{environment.ts}
+  substitue un mock de WebSocket pour le développement sans serveur actif \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Diagramme de séquence~: échange WebSocket STOMP}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[xscale=1,yscale=0.93]
+
+  \foreach \x/\lbl in {0/Client A (Angular), 3.5/chat-service, 7/Kafka, 10.5/Client B}{
+    \node[lifeline,minimum width=2.5cm] at (\x,8.5) {\lbl};
+    \draw[thick,dashed] (\x,8.15) -- (\x,0);
+  }
+
+  \draw[seqmsg] (0.05,7.5) -- (3.45,7.5) node[midway,above]{\scriptsize CONNECT /ws/chat (SockJS)};
+  \draw[seqret] (3.5,6.8)  -- (0.05,6.8) node[midway,above]{\scriptsize CONNECTED};
+  \draw[seqmsg] (0.05,6.1) -- (3.45,6.1) node[midway,above]{\scriptsize SUBSCRIBE /topic/messages.conv42};
+  \draw[seqmsg] (0.05,5.4) -- (3.45,5.4) node[midway,above]{\scriptsize SEND /app/chat.send \{text, convId\}};
+
+  % Activation chat-service
+  \fill[umlblue!60] (3.4,5.1) rectangle (3.6,2.5);
+
+  \draw[seqmsg] (3.5,4.7)  -- (6.95,4.7) node[midway,above]{\scriptsize NotificationEvent → topic notifications};
+  \draw[seqmsg] (3.5,4.0)  -- (10.45,4.0) node[midway,above]{\scriptsize MESSAGE /topic/messages.conv42 \{text, sender\}};
+  \draw[seqret] (3.5,3.3)  -- (0.05,3.3)  node[midway,above]{\scriptsize MESSAGE (echo)};
+
+  % Assistant IA
+  \node[font=\small\itshape, gray] at (5.25,2.0) {— flux assistant IA —};
+  \draw[seqmsg] (0.05,1.5) -- (3.45,1.5) node[midway,above]{\scriptsize SEND /app/ai.message \{question\}};
+  \draw[seqret] (3.5,0.8)  -- (0.05,0.8) node[midway,above]{\scriptsize MESSAGE /queue/ai-reply \{answer, model: llama-3.3\}};
+
+\end{tikzpicture}
+\caption{Diagramme de séquence~: messagerie STOMP et assistant IA Groq}
+\label{fig:seq_chat}
+\end{figure}
+
+\subsection{Réalisation~: intégration Groq}
+
+Le \textit{chat-service} construit un prompt système contextuel à chaque question
+soumise sur \texttt{/app/ai.message}~:
+
+\begin{lstlisting}[language=Java,caption={Construction du prompt Groq dans ChatService}]
+String systemPrompt =
+  "Tu es l'assistant RH de Synapse. Réponds uniquement aux questions " +
+  "relatives aux congés, demandes, formations et procédures RH. " +
+  "Langue: français. Sois concis et précis.";
+
+ChatCompletionRequest req = ChatCompletionRequest.builder()
+    .model("llama-3.3-70b-versatile")
+    .message("system", systemPrompt)
+    .message("user", question)
+    .temperature(0.3)
+    .build();
+\end{lstlisting}
+
+La réponse est diffusée sur \texttt{/queue/ai-reply} de l'utilisateur concerné~;
+le frontend l'affiche dans un \textit{bubble} distinct (couleur + icône IA)
+pour différencier clairement les messages de l'assistant des messages humains.
+
+\subsection{Résultats du sprint 5}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.85\textwidth]{images/sprint5_chat.png}
+  \caption{Interface de messagerie interne~: fil de discussion et réponses de l'assistant IA}
+  \label{fig:s5_chat}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+La deuxième release livre le c\oe{}ur opérationnel de Synapse~: cinq types de
+demandes avec circuit hiérarchique traçable, un workflow de prêt paramétrable avec
+commission dont le routage est déterminé à la création selon deux indicateurs
+configurables, Kafka comme bus asynchrone garantissant qu'aucun événement de
+transition n'est perdu, et une couche de communication temps réel couplant messagerie
+interne et intelligence artificielle conversationnelle. La release~3 complète la
+plateforme par la dimension collaborative (projets/tâches) et décisionnelle
+(reporting, attrition).

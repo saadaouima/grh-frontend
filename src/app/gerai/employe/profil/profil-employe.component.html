@@ -19,18 +19,6 @@
     }
   </div>
 
-  <!-- ── Feedback banners ─────────────────────────────── -->
-  @if (successMsg) {
-    <div class="feedback-banner feedback-success">
-      <i class="ti ti-circle-check"></i>{{ successMsg }}
-    </div>
-  }
-  @if (errorMsg) {
-    <div class="feedback-banner feedback-error">
-      <i class="ti ti-alert-circle"></i>{{ errorMsg }}
-    </div>
-  }
-
   <!-- ── Loading skeleton ─────────────────────────────── -->
   @if (loading) {
     <div class="row g-4">
@@ -66,11 +54,21 @@
           <div class="profile-header">
 
             <div class="profile-avatar">
-              <img [src]="userInfo.photo" [alt]="userInfo.nomComplet"
-                   (error)="userInfo.photo = 'assets/images/user/avatar-1.jpg'">
+              @if (hasPhoto) {
+                <img [src]="photoPreview ?? userInfo.photo" [alt]="userInfo.nomComplet"
+                     (error)="onPhotoError()">
+              } @else {
+                <div class="avatar-initials">{{ initiales }}</div>
+              }
               <div class="avatar-badge"><i class="ti ti-check"></i></div>
               @if (editMode) {
-                <button class="btn-change-photo"><i class="ti ti-camera"></i></button>
+                <button class="btn-change-photo" (click)="uploadPhoto()" [disabled]="isUploadingPhoto">
+                  @if (isUploadingPhoto) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    <i class="ti ti-camera"></i>
+                  }
+                </button>
               }
             </div>
 

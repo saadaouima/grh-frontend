@@ -5,7 +5,11 @@
 
 // Color System of Berry
 
-// BLUE Primary Color
+// INDIGO Primary Color
+
+$indigo: #4F46E5;
+$indigo-dark: #4338CA;
+$indigo-light: #6366F1;
 
 $blue-700: #1c76da;
 $purple-500: #673ab7;
@@ -28,11 +32,12 @@ $purple: $purple-500;
 // scss-docs-start colors-map
 $colors: (
   'blue': $blue,
+  'indigo': $indigo,
   'purple': $purple
 );
 
-$primary: $blue; // change
-$secondary: $indigo; // change
+$primary: $indigo; // change
+$secondary: $purple; // change
 
 // scss-docs-start theme-colors-map
 $theme-colors: (
@@ -41,7 +46,7 @@ $theme-colors: (
 );
 $theme-colors-rgb: map-loop($theme-colors, to-rgb, '$value');
 
-$min-contrast-ratio: 1.55;
+$min-contrast-ratio: 4.5;
 // Customize the light and dark text colors for use in our color contrast function.
 $color-contrast-dark: $body-color;
 
@@ -73,7 +78,7 @@ $position-values: (
   100: 100%
 );
 
-$body-bg: #eceff1; // change
+$body-bg: #F8FAFC; // change
 $body-text-align: null;
 $link-color: $primary;
 $link-decoration: none;
@@ -139,6 +144,8 @@ $border-radius-sm: 4px; // change
 $border-radius-pill: 50rem;
 $component-active-bg: $primary;
 
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+
 $font-size-base: 0.875rem;
 $font-size-sm: $font-size-base * 0.875;
 $font-size-lg: $font-size-base * 1.25;
@@ -174,7 +181,7 @@ $font-sizes: (
 $headings-margin-bottom: calc($spacer / 2);
 $headings-font-family: null;
 $headings-font-style: null;
-$headings-font-weight: 500;
+$headings-font-weight: 600;
 $headings-line-height: 1.2;
 
 // scss-docs-start display-headings

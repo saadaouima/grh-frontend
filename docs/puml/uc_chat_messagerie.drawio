@@ -1,0 +1,87 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc_chat_messagerie" name="UC Messagerie">
+    <mxGraphModel dx="1120" dy="692" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;strokeColor=none;fillColor=none;" value="Diagramme de cas d&#39;utilisation raffiné&#xa;Messagerie interne et Assistant IA" vertex="1">
+          <mxGeometry height="36" width="430" x="290" y="2" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=12;fontStyle=1;fillColor=none;strokeColor=#2C5F8A;strokeWidth=2;" value="Synapse — Module Messagerie &amp; Assistant IA" vertex="1">
+          <mxGeometry height="575" width="740" x="110" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="rounded=0;fillColor=#EAF2FB;strokeColor=#4A90D9;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="530" width="255" x="125" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="1" style="text;html=1;align=center;fontStyle=3;fontSize=11;strokeColor=none;fillColor=none;" value="Messagerie" vertex="1">
+          <mxGeometry height="22" width="130" x="185" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=0;fillColor=#FFF8E6;strokeColor=#E8A000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="240" width="425" x="405" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="text;html=1;align=center;fontStyle=3;fontSize=11;strokeColor=none;fillColor=none;" value="Assistant IA" vertex="1">
+          <mxGeometry height="22" width="130" x="550" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#EAF2FB;strokeColor=#2C5F8A;" value="Créer une conversation" vertex="1">
+          <mxGeometry height="50" width="185" x="140" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#EAF2FB;strokeColor=#2C5F8A;" value="Envoyer un message" vertex="1">
+          <mxGeometry height="50" width="185" x="140" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#EAF2FB;strokeColor=#2C5F8A;" value="Recevoir un message&#xa;en temps réel" vertex="1">
+          <mxGeometry height="55" width="185" x="140" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#EAF2FB;strokeColor=#2C5F8A;" value="Consulter l&#39;historique" vertex="1">
+          <mxGeometry height="50" width="185" x="140" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#EAF2FB;strokeColor=#2C5F8A;" value="Marquer un message&#xa;comme lu" vertex="1">
+          <mxGeometry height="55" width="185" x="140" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFF8E6;strokeColor=#E8A000;" value="Interroger l&#39;assistant IA" vertex="1">
+          <mxGeometry height="50" width="185" x="432" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFF8E6;strokeColor=#E8A000;" value="Obtenir une réponse&#xa;contextualisée (RAG)" vertex="1">
+          <mxGeometry height="55" width="185" x="432" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="30" edge="1" parent="1" source="Vhqngty5EzIrg5Z6en-z-47" style="endArrow=open;startArrow=none;html=1;                  exitX=1;exitY=0.5;exitDx=0;exitDy=0;                  entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitPerimeter=0;endFill=0;" target="11" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="294.77380505953886" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" edge="1" parent="1" source="Vhqngty5EzIrg5Z6en-z-47" style="endArrow=open;startArrow=none;html=1;                  exitX=1;exitY=0.59;exitDx=0;exitDy=0;                  entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.526;exitPerimeter=0;endFill=0;" target="13" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="312.0063394146579" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" edge="1" parent="1" source="Vhqngty5EzIrg5Z6en-z-47" style="endArrow=open;startArrow=none;html=1;curved=1;exitX=0.526;exitY=0.423;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitPerimeter=0;endFill=0;" target="15" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="270" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="33" edge="1" parent="1" source="Vhqngty5EzIrg5Z6en-z-48" style="endArrow=open;startArrow=none;html=1;                  exitX=0;exitY=0.5;exitDx=0;exitDy=0;                  entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitPerimeter=0;endFill=0;" target="16" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="915" y="277.6004759625638" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="40" edge="1" parent="1" source="11" style="dashed=1;endArrow=open;endFill=0;startArrow=none;startFill=0;html=1;fontSize=10;                  exitX=0.5;exitY=0;exitDx=0;exitDy=0;                  entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="10" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="41" edge="1" parent="1" source="12" style="dashed=1;endArrow=open;endFill=0;startArrow=none;startFill=0;html=1;fontSize=10;                  exitX=0.5;exitY=0;exitDx=0;exitDy=0;                  entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="11" value="«extend»&#xa;[destinataire connecté]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="42" edge="1" parent="1" source="14" style="dashed=1;endArrow=open;endFill=0;startArrow=none;startFill=0;html=1;fontSize=10;                  exitX=0.5;exitY=0;exitDx=0;exitDy=0;                  entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="13" value="«extend»&#xa;[message non lu]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="43" edge="1" parent="1" source="15" style="dashed=1;endArrow=open;endFill=0;startArrow=none;startFill=0;html=1;fontSize=10;                  exitX=0.5;exitY=1;exitDx=0;exitDy=0;                  entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="16" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Vhqngty5EzIrg5Z6en-z-47" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" value="&lt;h3 style=&quot;text-align: start;&quot;&gt;&lt;span style=&quot;font-family: monospace; font-size: 11.7px; white-space: pre-wrap;&quot;&gt;&lt;font style=&quot;color: rgb(2, 2, 2);&quot;&gt;Utilisateur authentifié&lt;/font&gt;&lt;/span&gt;&lt;/h3&gt;" vertex="1">
+          <mxGeometry height="93" width="36" x="25" y="246" as="geometry" />
+        </mxCell>
+        <mxCell id="Vhqngty5EzIrg5Z6en-z-48" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;align=center;" value="&lt;h3 style=&quot;&quot;&gt;&lt;span style=&quot;background-color: transparent; font-size: 10.8px; white-space: pre-wrap;&quot;&gt;&lt;font face=&quot;monospace&quot; style=&quot;color: rgb(2, 2, 2);&quot;&gt;Groq API&lt;br&gt;&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; font-size: 10.8px; white-space: pre-wrap;&quot;&gt;&lt;font face=&quot;monospace&quot; style=&quot;color: rgb(2, 2, 2);&quot;&gt;&amp;lt;&amp;lt;système&amp;gt;&amp;gt;&lt;/font&gt;&lt;/span&gt;&lt;/h3&gt;" vertex="1">
+          <mxGeometry height="93" width="40" x="920" y="218" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

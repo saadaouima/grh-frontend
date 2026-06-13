@@ -4,7 +4,8 @@ import {
     getDemandes,
     getStatistiques,
     creerDemande,
-    annulerDemande
+    annulerDemande,
+    getEquipeAbsences
 } from '../data/conges.mock';
 import { CreateDemandeDTO } from 'src/app/gerai/models/conge.model';
 
@@ -13,6 +14,17 @@ import { CreateDemandeDTO } from 'src/app/gerai/models/conge.model';
    ══════════════════════════════════════════════════════════════ */
 
 export const congesHandlers = [
+
+    /**
+     * GET /api/conges/equipe?dateDebut=YYYY-MM-DD&dateFin=YYYY-MM-DD
+     * Absences approuvées des collègues sur une période
+     */
+    http.get('/api/conges/equipe', ({ request }) => {
+        const url      = new URL(request.url);
+        const dateDebut = url.searchParams.get('dateDebut') ?? undefined;
+        const dateFin   = url.searchParams.get('dateFin')   ?? undefined;
+        return HttpResponse.json(getEquipeAbsences(dateDebut, dateFin));
+    }),
 
     /**
      * GET /api/conges/solde

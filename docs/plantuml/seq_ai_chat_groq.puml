@@ -1,0 +1,54 @@
+@startuml seq_ai_chat_groq
+!theme plain
+skinparam sequenceArrowColor #2C3E50
+skinparam sequenceParticipantBackgroundColor #EEF4FF
+skinparam sequenceParticipantBorderColor #3498DB
+skinparam noteBackgroundColor #FFFAF0
+skinparam noteBorderColor #E67E22
+
+title Diagramme de séquence — Assistant IA Groq\nScénario 1 : Chatbot RH | Scénario 2 : Scoring de CV
+
+actor "Utilisateur\n(Angular)" as User
+participant "chat-service\n:8086" as ChatSvc
+participant "AiChatService" as AiSvc
+participant "Groq Cloud API\n(Llama 3.3 70B)" as Groq
+participant "demandes-service\n:8085 (facultatif)" as DemSvc
+database "Oracle 23ai\n(MESSAGES)" as DB
+
+== Cas d'utilisation 1 : Chatbot RH (questions employé) ==
+
+User -> ChatSvc : POST /api/chat/ai/message\n{message: "Quel est mon solde de congés ?",\nhistory: [{role:"user",...}, {role:"assistant",...}]}
+note right of ChatSvc : JWT validé → employee_id résolu\n(AiChatService.ts : API = '/api/chat/ai/message')
+
+ChatSvc -> AiSvc : askGroq(conversationId, userMessage)
+AiSvc -> DemSvc : GET /demandes/mes-demandes\n(Bearer token relayé)
+DemSvc --> AiSvc : [{type:CONGE, statut:VALIDE_RH, jours:5}]
+
+AiSvc -> Groq : POST /chat/completions\n{\n  model: "llama-3.3-70b-versatile",\n  messages: [\n    {role:"system",\n     content: "Tu es l'assistant RH de Synapse..."},\n    {role:"user",\n     content: "Quel est mon solde? (contexte: ...)"}\n  ]\n}
+note right of Groq : LPU — Latence < 1s\nGroq API key côté serveur\n(jamais exposée au client)
+
+Groq --> AiSvc : {choices:[{message:{role:"assistant",\ncontent:"Votre solde actuel est..."}}]}
+
+AiSvc -> DB : INSERT INTO MESSAGES\n(type=IA, content=réponseLLM)
+DB --> AiSvc : message_id
+
+AiSvc --> ChatSvc : AiChatResponse{reply: "Votre solde...", success: true}
+ChatSvc --> User : 200 OK {reply: "Votre solde actuel est de X jours.", success: true}
+
+== Cas d'utilisation 2 : Scoring de CV (recrutement) ==
+
+actor "Admin RH" as Admin
+participant "projets-service\n:8087" as ProjSvc
+participant "CvScoringService" as CvSvc
+
+Admin -> ProjSvc : POST /candidats/{id}/score-cv\n(multipart: CV PDF)
+ProjSvc -> CvSvc : scoreCv(cvText, jobDescription)
+CvSvc -> Groq : POST /chat/completions\n{\n  model: "llama-3.3-70b-versatile",\n  messages: [\n    {role:"system",\n     content: "Tu es un expert RH. Évalue ce CV..."},\n    {role:"user",\n     content: "CV: [texte] Poste: [desc]"}\n  ]\n}
+Groq --> CvSvc : {score: 78, strengths: [...], weaknesses: [...]}
+CvSvc --> ProjSvc : CvScoreResult{score:78, ...}
+ProjSvc -> DB : UPDATE CANDIDATS SET cv_score=78, cv_feedback='...'
+ProjSvc --> Admin : 200 OK {score: 78}
+
+note over Groq : La clé API Groq (GROQ_API_KEY)\nest stockée comme variable\nd'environnement côté serveur.\nElle n'est JAMAIS exposée\nau client Angular.
+
+@enduml

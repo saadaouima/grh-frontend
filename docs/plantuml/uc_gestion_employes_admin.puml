@@ -1,0 +1,56 @@
+@startuml uc_gestion_employes_admin
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor #3498DB
+}
+skinparam actor {
+  BackgroundColor #8E44AD
+  FontColor #FFFFFF
+  BorderColor #8E44AD
+}
+
+title Cas d'utilisation — Gestion des employés (Admin RH)
+
+left to right direction
+
+actor "Admin RH\n[ADMIN_RH]" as Admin
+
+rectangle "Gestion des Employés — employe-service" {
+
+  usecase "Créer un employé\n(+ provisioning Keycloak\n+ matricule EMP-XXXX\n+ e-mail bienvenue)" as UC_CREATE
+  usecase "Modifier un employé\n(identité, poste, département)" as UC_EDIT
+  usecase "Désactiver / Activer\nun employé" as UC_TOGGLE
+  usecase "Consulter la liste\ndes employés\n(filtres : dept, statut)" as UC_LIST
+  usecase "Consulter le profil\nd'un employé\n(identité + contrat + docs)" as UC_PROFIL
+  usecase "Gérer les départements\n(CRUD)" as UC_DEPT
+  usecase "Gérer les postes\n(CRUD, grille salariale)" as UC_POSTE
+  usecase "Uploader / consulter\nles documents RH" as UC_DOCS
+  usecase "Gérer les soldes\nde congés" as UC_SOLDES
+}
+
+Admin --> UC_CREATE
+Admin --> UC_EDIT
+Admin --> UC_TOGGLE
+Admin --> UC_LIST
+Admin --> UC_PROFIL
+Admin --> UC_DEPT
+Admin --> UC_POSTE
+Admin --> UC_DOCS
+Admin --> UC_SOLDES
+
+UC_CREATE .> UC_LIST : <<include>>
+UC_EDIT   .> UC_PROFIL : <<include>>
+
+note right of UC_CREATE
+  **Synchronisation Oracle ↔ Keycloak :**
+  1. INSERT EMPLOYEES (Oracle)
+  2. keycloakAdmin.createUser()
+  3. UPDATE user_id (Keycloak UUID)
+  4. setTemporaryPassword()
+  5. E-mail de bienvenue (MailHog)
+  6. KafkaTemplate.send("employe.cree")
+end note
+
+@enduml

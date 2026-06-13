@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import Keycloak from 'keycloak-js';
+import { switchMap } from 'rxjs/operators';
+import { AuthService } from '../../services/auth.service';
 
 import { SharedModule }  from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
@@ -10,6 +11,7 @@ import {
   StatistiquesEmploye, ProfilComplet, UpdateProfilDTO, Langue
 } from '../../models/employe-profile.model';
 import { ProfilEmployeService } from '../../services/employe-profile.service';
+import { ToastService } from '../../services/toast.service';
 
 export type ProfileTab = 'infos' | 'contrat' | 'competences' | 'documents';
 
@@ -24,16 +26,19 @@ export type ProfileTab = 'infos' | 'contrat' | 'competences' | 'documents';
 export class ProfilEmployeComponent implements OnInit {
 
   private profilService = inject(ProfilEmployeService);
-  private keycloak      = inject(Keycloak);
+  private auth          = inject(AuthService);
   private cdr           = inject(ChangeDetectorRef);
+  private toast         = inject(ToastService);
 
   // ── State ─────────────────────────────────────────────
-  loading    = true;
-  editMode   = false;
-  isSaving   = false;
-  activeTab  : ProfileTab = 'infos';
-  successMsg : string | null = null;
-  errorMsg   : string | null = null;
+  loading      = true;
+  editMode     = false;
+  isSaving     = false;
+  activeTab    : ProfileTab = 'infos';
+  photoPreview      : string | null = null;
+  isUploadingPhoto  = false;
+  photoLoadFailed   = false;
+  private photoObjectUrl: string | null = null;
 
   // ── New skill input state ─────────────────────────────
   newCompetence = '';
@@ -64,7 +69,9 @@ export class ProfilEmployeComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    this.profilService.getProfilComplet().subscribe({
+    this.profilService.syncProfil().pipe(
+      switchMap(() => this.profilService.getProfilComplet())
+    ).subscribe({
       next: (data: ProfilComplet) => {
         this.userInfo   = data.profil;
         this.backup     = this.deepCopy(data.profil);
@@ -73,6 +80,7 @@ export class ProfilEmployeComponent implements OnInit {
         this.stats      = data.statistiques;
         this.loading    = false;
         this.cdr.markForCheck();
+        this.loadPhotoBlob(data.profil.photo);
       },
       error: () => {
         this.showError('Erreur lors du chargement du profil.');
@@ -204,8 +212,79 @@ export class ProfilEmployeComponent implements OnInit {
     });
   }
 
+  // ── Photo upload ──────────────────────────────────────
+  get initiales(): string {
+    const p = this.userInfo?.prenom ?? '';
+    const n = this.userInfo?.nom    ?? '';
+    return ((p[0] ?? '') + (n[0] ?? '')).toUpperCase();
+  }
+
+  private loadPhotoBlob(photoUrl: string | undefined): void {
+    if (!photoUrl || photoUrl.includes('avatar-1.jpg')) return;
+    this.profilService.getPhotoBlobUrl(photoUrl).subscribe({
+      next: objectUrl => {
+        if (this.photoObjectUrl) URL.revokeObjectURL(this.photoObjectUrl);
+        this.photoObjectUrl  = objectUrl;
+        this.photoPreview    = objectUrl;
+        this.photoLoadFailed = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {}   // no photo → initials stay, no mutation needed
+    });
+  }
+
+  onPhotoError(): void {
+    this.photoLoadFailed = true;
+    this.cdr.markForCheck();
+  }
+
+  get hasPhoto(): boolean {
+    if (this.photoLoadFailed) return false;
+    const src = this.photoPreview ?? this.userInfo?.photo ?? '';
+    return !!src && !src.includes('avatar-1.jpg');
+  }
+
+  uploadPhoto(): void {
+    const input = document.createElement('input');
+    input.type   = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Instant local preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.photoPreview = reader.result as string;
+        this.cdr.markForCheck();
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to backend
+      this.isUploadingPhoto = true;
+      const fd = new FormData();
+      fd.append('photo', file);
+      this.profilService.uploadPhoto(fd).subscribe({
+        next: res => {
+          this.userInfo.photo   = res.photoUrl;
+          this.photoLoadFailed  = false;
+          // keep base64 preview — no auth header needed for <img>
+          this.isUploadingPhoto = false;
+          this.showSuccess('Photo mise à jour.');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.isUploadingPhoto = false;
+          this.showError('Erreur lors de l\'envoi de la photo.');
+          this.cdr.markForCheck();
+        }
+      });
+    };
+    input.click();
+  }
+
   // ── Password ──────────────────────────────────────────
-  changePassword(): void { this.keycloak.accountManagement(); }
+  changePassword(): void { this.auth.logout(); }
 
   // ── Profile completion % ──────────────────────────────
   get completionPct(): number {
@@ -216,7 +295,7 @@ export class ProfilEmployeComponent implements OnInit {
       !!u.adresse, !!u.cin, !!u.nationalite,
       !!u.contactUrgenceNom, !!u.contactUrgenceTel,
       !!u.niveauEtudes, !!u.diplome,
-      u.competences.length > 0, u.langues.length > 0
+      (u.competences?.length ?? 0) > 0, (u.langues?.length ?? 0) > 0
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
@@ -229,9 +308,7 @@ export class ProfilEmployeComponent implements OnInit {
 
   // ── Role helpers ──────────────────────────────────────
   get isManagerVisible(): boolean {
-    const roles: string[] = (this.keycloak.tokenParsed as any)?.realm_access?.roles ?? [];
-    const elevated = ['chef', 'CHEF', 'admin', 'ADMIN'];
-    return !elevated.some(r => roles.includes(r));
+    return this.auth.role === 'employe';
   }
 
   // ── Display helpers ───────────────────────────────────
@@ -279,17 +356,9 @@ export class ProfilEmployeComponent implements OnInit {
   }
 
   // ── Private ───────────────────────────────────────────
-  private showSuccess(msg: string): void {
-    this.successMsg = msg; this.errorMsg = null;
-    setTimeout(() => { this.successMsg = null; this.cdr.markForCheck(); }, 4000);
-  }
-
-  private showError(msg: string): void {
-    this.errorMsg = msg; this.successMsg = null;
-    setTimeout(() => { this.errorMsg = null; this.cdr.markForCheck(); }, 5000);
-  }
-
-  private clearMessages(): void { this.successMsg = null; this.errorMsg = null; }
+  private showSuccess(msg: string): void { this.toast.success(msg); }
+  private showError(msg: string):   void { this.toast.error(msg);   }
+  private clearMessages(): void {}
 
   private deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
 }

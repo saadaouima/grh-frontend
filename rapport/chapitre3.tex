@@ -1,0 +1,401 @@
+\chapter{Sprints 1 et 2~: Infrastructure et Gestion des Employés}
+
+\noindent\textbf{Plan du chapitre}
+\begin{enumerate}[nosep]
+  \item Introduction
+  \item Sprint 1~: Initialisation de l'infrastructure
+  \item Sprint 2~: Gestion du cycle de vie des employés
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+La première release établit les fondations sur lesquelles tout le reste repose.
+Le sprint~1 met en place l'infrastructure complète~: serveur d'identité Keycloak,
+base Oracle provisionnée par Flyway et squelettes des sept microservices. Le
+sprint~2 livre le premier module métier~: la gestion complète du cycle de vie
+des employés avec synchronisation bidirectionnelle Oracle--Keycloak. Ces deux
+sprints constituent le prérequis indispensable à tout développement applicatif
+sécurisé et déployable de façon reproductible.
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 1~: Initialisation de l'infrastructure}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs du sprint}
+
+\begin{table}[H]
+\centering
+\caption{Tâches et critères d'acceptation~: sprint 1}
+\label{tab:s1_obj}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Critère d'acceptation} \\\hline
+\rowcolor{rowgray}
+Squelettes microservices & 7 projets Spring Boot compilables avec POM parent
+  multimodule Maven~; Java 21 \\\hline
+Keycloak 26 & Realm \texttt{gerai} opérationnel~; client \texttt{gerai-frontend}~;
+  4 rôles realm~: \texttt{ADMIN\_RH}, \texttt{CHEF}, \texttt{EMPLOYE}, \texttt{COMITE} \\\hline
+\rowcolor{rowgray}
+Oracle 23ai + Flyway & Migrations V1--V4 appliquées~: tables \texttt{EMPLOYEES},
+  \texttt{DEPARTMENTS}, \texttt{POSITIONS}, \texttt{LEAVE\_REQUESTS}~;
+  vue \texttt{V\_ALL\_DEMANDES} \\\hline
+Sécurité JWT & \texttt{JwtAuthenticationConverter} commun~: extrait
+  \texttt{realm\_access.roles}, préfixe \texttt{ROLE\_} \\\hline
+\rowcolor{rowgray}
+Angular & Intégration \texttt{keycloak-angular}~; redirection login/logout~;
+  garde de route par rôle \\\hline
+Docker Compose & Démarrage en une commande~: Oracle (:1521), Keycloak (:8080),
+  Kafka (:9092), Zookeeper (:2181), MailHog (:1025) \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Conception UML}
+
+\subsubsection*{Cas d'utilisation~: S'authentifier}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+
+  % Acteur
+  \draw[thick] (-2.5,4.2) circle(0.3cm);
+  \draw[thick] (-2.5,3.9)--(-2.5,3.1) coordinate(wU);
+  \draw[thick] (wU)++(0,.1)--++(-.38,-.33) (wU)++(0,.1)--++(.38,-.33);
+  \draw[thick] (wU)--++(-.27,-.52) (wU)--++(.27,-.52);
+  \node[font=\small] at (-2.5,2.2) {Utilisateur};
+
+  % Frontière
+  \begin{scope}[on background layer]
+    \filldraw[draw=headerblue!60, fill=blue!3, rounded corners=5pt, dashed]
+      (0,0.2) rectangle (9.5,5.6);
+    \node[font=\bfseries\small, headerblue] at (4.75,5.3) {GerAI / Keycloak 26};
+  \end{scope}
+
+  % UCs
+  \draw (3.8,4.6) ellipse(2.2cm and .48cm);
+  \node[font=\scriptsize] at (3.8,4.6) {S'authentifier (PKCE)};
+
+  \draw (7.5,4.6) ellipse(1.8cm and .48cm);
+  \node[font=\scriptsize] at (7.5,4.6) {Obtenir le JWT};
+
+  \draw (3.8,3.2) ellipse(2.4cm and .48cm);
+  \node[font=\scriptsize] at (3.8,3.2) {Accéder au tableau de bord};
+
+  \draw (3.8,1.8) ellipse(2.2cm and .48cm);
+  \node[font=\scriptsize] at (3.8,1.8) {Se déconnecter};
+
+  % Relations internes
+  \draw[->,dashed,>=stealth] (5.95,4.6)--(5.3,4.6)
+    node[midway,above,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (3.8,4.12)--(3.8,3.68)
+    node[midway,right,font=\scriptsize]{<<include>>};
+
+  % Associations acteur
+  \draw[->] (-2.18,4.2)--(1.6,4.6);
+  \draw[->] (-2.18,4.0)--(1.6,3.2);
+  \draw[->] (-2.18,3.8)--(1.6,1.8);
+
+\end{tikzpicture}
+\caption{Diagramme de cas d'utilisation raffiné~: S'authentifier}
+\label{fig:uc_auth}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Description textuelle du cas d'utilisation~: S'authentifier}
+\label{tab:uc_auth_desc}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Champ} & \textbf{Description} \\\hline
+\rowcolor{rowgray}
+Acteurs & Tout utilisateur~: \texttt{ADMIN\_RH}, \texttt{CHEF}, \texttt{EMPLOYE}, \texttt{COMITE} \\\hline
+Précondition & L'utilisateur dispose d'un compte actif dans le realm \texttt{gerai} \\\hline
+\rowcolor{rowgray}
+Postcondition & JWT valide stocké en session~; rôle extrait et tableau de bord affiché \\\hline
+Scénario nominal &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item L'utilisateur navigue vers \texttt{/dashboard}
+  \item Angular (\texttt{keycloak-angular}) détecte l'absence de session et redirige vers Keycloak (flux PKCE)
+  \item L'utilisateur saisit ses identifiants sur la page Keycloak
+  \item Keycloak retourne un authorization code~; Angular échange contre un \texttt{access\_token}
+  \item Le JWT est injecté dans chaque requête HTTP via \texttt{HttpInterceptor}
+  \item Le rôle détermine la route d'accueil~: \texttt{/admin}, \texttt{/chef} ou \texttt{/employe}
+\end{enumerate} \\\hline
+\rowcolor{rowgray}
+Alternatives &
+\begin{itemize}[leftmargin=*,nosep]
+  \item Identifiants incorrects~: message Keycloak, nouvelle tentative possible
+  \item Compte désactivé~: message « Compte inactif, contacter le RH »
+  \item JWT expiré~: refresh automatique via \texttt{refresh\_token}
+\end{itemize} \\\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Diagramme de séquence~: Authentification OAuth2/OIDC avec PKCE}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[xscale=1.0, yscale=0.92]
+
+  % Lifelines
+  \foreach \x/\lbl in {0/Utilisateur, 3/Angular, 6/Keycloak 26, 9.5/Microservice}{
+    \node[lifeline, minimum width=2.2cm] at (\x, 9) {\lbl};
+    \draw[thick,dashed] (\x, 8.65)--(\x, 0);
+  }
+
+  \draw[seqmsg] (0.05,8.0) -- (2.9,8.0) node[midway,above]{\scriptsize Accès /dashboard};
+  \draw[seqmsg] (3,7.2)    -- (5.9,7.2) node[midway,above]{\scriptsize redirect /auth?response\_type=code (PKCE)};
+  \draw[seqret] (6,6.4)    -- (0.05,6.4)  node[midway,above]{\scriptsize Page de connexion Keycloak};
+  \draw[seqmsg] (0.05,5.6) -- (5.9,5.6)  node[midway,above]{\scriptsize POST identifiants};
+  \draw[seqret] (6,4.8)    -- (3.05,4.8) node[midway,above]{\scriptsize authorization\_code + redirect\_uri};
+  \draw[seqmsg] (3,4.0)    -- (5.9,4.0)  node[midway,above]{\scriptsize POST /token (code + code\_verifier)};
+  \draw[seqret] (6,3.2)    -- (3.05,3.2) node[midway,above]{\scriptsize access\_token + refresh\_token (JWT)};
+  \draw[seqmsg] (3,2.4)    -- (9.45,2.4) node[midway,above]{\scriptsize GET /api/... Bearer \{jwt\}};
+  \draw[seqmsg] (9.5,1.7)  -- (6.05,1.7) node[midway,above]{\scriptsize Vérification clé publique JWK};
+  \draw[seqret] (6,1.0)    -- (9.45,1.0) node[midway,above]{\scriptsize Rôles extraits (ROLE\_EMPLOYE…)};
+  \draw[seqret] (9.5,0.3)  -- (3.05,0.3) node[midway,above]{\scriptsize 200 OK + données};
+
+\end{tikzpicture}
+\caption{Diagramme de séquence~: flux OAuth2 PKCE avec Keycloak 26, realm \texttt{gerai}}
+\label{fig:seq_auth}
+\end{figure}
+
+\subsection{Implémentation backend~: JwtAuthenticationConverter}
+
+Chaque microservice partage la même configuration de sécurité OAuth2~:
+
+\begin{lstlisting}[language=Java,caption={JwtAuthenticationConverter commun — SecurityConfig.java}]
+@Bean
+public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter gc = new JwtGrantedAuthoritiesConverter();
+    gc.setAuthoritiesClaimName("realm_access.roles"); // realm gerai
+    gc.setAuthorityPrefix("ROLE_");
+    JwtAuthenticationConverter conv = new JwtAuthenticationConverter();
+    conv.setJwtGrantedAuthoritiesConverter(gc);
+    return conv;
+}
+\end{lstlisting}
+
+Les endpoints sont protégés par des annotations \texttt{@PreAuthorize}~:
+\begin{lstlisting}[language=Java]
+@GetMapping("/employes")
+@PreAuthorize("hasAnyRole('ADMIN_RH', 'CHEF')")
+public ResponseEntity<Page<EmployeeDTO>> list(Pageable p) { ... }
+\end{lstlisting}
+
+\subsection{Implémentation frontend~: initialisation Keycloak}
+
+L'application Angular démarre après l'initialisation de Keycloak~:
+
+\begin{lstlisting}[language=Java,caption={Initialisation Keycloak dans main.ts}]
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideKeycloak({
+      config: { url: environment.keycloakUrl,
+                realm: 'gerai', clientId: 'gerai-frontend' },
+      initOptions: { onLoad: 'check-sso', silentCheckSsoRedirectUri:
+        window.location.origin + '/assets/silent-check-sso.html' }
+    })
+  ]
+});
+\end{lstlisting}
+
+\subsection{Résultats du sprint 1}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.75\textwidth]{images/sprint1_login.png}
+  \caption{Interface de connexion Keycloak~: page générée par le realm \texttt{gerai}}
+  \label{fig:s1_login}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 2~: Gestion du cycle de vie des employés}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs du sprint}
+
+\begin{table}[H]
+\centering
+\caption{Tâches et critères d'acceptation~: sprint 2}
+\label{tab:s2_obj}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Critère d'acceptation} \\\hline
+\rowcolor{rowgray}
+Créer un employé & Code \texttt{EMP-NNNN} auto-incrémenté~; provisioning Keycloak~;
+  e-mail avec identifiants provisoires envoyé via MailHog \\\hline
+CRUD complet & Liste paginée avec filtres (département, statut, recherche
+  plein texte via \texttt{searchByQuery()})~; édition~; désactivation \\\hline
+\rowcolor{rowgray}
+Sync bidirectionnelle & Désactivation Oracle → désactivation Keycloak (\texttt{enabled: false})
+  en temps réel, sans intervention manuelle \\\hline
+Profil enrichi & Compétences, langues, certifications, statistiques de congés
+  (\texttt{soldeCongesRestants}) \\\hline
+\rowcolor{rowgray}
+Interface Angular & \texttt{ListeEmployesAdminComponent}, \texttt{FormEmployeAdminComponent},
+  \texttt{ProfilEmployeAdminComponent} \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Conception UML}
+
+\subsubsection*{Cas d'utilisation~: Gérer les employés}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+
+  % Acteur Admin
+  \draw[thick] (-2.5,5.5) circle(0.3cm);
+  \draw[thick] (-2.5,5.2)--(-2.5,4.4) coordinate(wA);
+  \draw[thick] (wA)++(0,.1)--++(-.38,-.33) (wA)++(0,.1)--++(.38,-.33);
+  \draw[thick] (wA)--++(-.27,-.52) (wA)--++(.27,-.52);
+  \node[font=\small] at (-2.5,3.5) {Admin RH};
+
+  % Frontière
+  \begin{scope}[on background layer]
+    \filldraw[draw=headerblue!60, fill=blue!3, rounded corners=5pt, dashed]
+      (0,-0.2) rectangle (10.5,7.0);
+    \node[font=\bfseries\small, headerblue] at (5.25,6.7) {employe-service~: gestion des employés};
+  \end{scope}
+
+  % UCs
+  \draw (4,6.1) ellipse(2.3cm and .48cm);
+  \node[font=\scriptsize] at (4,6.1) {Créer un employé};
+
+  \draw (4,4.8) ellipse(2.8cm and .48cm);
+  \node[font=\scriptsize,align=center] at (4,4.8) {Générer code EMP-NNNN (Oracle)};
+
+  \draw (4,3.5) ellipse(2.8cm and .48cm);
+  \node[font=\scriptsize,align=center] at (4,3.5) {Provisionner compte Keycloak};
+
+  \draw (4,2.2) ellipse(2.8cm and .48cm);
+  \node[font=\scriptsize,align=center] at (4,2.2) {Envoyer e-mail provisoire};
+
+  \draw (4,0.9) ellipse(2.3cm and .48cm);
+  \node[font=\scriptsize] at (4,0.9) {Désactiver un employé};
+
+  \draw (8.2,4.8) ellipse(1.8cm and .48cm);
+  \node[font=\scriptsize] at (8.2,4.8) {Valider le formulaire};
+
+  % Relations internes
+  \draw[->,dashed,>=stealth] (4,5.62)--(4,5.28) node[midway,right,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (4,4.32)--(4,3.98) node[midway,right,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (4,3.02)--(4,2.68) node[midway,right,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (6.4,4.8)--(5.5,6.1) node[pos=0.4,above,font=\scriptsize]{<<extend>>};
+
+  % Association acteur
+  \draw[->] (-2.18,5.5)--(1.7,6.1);
+  \draw[->] (-2.18,5.2)--(1.7,0.9);
+
+\end{tikzpicture}
+\caption{Diagramme de cas d'utilisation raffiné~: gérer les employés}
+\label{fig:uc_emp}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Description textuelle du cas d'utilisation~: Créer un employé}
+\label{tab:uc_emp_desc}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Champ} & \textbf{Description} \\\hline
+\rowcolor{rowgray}Acteur & Administrateur RH (\texttt{ADMIN\_RH}) \\\hline
+Précondition & L'administrateur est authentifié~; le département et le poste cibles existent \\\hline
+\rowcolor{rowgray}Postcondition & Employé persité en Oracle~; compte Keycloak actif~; e-mail provisoire envoyé \\\hline
+Scénario nominal &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item L'admin remplit le formulaire~: nom, prénom, e-mail, département, poste, date d'embauche
+  \item Angular valide les champs requis~; soumet \texttt{POST /api/employes}
+  \item L'\textit{employe-service} génère le code \texttt{EMP-NNNN} (séquence Oracle)
+  \item L'endpoint appelle \texttt{POST /admin/realms/gerai/users} (Keycloak Admin API)
+  \item Le mot de passe provisoire est défini via \texttt{PUT …/reset-password}
+  \item Le rôle est affecté via \texttt{PUT …/role-mappings/realm}
+  \item Un e-mail de bienvenue est envoyé via MailHog avec les identifiants
+\end{enumerate} \\\hline
+\rowcolor{rowgray}Alternatives &
+\begin{itemize}[leftmargin=*,nosep]
+  \item E-mail déjà utilisé~: contrainte UNIQUE Oracle → erreur 409
+  \item Keycloak indisponible~: transaction rollback~; employé non créé en base
+\end{itemize} \\\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Diagramme de séquence~: Créer un employé}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[xscale=1.0, yscale=0.92]
+
+  \foreach \x/\lbl in {0/Admin, 2.6/Angular, 5.5/employe-service, 8.8/Keycloak 26, 12/MailHog}{
+    \node[lifeline, minimum width=2.2cm] at (\x, 9) {\lbl};
+    \draw[thick,dashed] (\x, 8.65)--(\x, 0);
+  }
+
+  \draw[seqmsg] (0.05,8.0)--(2.5,8.0) node[midway,above]{\scriptsize Remplissage formulaire};
+  \draw[seqmsg] (2.6,7.2)--(5.4,7.2)  node[midway,above]{\scriptsize POST /api/employes \{firstName, email, deptId, …\}};
+
+  % Activation employe-service
+  \fill[umlblue!60] (5.38,6.9) rectangle (5.62,0.8);
+
+  \draw[seqmsg] (5.55,6.2)--(5.55,6.2) node[right,font=\scriptsize]{Génération EMP-NNNN (séquence Oracle)};
+  \draw[seqmsg] (5.55,5.5)--(8.7,5.5) node[midway,above]{\scriptsize POST /admin/realms/gerai/users \{username, email\}};
+  \draw[seqret] (8.8,4.8)--(5.65,4.8) node[midway,above]{\scriptsize 201 keycloakUserId (UUID)};
+  \draw[seqmsg] (5.55,4.1)--(8.7,4.1) node[midway,above]{\scriptsize PUT …/users/\{id\}/reset-password \{temporary: true\}};
+  \draw[seqret] (8.8,3.4)--(5.65,3.4) node[midway,above]{\scriptsize 204 No Content};
+  \draw[seqmsg] (5.55,2.7)--(8.7,2.7) node[midway,above]{\scriptsize PUT …/users/\{id\}/role-mappings/realm \{EMPLOYE\}};
+  \draw[seqret] (8.8,2.0)--(5.65,2.0) node[midway,above]{\scriptsize 204 No Content};
+  \draw[seqmsg] (5.55,1.3)--(11.9,1.3) node[midway,above]{\scriptsize SMTP — login + mot de passe provisoire};
+  \draw[seqret] (5.5,0.6)--(2.65,0.6)  node[midway,above]{\scriptsize 201 \{employeeId: 42, code: "EMP-0042"\}};
+
+\end{tikzpicture}
+\caption{Diagramme de séquence~: création d'un employé et provisioning Keycloak (realm \texttt{gerai})}
+\label{fig:seq_emp}
+\end{figure}
+
+\subsection{Implémentation backend~: code employé et sync Keycloak}
+
+\begin{lstlisting}[language=SQL,caption={Génération du code EMP-NNNN via séquence Oracle}]
+-- Migration V2 : séquence dédiée aux codes employés
+CREATE SEQUENCE emp_code_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- Dans EmployeeService.java :
+Long nextVal = em.createNativeQuery(
+    "SELECT emp_code_seq.NEXTVAL FROM DUAL")
+    .getSingleResult();
+employee.setEmployeeCode(String.format("EMP-%04d", nextVal));
+\end{lstlisting}
+
+La désactivation synchronise Oracle et Keycloak atomiquement~: si l'appel Keycloak
+échoue, la transaction Oracle est annulée pour garantir la cohérence.
+
+\subsection{Résultats du sprint 2}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{images/sprint2_employes.png}
+  \caption{Interface de gestion des employés~: liste filtrée avec codes EMP-NNNN et statuts}
+  \label{fig:s2_list}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.80\textwidth]{images/sprint2_profil.png}
+  \caption{Vue profil d'un employé~: compétences, certifications, solde de congés}
+  \label{fig:s2_profil}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+La première release livre trois garanties fondamentales~: un JWT Keycloak validé
+de façon uniforme par les sept services via un \texttt{JwtAuthenticationConverter}
+partagé~; un schéma Oracle reproductible en onze migrations Flyway~; une
+synchronisation Oracle--Keycloak bidirectionnelle validée en sens création
+(provisioning) et en sens désactivation (révocation immédiate). Ces garanties
+conditionne l'ensemble des développements de la release suivante.

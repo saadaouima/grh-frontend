@@ -6,9 +6,9 @@ export const environment = {
 
   // 🔐 Configuration Keycloak
   keycloak: {
-    url: 'https://keycloak.gerai.tn',
-    realm: 'gerai',
-    clientId: 'gerai'
+    url: 'https://keycloak.synapse.tn',
+    realm: 'SYNAPSE',
+    clientId: 'synapse-frontend'
   },
 
   // 🌐 Configuration API Backend Spring Boot
@@ -17,6 +17,9 @@ export const environment = {
   // 📡 Configuration WebSocket chat-service
   websocketUrl: 'wss://api.gerai.tn/ws',
 
+  // 📡 Configuration WebSocket notification-service
+  notificationWsUrl: 'wss://api.gerai.tn/ws-notifications',
+
   // 🔧 Configuration générale
   app: {
     name: 'SYNAPSE',
@@ -24,6 +27,11 @@ export const environment = {
     version: packageInfo.version,
     author: 'Votre équipe'
   },
+
+  // 📡 WebSocket — true = simulation, false = real STOMP backend
+  mockWs: false,
+
+  useMocks: false,
 
   // ⚙️ Features flags
   features: {

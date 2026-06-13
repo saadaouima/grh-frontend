@@ -1,0 +1,56 @@
+﻿@startuml seq_ai_chat_groq
+title Diagramme de séquence  -  Messagerie WebSocket et assistant IA Groq
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Utilisateur A" as userA
+actor "Utilisateur B" as userB
+participant "ChatComponent\n(Angular)" as chatView
+participant "WebSocket\n(STOMP/SockJS)" as ws
+participant "ChatController" as chatCtrl
+participant "MessageService" as msgSvc
+database "Oracle\n(MESSAGES, CONVERSATIONS)" as db
+participant "AiChatController" as aiCtrl
+participant "GroqRagService" as ragSvc
+participant "Groq API\n(LLM)" as groq
+
+== Connexion WebSocket ==
+userA -> chatView : Ouvre la messagerie
+chatView -> ws : Connexion STOMP avec JWT (Bearer)
+ws -> chatView : Connexion établie
+
+== Ouverture ou création d'une conversation ==
+chatView -> chatCtrl : GET /api/conversations/{destinataireId}
+chatCtrl -> msgSvc : getOrCreate(userId, destinataireId)
+msgSvc -> db : SELECT * FROM CONVERSATIONS WHERE (user_a = ? AND user_b = ?)\nINSERT INTO CONVERSATIONS si inexistante
+db -> msgSvc : Conversation {id, historique}
+chatCtrl -> chatView : ConversationDto {messages[]}
+
+== Envoi d'un message ==
+userA -> chatView : Saisit et envoie un message
+chatView -> chatCtrl : STOMP /app/chat/{conversationId}
+chatCtrl -> msgSvc : saveAndBroadcast(message)
+msgSvc -> db : INSERT INTO MESSAGES (conversation_id, expediteur_id, contenu, date_envoi, lu = false)
+msgSvc -> ws : STOMP /topic/chat/{conversationId} (push temps réel)
+ws -> userB : Réception du message en temps réel
+chatView -> userA : Message affiché (statut : envoyé)
+
+== Interaction avec l'assistant IA ==
+userA -> chatView : Pose une question (onglet IA)
+chatView -> aiCtrl : POST /api/chat/ai {question, employeId}
+aiCtrl -> ragSvc : processQuestion(question, employeId)
+ragSvc -> db : SELECT solde FROM LEAVE_BALANCES, demandes FROM LEAVE_REQUESTS,\ntâches FROM TASKS WHERE employe_id = ?
+db -> ragSvc : Contexte RH de l'employé
+ragSvc -> groq : POST /chat/completions {prompt + contexte RH}
+groq -> ragSvc : Réponse générée (streaming)
+ragSvc -> db : INSERT INTO MESSAGES (conversation_id = IA, contenu = réponse, type = AI)
+ragSvc -> aiCtrl : AiResponseDto {réponse}
+aiCtrl -> chatView : 200 OK {réponse}
+chatView -> userA : Affiche la réponse de l'IA
+
+@enduml

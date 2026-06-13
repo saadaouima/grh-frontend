@@ -7,15 +7,18 @@ export const environment = {
   // 🔐 Configuration Keycloak
   keycloak: {
     url: 'http://localhost:8080',
-    realm: 'gerai',
-    clientId: 'gerai'
+    realm: 'SYNAPSE',
+    clientId: 'synapse-frontend'
   },
 
   // 🌐 Configuration API Backend Spring Boot
-  apiUrl: 'http://localhost:8085/api',
+  apiUrl: 'http://localhost:8081/api',
 
   // 📡 Configuration WebSocket chat-service
-  websocketUrl: 'ws://localhost:8085/ws',
+  websocketUrl: 'ws://localhost:8086/ws',
+
+  // 📡 Configuration WebSocket notification-service (port 8084, endpoint /ws-notifications)
+  notificationWsUrl: 'ws://localhost:8084/ws-notifications',
 
   // 🔧 Configuration générale
   app: {
@@ -24,6 +27,12 @@ export const environment = {
     version: packageInfo.version,
     author: 'Votre équipe'
   },
+
+  // 📡 WebSocket — true = simulation, false = real STOMP backend
+  mockWs: false,
+
+  // 🔧 MSW — true = intercept HTTP with mock handlers, false = hit real backend
+  useMocks: false,
 
   // ⚙️ Features flags
   features: {

@@ -1,0 +1,76 @@
+@startuml seq_depot_validation_conge
+!theme plain
+skinparam sequenceArrowColor #2C3E50
+skinparam sequenceLifeLineBorderColor #3498DB
+skinparam sequenceParticipantBackgroundColor #EEF4FF
+skinparam sequenceParticipantBorderColor #3498DB
+skinparam sequenceGroupBackgroundColor #FFF9F0
+skinparam noteBorderColor #E67E22
+skinparam noteBackgroundColor #FFFAF0
+
+title Diagramme de séquence — Dépôt et validation d'une demande de congé
+
+actor "Employé\n(Angular)" as Emp
+participant "demandes-service\n:8085" as DemSvc
+participant "Oracle 23ai\n(LEAVE_REQUESTS)" as DB
+participant "Apache Kafka\n(notification-events)" as Kafka
+participant "notification-service\n:8084" as NotSvc
+participant "Chef\n(Angular)" as Chef
+participant "Admin RH\n(Angular)" as RH
+
+== Phase 1 : Dépôt de la demande ==
+
+Emp -> DemSvc : POST /demandes\n{type:CONGE, start:2026-06-01,\n days:5, leaveTypeId:1}
+note right of DemSvc : JWT validé\n→ resolveEmployeeId()\n→ employee_id=10
+
+DemSvc -> DB : INSERT INTO LEAVE_REQUESTS\n(employee_id=10, status='EN_ATTENTE')
+DB --> DemSvc : request_id = 101
+
+DemSvc -> Kafka : produce(\ntopic='notification-events',\nDemandeEvent{requestId=101,\ntype=CONGE, destId=chef_sub}\n)
+Kafka --> DemSvc : ack
+
+DemSvc --> Emp : 201 Created\n{requestId:101, statut:'EN_ATTENTE'}
+
+== Phase 2 : Notification du Chef ==
+
+NotSvc -> Kafka : consume(notification-events)
+Kafka --> NotSvc : DemandeEvent
+NotSvc -> DB : INSERT INTO NOTIFICATIONS\n(user_id=chef_sub,\ntitle='Nouvelle demande de congé')
+NotSvc --> Chef : (notification temps réel\nvia WebSocket)
+
+== Phase 3 : Validation par le Chef ==
+
+Chef -> DemSvc : PUT /api/demandes/conge/101/valider\n{nouveauStatut:'VALIDEE_CHEF', comment:'OK'}
+note right of DemSvc : JWT → MANAGER_ID=20\n(demande.service.ts l.54 :\nrole=chef → statut='VALIDEE_CHEF')
+
+DemSvc -> DB : UPDATE LEAVE_REQUESTS\nSET status='VALIDE_CHEF',\napproved_by=20,\napproved_at=NOW()\nWHERE request_id=101
+note right of DB : Colonne Oracle : VALIDE_CHEF\n(contrainte CHECK V3 migration)\nAPI → VALIDEE_CHEF / DB → VALIDE_CHEF
+
+DemSvc -> Kafka : produce(\nDemandeEvent{requestId=101,\ntype=CONGE, destId=rh_sub,\nstatut=VALIDEE_CHEF}\n)
+
+DemSvc --> Chef : 200 OK {statut:'VALIDEE_CHEF'}
+
+== Phase 4 : Validation finale par l'Admin RH ==
+
+NotSvc -> Kafka : consume
+Kafka --> NotSvc : DemandeEvent
+NotSvc -> DB : INSERT INTO NOTIFICATIONS (RH)
+
+RH -> DemSvc : PUT /demandes/101/valider\n{statut:VALIDEE_RH}
+note right of DemSvc : JWT → RH_ID=30
+
+DemSvc -> DB : UPDATE LEAVE_REQUESTS\nSET status='VALIDE_RH',\napproved_by_rh=30,\napproved_at_rh=NOW()
+
+DemSvc -> Kafka : produce(\nDemandeEvent{requestId=101,\ndestId=emp_sub, statut=VALIDEE_RH}\n)
+DemSvc --> RH : 200 OK {statut:'VALIDE_RH'}
+
+== Phase 5 : Notification finale à l'Employé ==
+
+NotSvc -> Kafka : consume
+Kafka --> NotSvc : DemandeEvent
+NotSvc -> DB : INSERT INTO NOTIFICATIONS (Employé)
+NotSvc --> Emp : (notification : "Votre congé a été validé")
+
+note over Kafka, NotSvc : analytics-service consomme\nle même topic pour\nmettre à jour le compteur\nd'absences et invalider\nle cache Caffeine
+
+@enduml

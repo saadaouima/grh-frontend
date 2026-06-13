@@ -1,0 +1,56 @@
+﻿@startuml uc_projets_taches_chef
+title Diagramme de cas d'utilisation - Gestion des projets, taches et evaluations
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Chef de projet" as chef
+actor "Employe"        as emp
+actor "Admin RH"       as admin
+
+rectangle "Synapse - Module Projets, Taches et Evaluations" {
+
+  package "Projets" {
+    usecase "Creer un projet"              as UC1
+    usecase "Affecter des membres"         as UC2
+    usecase "Mettre a jour la progression" as UC3
+    usecase "Cloture un projet"            as UC4
+    usecase "Consulter ses projets"        as UC5
+  }
+
+  package "Taches" {
+    usecase "Creer une tache"                as UC6
+    usecase "Affecter une tache a un membre" as UC7
+    usecase "Mettre a jour le statut"        as UC8
+    usecase "Consulter ses taches"           as UC9
+  }
+
+  package "Evaluation des performances" {
+    usecase "Evaluer un employe"        as UC10
+    usecase "Consulter ses evaluations" as UC11
+  }
+}
+
+chef  --> UC1
+chef  --> UC3
+chef  --> UC4
+chef  --> UC5
+chef  --> UC6
+chef  --> UC7
+chef  --> UC10
+admin --> UC10
+admin --> UC5
+emp   --> UC8
+emp   --> UC9
+emp   --> UC11
+
+UC2 ..> UC1 : <<extend>>\n[condition : membres a affecter]
+UC4 ..> UC3 : <<include>>
+UC7 ..> UC6 : <<include>>
+
+@enduml

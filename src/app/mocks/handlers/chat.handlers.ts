@@ -1,77 +1,48 @@
 import { http, HttpResponse } from 'msw';
-import { ConversationDTO, MessageDTO } from 'src/app/gerai/models/chat.model';
+import { ConversationDTO, MessageDTO, ParticipantDTO } from 'src/app/gerai/models/chat.model';
 
 /* ══════════════════════════════════════════════════════════════
-   📊 DATA MOCK - Utilisateurs Keycloak + état partagé
+   📊 DATA MOCK
    ══════════════════════════════════════════════════════════════ */
 
 export const CHAT_USERS_MOCK = [
-    {
-        id: '98d63792-7104-4b53-b0a5-f39b6999a0d8',
-        username: 'nabil',
-        firstName: 'Nabil',
-        lastName: 'Benzarti'
-    },
-    {
-        id: 'd8004f21-7290-48e0-ae89-082098650085',
-        username: 'ahmed',
-        firstName: 'Ahmed',
-        lastName: ''
-    },
-    {
-        id: '749f7e52-bc66-4d0a-9d6e-0960bc21008d',
-        username: 'sarra',
-        firstName: 'Sarra',
-        lastName: ''
-    },
-    {
-        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        username: 'sarah.t',
-        firstName: 'Sarah',
-        lastName: 'Trabelsi'
-    }
+    { id: '98d63792-7104-4b53-b0a5-f39b6999a0d8', employeeId: 2, username: 'nabil',   firstName: 'Nabil',  lastName: 'Benzarti'  },
+    { id: 'd8004f21-7290-48e0-ae89-082098650085', employeeId: 3, username: 'ahmed',   firstName: 'Ahmed',  lastName: ''          },
+    { id: '749f7e52-bc66-4d0a-9d6e-0960bc21008d', employeeId: 4, username: 'sarra',   firstName: 'Sarra',  lastName: ''          },
+    { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', employeeId: 5, username: 'sarah.t', firstName: 'Sarah',  lastName: 'Trabelsi'  }
 ];
 
-/* ══════════════════════════════════════════════════════════════
-   💬 Conversations & Messages (Mock state)
-   ══════════════════════════════════════════════════════════════ */
-
 let conversations: ConversationDTO[] = [];
-let messages: MessageDTO[] = [];
+let messages: MessageDTO[]           = [];
+let nextConversationId               = 1;
+let nextMessageId                    = 1;
 
-let nextConversationId = 1;
-let nextMessageId = 1;
-
-const CURRENT_USER_ID = 'user-1';
-const CURRENT_USER_NAME = 'Moi';
+const CURRENT_EMPLOYEE_ID = 1;
+const CURRENT_USER_NAME   = 'Moi';
 
 /* ══════════════════════════════════════════════════════════════
    🔧 UTILITAIRE
    ══════════════════════════════════════════════════════════════ */
 
-function trouverOuCreerConversation(
-    user1Id: string,
-    user2Id: string,
-    user1Nom: string,
-    user2Nom: string
-): ConversationDTO {
-
+function trouverOuCreerConversation(emp1Id: number, emp2Id: number, emp2Nom: string): ConversationDTO {
     let conv = conversations.find(c =>
-        (c.participant1Id === user1Id && c.participant2Id === user2Id) ||
-        (c.participant1Id === user2Id && c.participant2Id === user1Id)
+        c.participants.some(p => p.employeeId === emp1Id) &&
+        c.participants.some(p => p.employeeId === emp2Id)
     );
 
     if (!conv) {
+        const p1: ParticipantDTO = { employeeId: emp1Id, nomComplet: CURRENT_USER_NAME, role: 'MEMBRE', enLigne: true };
+        const p2: ParticipantDTO = { employeeId: emp2Id, nomComplet: emp2Nom,           role: 'MEMBRE', enLigne: false };
         conv = {
-            id: nextConversationId++,
-            participant1Id: user1Id,
-            participant2Id: user2Id,
-            participant1Nom: user1Nom,
-            participant2Nom: user2Nom,
-            dernierMessage: '',
-            dateDernierMessage: new Date().toISOString()
+            conversationId : nextConversationId++,
+            type           : 'DIRECT',
+            name           : emp2Nom,
+            participants   : [p1, p2],
+            dernierMessage : '',
+            lastMessageAt  : new Date().toISOString(),
+            nombreNonLus   : 0,
+            currentEmployeeId: emp1Id
         };
-
         conversations.push(conv);
     }
 
@@ -80,151 +51,83 @@ function trouverOuCreerConversation(
 
 /* ══════════════════════════════════════════════════════════════
    🌐 HANDLERS HTTP
-   apiUrl = http://localhost:8085/api
    ══════════════════════════════════════════════════════════════ */
 
 export const chatHandlers = [
 
-    /* 🔑 USERS — Keycloak admin endpoint (KeycloakUserService) */
-    http.get('http://localhost:8085/api/keycloak/users', () => {
-        return HttpResponse.json(CHAT_USERS_MOCK);
-    }),
-
-    /* 🔑 USERS — Chat users endpoint (ChatComponent) */
+    /* USERS */
     http.get('http://localhost:8085/api/chat/users', () => {
-        const withFullName = CHAT_USERS_MOCK.map(u => ({
+        return HttpResponse.json(CHAT_USERS_MOCK.map(u => ({
             ...u,
             nomComplet: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username
-        }));
-        return HttpResponse.json(withFullName);
+        })));
     }),
 
-    /* 📋 GET CONVERSATIONS */
+    /* GET CONVERSATIONS */
     http.get('http://localhost:8085/api/chat/conversations', () => {
         return HttpResponse.json(conversations);
     }),
 
-    /* ➕ CREATE / GET CONVERSATION — params sent as query string (not body) */
+    /* CREATE / GET CONVERSATION */
     http.post('http://localhost:8085/api/chat/conversations', async ({ request }) => {
-
-        const url = new URL(request.url);
-        const user2Id = url.searchParams.get('user2Id');
-        const user2Nom = url.searchParams.get('user2Nom') ?? 'Inconnu';
-
-        if (!user2Id) {
-            return HttpResponse.json(
-                { message: 'user2Id manquant' },
-                { status: 400 }
-            );
-        }
-
-        const conversation = trouverOuCreerConversation(
-            CURRENT_USER_ID,
-            user2Id,
-            CURRENT_USER_NAME,
-            user2Nom || 'Inconnu'
-        );
-
-        return HttpResponse.json(conversation);
-    }),
-
-    /* 📩 GET MESSAGES */
-    http.get(
-        'http://localhost:8085/api/chat/conversations/:id/messages',
-        ({ params }) => {
-
-            const conversationId = Number(params['id']);
-
-            const convMessages = messages.filter(
-                m => m.conversationId === conversationId
-            );
-
-            return HttpResponse.json(convMessages);
-        }
-    ),
-
-    /* ✉️ SEND MESSAGE */
-    http.post('http://localhost:8085/api/chat/send', async ({ request }) => {
-
         const body = await request.json() as any;
+        const emp2Id  = Number(body?.otherEmployeeId ?? 0);
+        const emp2Nom = CHAT_USERS_MOCK.find(u => u.employeeId === emp2Id)?.firstName ?? 'Inconnu';
+        if (!emp2Id) return HttpResponse.json({ message: 'otherEmployeeId manquant' }, { status: 400 });
+        return HttpResponse.json(trouverOuCreerConversation(CURRENT_EMPLOYEE_ID, emp2Id, emp2Nom));
+    }),
 
-        if (!body.conversationId) {
-            return HttpResponse.json(
-                { message: 'conversationId manquant' },
-                { status: 400 }
-            );
-        }
+    /* GET MESSAGES */
+    http.get('http://localhost:8085/api/chat/conversations/:id/messages', ({ params }) => {
+        const convId = Number(params['id']);
+        return HttpResponse.json(messages.filter(m => m.conversationId === convId));
+    }),
 
-        const nouveauMessage: MessageDTO = {
-            id: nextMessageId++,
+    /* SEND MESSAGE */
+    http.post('http://localhost:8085/api/chat/send', async ({ request }) => {
+        const body = await request.json() as any;
+        if (!body.conversationId) return HttpResponse.json({ message: 'conversationId manquant' }, { status: 400 });
+
+        const msg: MessageDTO = {
+            messageId    : nextMessageId++,
             conversationId: body.conversationId,
-            expediteurId: CURRENT_USER_ID,
-            expediteurNom: CURRENT_USER_NAME,
-            contenu: body.contenu,
-            dateEnvoi: new Date().toISOString(),
-            typeMessage: 'TEXTE',
-            statut: 'ENVOYE'
+            senderId     : CURRENT_EMPLOYEE_ID,
+            senderNom    : CURRENT_USER_NAME,
+            content      : body.content ?? '',
+            type         : 'TEXTE',
+            sentAt       : new Date().toISOString(),
         };
+        messages.push(msg);
 
-        messages.push(nouveauMessage);
+        const conv = conversations.find(c => c.conversationId === body.conversationId);
+        if (conv) { conv.dernierMessage = msg.content; conv.lastMessageAt = msg.sentAt; }
 
-        const conv = conversations.find(c => c.id === body.conversationId);
-        if (conv) {
-            conv.dernierMessage = body.contenu;
-            conv.dateDernierMessage = nouveauMessage.dateEnvoi;
-        }
-
-        return HttpResponse.json(nouveauMessage);
+        return HttpResponse.json(msg);
     }),
 
-    /* 📎 UPLOAD FILE */
+    /* UPLOAD FILE */
     http.post('http://localhost:8085/api/chat/upload', async ({ request }) => {
-
-        const formData = await request.formData();
-        const file = formData.get('file') as File;
+        const formData     = await request.formData();
+        const file         = formData.get('file') as File;
         const conversationId = Number(formData.get('conversationId'));
+        if (!file) return HttpResponse.json({ message: 'Fichier manquant' }, { status: 400 });
 
-        if (!file) {
-            return HttpResponse.json(
-                { message: 'Fichier manquant' },
-                { status: 400 }
-            );
-        }
-
-        const nouveauMessage: MessageDTO = {
-            id: nextMessageId++,
+        const msg: MessageDTO = {
+            messageId    : nextMessageId++,
             conversationId,
-            expediteurId: CURRENT_USER_ID,
-            expediteurNom: CURRENT_USER_NAME,
-            contenu: '',
-            dateEnvoi: new Date().toISOString(),
-            typeMessage: file.type?.startsWith('image/')
-                ? 'IMAGE'
-                : 'FICHIER',
-            statut: 'ENVOYE',
-            fileUrl: URL.createObjectURL(file),
-            fileName: file.name
+            senderId     : CURRENT_EMPLOYEE_ID,
+            senderNom    : CURRENT_USER_NAME,
+            content      : file.type?.startsWith('image/') ? '📷 Image' : '📎 Fichier',
+            type         : file.type?.startsWith('image/') ? 'IMAGE' : 'FICHIER',
+            attachmentUrl: URL.createObjectURL(file),
+            sentAt       : new Date().toISOString(),
         };
-
-        messages.push(nouveauMessage);
-
-        return HttpResponse.json(nouveauMessage);
+        messages.push(msg);
+        return HttpResponse.json(msg);
     }),
 
-    /* ✅ MARK AS READ */
-    http.post(
-        'http://localhost:8085/api/chat/read/:id',
-        ({ params }) => {
-
-            const id = Number(params['id']);
-
-            messages = messages.map(m =>
-                m.conversationId === id
-                    ? { ...m, statut: 'LU' }
-                    : m
-            );
-
-            return HttpResponse.json({ success: true });
-        }
-    )
+    /* MARK AS READ */
+    http.post('http://localhost:8085/api/chat/read/:id', () => {
+        return HttpResponse.json({ success: true });
+    })
 ];

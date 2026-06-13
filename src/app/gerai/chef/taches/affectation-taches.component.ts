@@ -7,11 +7,11 @@ import { forkJoin } from 'rxjs';
 import { SharedModule }        from 'src/app/theme/shared/shared.module';
 import { CardComponent }       from 'src/app/theme/shared/components/card/card.component';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
-import { TacheService }        from 'src/app/gerai/services/tache-chef.service';
+import { TacheService, CreateTachePayload } from 'src/app/gerai/services/tache-chef.service';
 import { ProjetService }       from 'src/app/gerai/services/projet-chef.service';
 import { Projet }              from 'src/app/gerai/models/projet.model';
 import { Tache }               from 'src/app/gerai/models/tache.model';
-import { Employe }             from 'src/app/gerai/models/employe.model';
+import { Employe }             from 'src/app/theme/shared/interfaces/employe';
 
 @Component({
   selector   : 'app-affectation-taches',
@@ -95,8 +95,8 @@ export class AffectationTachesComponent implements OnInit {
     }).subscribe({
       next: ({ projets, taches, employes }) => {
         this.projets  = projets;
-        this.taches   = taches;
         this.employes = employes;
+        this.taches   = taches.map(t => this.resolveAssignee(t));
         this.loading  = false;
         this.applyFilter();
         this.cdr.markForCheck();
@@ -107,6 +107,12 @@ export class AffectationTachesComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private resolveAssignee(t: Tache): Tache {
+    if (!t.assignedTo) return t;
+    const emp = this.employes.find(e => e.id === t.assignedTo);
+    return emp ? { ...t, assigneA: `${emp.prenom} ${emp.nom}` } : t;
   }
 
   // ── Projet selection ───────────────────────────────────
@@ -136,10 +142,9 @@ export class AffectationTachesComponent implements OnInit {
   }
 
   getTaskCountForMembre(membreId: number): number {
-    const membre = this.employes.find(e => e.id === membreId);
-    if (!membre) return 0;
-    const fullName = `${membre.prenom} ${membre.nom}`;
-    return this.taches.filter(t => t.projet === this.selectedProjetNom && t.assigneA === fullName).length;
+    return this.taches.filter(t =>
+      t.projet === this.selectedProjetNom && t.assignedTo === membreId
+    ).length;
   }
 
   getPrioriteColor(priorite: string): string {
@@ -153,13 +158,14 @@ export class AffectationTachesComponent implements OnInit {
     this.membreChoisi = null;
     this.tacheForm.reset({ priorite: 'Moyenne', statut: 'A_FAIRE' });
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   editTask(tache: Tache): void {
     this.isEditMode   = true;
     this.editingTache = tache;
     this.membreChoisi = (this.selectedProjet?.membres ?? [])
-      .find((m: any) => `${m.prenom} ${m.nom}` === tache.assigneA) ?? null;
+      .find((m: any) => m.id === tache.assignedTo) ?? null;
     this.tacheForm.patchValue({
       titre        : tache.titre,
       description  : tache.description ?? '',
@@ -171,6 +177,7 @@ export class AffectationTachesComponent implements OnInit {
       effortEstime : tache.effortEstime ?? null
     });
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   closeModal(): void {
@@ -190,58 +197,42 @@ export class AffectationTachesComponent implements OnInit {
     if (this.tacheForm.invalid) return;
     this.isSaving = true;
 
-    const val          = this.tacheForm.value;
-    const prioriteColor = this.getPrioriteColor(val.priorite);
+    const val = this.tacheForm.value;
+
+    const payload: CreateTachePayload = {
+      projectId:      this.selectedProjet!.id,
+      titre:          val.titre,
+      description:    val.description || undefined,
+      assignedTo:     this.membreChoisi?.id ?? undefined,
+      prioritize:     val.priorite,
+      echeance:       val.echeance || undefined,
+      estimatedHours: val.effortEstime || undefined
+    };
 
     if (this.isEditMode && this.editingTache) {
-      const updated: Tache = {
-        ...this.editingTache,
-        titre        : val.titre,
-        description  : val.description || undefined,
-        priorite     : val.priorite,
-        prioriteColor,
-        statut       : val.statut,
-        assigneA     : val.assigneA,
-        dateDebut    : val.dateDebut || undefined,
-        echeance     : val.echeance,
-        effortEstime : val.effortEstime || undefined
-      };
-
-      this.tacheService.updateTache(updated.id, updated).subscribe({
+      this.tacheService.updateTache(this.editingTache.id, payload).subscribe({
         next: saved => {
-          const idx = this.taches.findIndex(t => t.id === saved.id);
-          if (idx !== -1) this.taches[idx] = saved;
+          const enriched = this.resolveAssignee(saved);
+          const idx = this.taches.findIndex(t => t.id === enriched.id);
+          if (idx !== -1) this.taches[idx] = enriched;
+          this.taches = [...this.taches];
           this.applyFilter();
           this.isSaving = false;
           this.closeModal();
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         },
-        error: () => { this.isSaving = false; }
+        error: () => { this.isSaving = false; this.cdr.detectChanges(); }
       });
-
     } else {
-      const newTache: Omit<Tache, 'id'> = {
-        titre        : val.titre,
-        description  : val.description || undefined,
-        projet       : this.selectedProjetNom,
-        priorite     : val.priorite,
-        prioriteColor,
-        statut       : val.statut,
-        assigneA     : val.assigneA,
-        dateDebut    : val.dateDebut || undefined,
-        echeance     : val.echeance,
-        effortEstime : val.effortEstime || undefined
-      };
-
-      this.tacheService.createTache(newTache as Tache).subscribe({
+      this.tacheService.createTache(payload).subscribe({
         next: created => {
-          this.taches.push(created);
+          this.taches = [...this.taches, this.resolveAssignee(created)];
           this.applyFilter();
           this.isSaving = false;
           this.closeModal();
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         },
-        error: () => { this.isSaving = false; }
+        error: () => { this.isSaving = false; this.cdr.detectChanges(); }
       });
     }
   }

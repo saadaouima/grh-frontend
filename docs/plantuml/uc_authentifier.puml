@@ -1,0 +1,106 @@
+@startuml uc_authentifier
+' ============================================================
+'  Diagramme de cas d'utilisation raffiné — S'authentifier
+'  Synapse – Plateforme GRH
+' ============================================================
+
+' ── Paramètres d'export ──────────────────────────────────────
+scale 1.5
+skinparam dpi 150
+
+' ── Thème visuel ────────────────────────────────────────────
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 12
+
+skinparam actor {
+  BackgroundColor  #D6EAF8
+  BorderColor      #2980B9
+  FontColor        #1A252F
+  FontSize         12
+}
+
+skinparam usecase {
+  BackgroundColor  #EBF5FB
+  BorderColor      #2980B9
+  FontColor        #1A252F
+  FontSize         11
+  BorderThickness  1.5
+}
+
+skinparam rectangle {
+  BackgroundColor  #F8FBFD
+  BorderColor      #2980B9
+  BorderThickness  1.5
+  FontColor        #1B4F72
+  FontSize         13
+  FontStyle        bold
+}
+
+skinparam arrow {
+  Color       #2980B9
+  FontSize    10
+  FontColor   #1A252F
+}
+
+skinparam note {
+  BackgroundColor #FEF9E7
+  BorderColor     #F39C12
+  FontSize        10
+}
+
+' ── Acteurs ──────────────────────────────────────────────────
+actor "Utilisateur" as U
+
+' ── Frontière du système ────────────────────────────────────
+rectangle "Synapse" {
+
+  usecase "S'authentifier"           as UC1
+  usecase "Saisir ses identifiants"  as UC2
+  usecase "Valider le JWT\n(Keycloak)"  as UC3
+  usecase "Rediriger vers le\ntableau de bord" as UC4
+  usecase "Rafraîchir le token"      as UC5
+
+}
+
+' ── Scénarios alternatifs (hors frontière) ──────────────────
+usecase "Identifiants incorrects"    as EXT1
+usecase "Compte désactivé"           as EXT2
+
+' ── Association principale ──────────────────────────────────
+U --> UC1
+
+' ── Relations include ───────────────────────────────────────
+UC1 .down.> UC2 : <<include>>
+UC1 .down.> UC3 : <<include>>
+UC1 .down.> UC4 : <<include>>
+UC4 .down.> UC5 : <<include>>
+
+' ── Relations extend ────────────────────────────────────────
+EXT1 .up.> UC1 : <<extend>>
+EXT2 .up.> UC1 : <<extend>>
+
+' ── Notes de conditions ─────────────────────────────────────
+note right of EXT1
+  <b>Condition :</b> identifiants invalides
+  → message d'erreur Keycloak,
+  nouvelle tentative autorisée
+end note
+
+note right of EXT2
+  <b>Condition :</b> compte inactif
+  dans Keycloak → blocage, invitation
+  à contacter l'administrateur
+end note
+
+note bottom of UC4
+  <b>Post-condition — redirection selon le rôle :</b>
+  comite            → /admin/comite-credit
+  admin / admin_rh
+  / directeur_general → /admin/dashboard
+  chef               → /chef/dashboard
+  employe / employé  → /employe/dashboard
+  (rôle lu depuis realm_access.roles du JWT Keycloak)
+end note
+
+@enduml

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,11 +7,12 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
-import { EquipeApiService } from '../../services/equipe-api.service';
 import { EmployeService } from '../../services/employe.service';
-import { MembreEquipe, CreateMembreDTO } from '../../models/equipe.model';
+import { ProjetService, UpdateProjetPayload } from '../../services/projet-chef.service';
+import { MembreEquipe } from '../../models/equipe.model';
 import { Employe } from 'src/app/theme/shared/interfaces/employe';
-import { ChangeDetectorRef } from '@angular/core';
+import { Projet }  from 'src/app/gerai/models/projet.model';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-equipe',
@@ -24,34 +25,40 @@ export class EquipeComponent implements OnInit, OnDestroy {
 
   constructor(private cd: ChangeDetectorRef) {}
 
-  private router           = inject(Router);
-  private equipeApiService = inject(EquipeApiService);
-  private employeService   = inject(EmployeService);
+  private router         = inject(Router);
+  private employeService = inject(EmployeService);
+  private projetService  = inject(ProjetService);
+  private toast          = inject(ToastService);
 
-  // ── Team list ────────────────────────────────────────
-  membres: MembreEquipe[] = [];
+  // ── Data ─────────────────────────────────────────────
+  projets:  Projet[]       = [];
+  membres:  MembreEquipe[] = [];
+  projetsByMembreId = new Map<number, Projet[]>();
   loading = false;
   error: string | null = null;
 
   // ── Profil modal ─────────────────────────────────────
-  showProfilModal = false;
+  showProfilModal    = false;
   membreSelectionne: MembreEquipe | null = null;
 
   // ── Add modal ────────────────────────────────────────
-  showModal    = false;
-  searchQuery  = '';
+  showModal      = false;
+  modalEtape: 'no-project' | 'select-project' | 'search' | 'confirm' = 'select-project';
+  selectedProjet: Projet | null = null;
+  searchQuery    = '';
   searchResults: Employe[] = [];
-  searching    = false;
+  searching      = false;
   employeChoisi: Employe | null = null;
   statutAjouter: 'ACTIF' | 'CONGE' | 'INACTIF' = 'ACTIF';
   ajoutError: string | null = null;
+  saving         = false;
 
   private searchSubject = new Subject<string>();
   private searchSub!: Subscription;
 
-  // ── Lifecycle ────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────
   ngOnInit(): void {
-    this.chargerMembres();
+    this.chargerDonnees();
 
     this.searchSub = this.searchSubject.pipe(
       debounceTime(300),
@@ -64,8 +71,7 @@ export class EquipeComponent implements OnInit, OnDestroy {
         );
       })
     ).subscribe(results => {
-      const emails = new Set(this.membres.map(m => m.email));
-      this.searchResults = results.filter(e => !emails.has(e.email));
+      this.searchResults = results;
       this.searching = false;
       this.cd.detectChanges();
     });
@@ -75,32 +81,107 @@ export class EquipeComponent implements OnInit, OnDestroy {
     this.searchSub?.unsubscribe();
   }
 
-  // ── Team loading ─────────────────────────────────────
-  chargerMembres(): void {
+  // ── Data loading ──────────────────────────────────────
+  chargerDonnees(): void {
     this.loading = true;
-    this.error = null;
-    this.equipeApiService.getMembres().subscribe({
-      next: data => { this.membres = data; this.loading = false; this.cd.detectChanges(); },
-      error: ()   => { this.error = 'Erreur lors du chargement de l\'équipe'; this.loading = false; }
+    this.error   = null;
+    this.projetService.getProjets().subscribe({
+      next: projets => {
+        this.projets = projets;
+        this.buildMembresFromProjets();
+        this.loading = false;
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.error   = 'Erreur lors du chargement des données';
+        this.loading = false;
+        this.cd.detectChanges();
+      }
     });
   }
 
-  // ── Add modal ────────────────────────────────────────
+  private buildMembresFromProjets(): void {
+    const seen = new Set<number>();
+    const result: MembreEquipe[] = [];
+    const byId = new Map<number, Projet[]>();
+
+    for (const p of this.projets) {
+      for (const m of (p.membres ?? [])) {
+        if ((m as any).role === 'CHEF') continue;
+        if (!seen.has(m.id)) {
+          seen.add(m.id);
+          result.push({
+            id:           m.id,
+            nom:          m.nom          ?? '',
+            prenom:       m.prenom       ?? '',
+            poste:        m.poste        ?? '',
+            email:        m.email        ?? '',
+            photo:        m.photo,
+            statut:       m.statut       ?? 'ACTIF',
+            dateEmbauche: m.dateEmbauche ?? '',
+            departement:  m.departement,
+            telephone:    m.telephone
+          });
+        }
+        const list = byId.get(m.id) ?? [];
+        if (!list.includes(p)) list.push(p);
+        byId.set(m.id, list);
+      }
+    }
+    this.membres = result;
+    this.projetsByMembreId = byId;
+  }
+
+  projetsDeMembre(membre: MembreEquipe): Projet[] {
+    return this.projetsByMembreId.get(membre.id) ?? [];
+  }
+
+  // ── Add modal ─────────────────────────────────────────
   ouvrirModal(): void {
-    this.showModal     = true;
-    this.searchQuery   = '';
-    this.searchResults = [];
-    this.employeChoisi = null;
-    this.statutAjouter = 'ACTIF';
-    this.ajoutError    = null;
+    this.showModal      = true;
+    this.employeChoisi  = null;
+    this.selectedProjet = null;
+    this.searchQuery    = '';
+    this.searchResults  = [];
+    this.statutAjouter  = 'ACTIF';
+    this.ajoutError     = null;
+    this.saving         = false;
+    this.modalEtape = this.projets.length === 0 ? 'no-project' : 'search';
   }
 
   fermerModal(): void {
-    this.showModal     = false;
-    this.searchQuery   = '';
-    this.searchResults = [];
-    this.employeChoisi = null;
-    this.ajoutError    = null;
+    this.showModal      = false;
+    this.employeChoisi  = null;
+    this.selectedProjet = null;
+    this.searchQuery    = '';
+    this.searchResults  = [];
+    this.ajoutError     = null;
+    this.saving         = false;
+  }
+
+  selectionnerProjet(p: Projet): void {
+    this.selectedProjet = p;
+    this.modalEtape     = 'confirm';
+  }
+
+  retourSelectionProjet(): void {
+    this.selectedProjet = null;
+    this.employeChoisi  = null;
+    this.searchQuery    = '';
+    this.searchResults  = [];
+    this.modalEtape     = 'search';
+  }
+
+  retourConfirm(): void {
+    this.selectedProjet = null;
+    this.modalEtape     = 'select-project';
+  }
+
+  projetsDisponiblesPourEmploye(): Projet[] {
+    if (!this.employeChoisi) return this.projets;
+    return this.projets.filter(p =>
+      !(p.membres ?? []).some((m: any) => m.id === this.employeChoisi!.id)
+    );
   }
 
   onSearchChange(): void {
@@ -109,40 +190,61 @@ export class EquipeComponent implements OnInit, OnDestroy {
   }
 
   selectionnerEmploye(e: Employe): void {
-    this.employeChoisi  = e;
-    this.searchQuery    = `${e.prenom} ${e.nom}`;
-    this.searchResults  = [];
+    this.employeChoisi = e;
+    this.searchQuery   = `${e.prenom} ${e.nom}`;
+    this.searchResults = [];
+    this.modalEtape    = 'select-project';
   }
 
   reinitialiserRecherche(): void {
-    this.employeChoisi = null;
-    this.searchQuery   = '';
-    this.searchResults = [];
+    this.employeChoisi  = null;
+    this.selectedProjet = null;
+    this.searchQuery    = '';
+    this.searchResults  = [];
+    this.modalEtape     = 'search';
   }
 
   confirmerAjout(): void {
-    if (!this.employeChoisi) return;
+    if (!this.employeChoisi || !this.selectedProjet) return;
+    this.saving     = true;
     this.ajoutError = null;
+
     const e = this.employeChoisi;
+    const p = this.selectedProjet;
 
-    const payload: CreateMembreDTO = {
-      prenom:       e.prenom,
-      nom:          e.nom,
-      poste:        e.poste ?? '',
-      email:        e.email,
-      photo:        e.photo,
-      telephone:    e.telephone,
-      departement:  e.departement,
-      statut:       this.statutAjouter
-    };
+    // Collect existing member IDs + the new one, deduplicated
+    const existingIds = (p.membres ?? []).map((m: any) => m.id as number);
+    const membreIds   = [...new Set([...existingIds, e.id])];
 
-    this.equipeApiService.ajouterMembre(payload).subscribe({
-      next: newMembre => { this.membres.push(newMembre); this.fermerModal(); this.cd.detectChanges(); },
-      error: ()       => { this.ajoutError = 'Erreur lors de l\'ajout. Veuillez réessayer.'; }
+    const payload: UpdateProjetPayload = { membreIds };
+
+    this.projetService.updateProjet(p.id, payload).subscribe({
+      next: updatedProjet => {
+        const idx = this.projets.findIndex(x => x.id === p.id);
+        if (idx !== -1) {
+          this.projets[idx] = updatedProjet;
+        }
+        this.projets = [...this.projets];      // new reference — Angular sees the change
+        this.buildMembresFromProjets();
+        this.saving = false;
+        this.toast.success(`${e.prenom} ${e.nom} ajouté(e) au projet "${p.nom}".`);
+        this.fermerModal();
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.ajoutError = 'Erreur lors de l\'ajout. Veuillez réessayer.';
+        this.saving = false;
+        this.cd.detectChanges();
+      }
     });
   }
 
-  // ── Profil modal ─────────────────────────────────────
+  naviguerVersProjets(): void {
+    this.fermerModal();
+    this.router.navigate(['/chef/projets']);
+  }
+
+  // ── Profil modal ──────────────────────────────────────
   ouvrirProfilModal(membre: MembreEquipe): void {
     this.membreSelectionne = membre;
     this.showProfilModal   = true;
@@ -153,10 +255,21 @@ export class EquipeComponent implements OnInit, OnDestroy {
     this.membreSelectionne = null;
   }
 
-  // ── Navigation ───────────────────────────────────────
+  // ── Navigation ────────────────────────────────────────
   voirDemandes(membre: MembreEquipe): void {
     this.router.navigate(['/chef/demandes'], {
       queryParams: { employeId: membre.keycloakId ?? membre.id }
+    });
+  }
+
+  evaluerMembre(membre: MembreEquipe): void {
+    this.router.navigate(['/chef/evaluations'], {
+      queryParams: {
+        initier: 1,
+        employeId: membre.id,
+        nom: membre.nom,
+        prenom: membre.prenom
+      }
     });
   }
 }

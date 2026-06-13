@@ -1,0 +1,708 @@
+﻿% !TEX root = ./rapport.tex
+\chapter{Analyse, Conception et Choix Technologiques}
+
+\noindent\textbf{Plan}
+\begin{enumerate}
+  \item Introduction
+  \item Spécification des besoins
+  \item Identification des acteurs
+  \item Diagrammes de cas d’utilisation
+  \item Architecture générale de Synapse
+  \item Modélisation des données
+  \item Environnement de développement
+  \item Planification du projet
+  \item Étude et justification des choix technologiques
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+En amont de tout développement, l’analyse des besoins et la planification jouent
+un rôle déterminant~: c’est là que les exigences sont formalisées, que les acteurs
+sont identifiés et que les technologies sont comparées et sélectionnées. Ce chapitre
+présente l’ensemble de cette démarche pour la plateforme Synapse~: spécification des
+besoins fonctionnels et non fonctionnels, modélisation UML\textsuperscript{[3]}, architecture retenue,
+environnement de développement, planification Scrum et justification des choix
+technologiques.
+
+% ─────────────────────────────────────────────────────────────
+\section{Spécification des besoins}
+
+\subsection{Besoins fonctionnels}
+
+Les tableaux suivants présentent les besoins fonctionnels de Synapse organisés par acteur.
+
+\begin{table}[H]
+\centering
+\caption{Besoins fonctionnels — Employé}
+\label{tab:bf_employe}
+\begin{tabularx}{\textwidth}{VLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Besoin fonctionnel} & \textbf{Priorité} \\
+\hline
+S’authentifier via Keycloak (OAuth2/OIDC avec PKCE) & Haute \\
+\hline
+Consulter son profil (informations personnelles, contrat, documents RH) & Haute \\
+\hline
+Déposer une demande (congé, formation, document, autorisation, prêt) & Haute \\
+\hline
+Suivre ses demandes et recevoir des notifications temps réel & Haute \\
+\hline
+Utiliser la messagerie interne et l’assistant IA & Moyenne \\
+\hline
+Consulter et mettre à jour ses tâches affectées & Moyenne \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Besoins fonctionnels — Chef de projet (hérite des fonctionnalités Employé)}
+\label{tab:bf_chef}
+\begin{tabularx}{\textwidth}{VLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Besoin fonctionnel} & \textbf{Priorité} \\
+\hline
+Utiliser la messagerie interne & Moyenne \\
+\hline
+Valider ou rejeter les demandes de son équipe (1\up{er} niveau) & Haute \\
+\hline
+Gérer les projets et les tâches depuis un tableau de bord équipe & Haute \\
+\hline
+Évaluer les performances de son équipe par campagnes & Moyenne \\
+\hline
+Déclencher un recrutement pour un poste à pourvoir & Moyenne \\
+\hline
+Générer un rapport d’activité équipe (PDF/Excel) & Moyenne \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Besoins fonctionnels — Administrateur RH}
+\label{tab:bf_adminrh}
+\begin{tabularx}{\textwidth}{VLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Besoin fonctionnel} & \textbf{Priorité} \\
+\hline
+Utiliser la messagerie interne & Moyenne \\
+\hline
+Gérer les employés (CRUD, contrats, documents, synchronisation Keycloak) & Haute \\
+\hline
+Effectuer la validation finale des demandes et gérer les soldes de congés & Haute \\
+\hline
+Gérer le pipeline de recrutement avec scoring IA des CV & Haute \\
+\hline
+Générer des rapports JasperReports (PDF/Excel) par département et période & Haute \\
+\hline
+Consulter le tableau de bord analytique et les scores d’attrition & Moyenne \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Besoins fonctionnels — Directeur Général, Comité et Candidat}
+\label{tab:bf_autres}
+\begin{tabularx}{\textwidth}{VlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Acteur} & \textbf{Besoin fonctionnel} & \textbf{Priorité} \\
+\hline
+Directeur Général & Approuver ou modifier le montant d’un prêt après avis du comité & Haute \\
+\hline
+Comité de crédit & Voter sur les dossiers de prêt soumis par le service RH & Haute \\
+\hline
+Candidat & Consulter les offres d’emploi et soumettre une candidature (portail public) & Moyenne \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ──────────────────────────────────────────────────────────────────────────
+\subsection{Product Backlog}
+% ──────────────────────────────────────────────────────────────────────────
+
+Les trente user stories de Synapse sont réparties en trois releases et numérotées
+US-01 à US-30 pour assurer leur traçabilité jusqu’à l’implémentation.
+
+% ── Release 1 ─────────────────────────────────────────────────────────────
+\begin{table}[H]
+\centering\small
+\caption{Product Backlog — Release 1~: Infrastructure et gestion des employés (Sprints 1--2)}
+\label{tab:backlog_r1}
+\begin{tabularx}{\textwidth}{Vp{0.9cm}|p{1.8cm}|L|p{0.6cm}|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{ID} & \textbf{Rôle} & \textbf{User Story} & \textbf{S.} \\
+\hline
+US-01 & ADMIN\_RH & En tant qu’administrateur RH, je veux créer un dossier employé, afin de lui garantir un accès immédiat et cohérent à la plateforme sans intervention manuelle sur plusieurs systèmes. & 2 \\
+\hline
+US-02 & ADMIN\_RH & En tant qu’administrateur RH, je veux modifier les informations d’un employé (poste, département, photo) afin de maintenir le référentiel RH à jour. & 2 \\
+\hline
+US-03 & ADMIN\_RH & En tant qu’administrateur RH, je veux désactiver un compte employé afin que son accès Keycloak soit révoqué simultanément. & 2 \\
+\hline
+US-04 & ADMIN\_RH & En tant qu’administrateur RH, je veux gérer le référentiel des départements et des postes afin de structurer l’organigramme. & 2 \\
+\hline
+US-05 & EMPLOYE & En tant qu’employé, je veux consulter ma fiche de profil (informations personnelles, contrat, documents RH) afin d’accéder à mes données personnelles et contractuelles en autonomie, sans solliciter le service RH. & 2 \\
+\hline
+\end{tabularx}
+\end{table}
+\vspace{-1em}
+% ── Release 2 ─────────────────────────────────────────────────────────────
+\begin{table}[H]
+\centering\small
+\caption{Product Backlog — Release 2~: Demandes RH, Kafka et communication (Sprints 3--5)}
+\label{tab:backlog_r2}
+\begin{tabularx}{\textwidth}{Vp{0.9cm}|p{1.8cm}|L|p{0.6cm}|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{ID} & \textbf{Rôle} & \textbf{User Story} & \textbf{S.} \\
+\hline
+US-06 & EMPLOYE & En tant qu’employé, je veux déposer une demande de congé afin de lancer le circuit Chef $\rightarrow$ RH sans échange d’e-mails. & 3 \\
+\hline
+US-07 & EMPLOYE & En tant qu’employé, je veux consulter l’historique de mes demandes et leur statut courant en temps réel afin de suivre l’avancement de mes dossiers sans contacter le service RH. & 3 \\
+\hline
+US-08 & EMPLOYE & En tant qu’employé, je veux soumettre une demande d’autorisation de sortie afin d’obtenir une approbation tracée de mon chef. & 3 \\
+\hline
+US-09 & EMPLOYE & En tant qu’employé, je veux déposer une demande de document administratif (attestation de travail, bulletin de paie) afin d’obtenir les justificatifs nécessaires via un circuit traçable. & 3 \\
+\hline
+US-10 & EMPLOYE & En tant qu’employé, je veux m’inscrire à une formation afin que ma demande soit transmise automatiquement à mon chef et au service RH. & 3 \\
+\hline
+US-11 & CHEF & En tant que chef de projet, je veux valider ou rejeter les demandes de mon équipe avec un commentaire obligatoire afin de garantir la traçabilité des décisions hiérarchiques. & 3 \\
+\hline
+US-12 & ADMIN\_RH & En tant qu’administrateur RH, je veux effectuer la validation finale des demandes afin de clôturer le circuit hiérarchique et notifier l’employé concerné. & 3 \\
+\hline
+US-13 & ADMIN\_RH & En tant qu’administrateur RH, je veux gérer les soldes de congés annuels par employé avant chaque validation afin d’éviter tout dépassement non contrôlé. & 3 \\
+\hline
+US-14 & EMPLOYE & En tant qu’employé, je veux déposer une demande de prêt afin de lancer le circuit Chef $\rightarrow$ RH $\rightarrow$ Comité $\rightarrow$ DG. & 4 \\
+\hline
+US-15 & DG & En tant que directeur général, je veux approuver ou modifier le montant d’un prêt après avis du comité afin de prendre la décision finale en tant qu’autorité de validation. & 4 \\
+\hline
+US-16 & COMITE & En tant que membre du comité de crédit, je veux voter sur les dossiers de prêt afin de contribuer à la décision collégiale sur l'attribution des prêts. & 4 \\
+\hline
+US-17 & EMPLOYE & En tant qu’employé, je veux recevoir une notification en temps réel à chaque changement de statut de mes demandes afin de suivre l’avancement de mes dossiers sans me connecter manuellement à l’application. & 4 \\
+\hline
+US-18 & EMPLOYE & En tant qu’employé, je veux envoyer et recevoir des messages instantanés afin de collaborer sans quitter Synapse. & 5 \\
+\hline
+US-19 & EMPLOYE & En tant qu’employé, je veux interroger l’assistant IA afin d’obtenir des réponses immédiates sur mes congés, procédures et soldes, sans solliciter le service RH. & 5 \\
+\hline
+US-20 & ADMIN\_RH & En tant qu’administrateur RH, je veux consulter le planning de congés de l’ensemble du personnel afin de prévenir les chevauchements et garantir la continuité de service. & 5 \\
+\hline
+\end{tabularx}
+\end{table}
+\vspace{-1em}
+% ── Release 3 ─────────────────────────────────────────────────────────────
+\begin{table}[H]
+\centering\small
+\caption{Product Backlog — Release 3~: Projets, reporting et analytique (Sprints 6--7)}
+\label{tab:backlog_r3}
+\begin{tabularx}{\textwidth}{Vp{0.9cm}|p{1.8cm}|L|p{0.6cm}|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{ID} & \textbf{Rôle} & \textbf{User Story} & \textbf{S.} \\
+\hline
+US-21 & CHEF & En tant que chef, je veux créer un projet et affecter des membres afin de piloter l’avancement depuis un tableau de bord. & 6 \\
+\hline
+US-22 & CHEF & En tant que chef, je veux créer et affecter des tâches avec priorité et échéance afin de coordonner le travail de mon équipe et respecter les délais du projet. & 6 \\
+\hline
+US-23 & EMPLOYE & En tant qu’employé, je veux mettre à jour le statut de mes tâches afin de recalculer automatiquement la progression du projet. & 6 \\
+\hline
+US-24 & CHEF & En tant que chef, je veux déclencher le recrutement d’un poste afin que l’administrateur RH publie l’offre et collecte les candidatures. & 6 \\
+\hline
+US-25 & ADMIN\_RH & En tant qu’administrateur RH, je veux scorer automatiquement les CV reçus via l’IA afin de prioriser les candidatures les plus pertinentes sans analyse manuelle exhaustive. & 6 \\
+\hline
+US-26 & CHEF & En tant que chef, je veux évaluer les performances de mon équipe via des campagnes périodiques afin de disposer d'indicateurs objectifs pour les décisions de promotion et de formation. & 6 \\
+\hline
+US-27 & ADMIN\_RH & En tant qu’administrateur RH, je veux générer un rapport PDF/Excel des congés filtrés par département et période afin de produire des indicateurs de présence pour le pilotage RH. & 7 \\
+\hline
+US-28 & CHEF & En tant que chef, je veux générer un rapport d’activité de mon équipe afin de disposer d’indicateurs objectifs pour mes réunions de direction. & 7 \\
+\hline
+US-29 & ADMIN\_RH & En tant qu’administrateur RH, je veux consulter le tableau de bord analytique global afin d’orienter les décisions RH stratégiques sur des indicateurs objectifs. & 7 \\
+\hline
+US-30 & ADMIN\_RH & En tant qu’administrateur RH, je veux consulter le score d’attrition de chaque employé avec facteurs et recommandations afin d’anticiper les risques de départ et prendre des mesures préventives. & 7 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Besoins non fonctionnels}
+
+Le tableau~\ref{tab:nf_requirements} présente les besoins non fonctionnels de Synapse,
+qui définissent les critères qualitatifs et les contraintes de fonctionnement du système.
+
+\begin{table}[H]
+\centering
+\caption{Besoins non fonctionnels de Synapse}
+\label{tab:nf_requirements}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Intitulé} & \textbf{Description} \\
+\hline
+Disponibilité et robustesse &
+La plateforme doit rester opérationnelle en continu. La défaillance d’un microservice
+ne doit pas affecter les autres services (isolation par conteneur). Les événements
+Kafka sont persistés~: un consommateur peut reprendre la consommation depuis son
+dernier offset après redémarrage, sans perte de données. \\
+\hline
+Sécurité et confidentialité &
+Toute requête API doit porter un JWT Keycloak valide~; les accès non autorisés
+sont rejetés par \texttt{@PreAuthorize}. Les échanges sont chiffrés via HTTPS
+et les connexions WebSocket authentifiées par JWT. Les clés API (Groq, SMTP)
+sont externalisées via variables d’environnement, conformément aux exigences RGPD. \\
+\hline
+Performance &
+Le temps de réponse des interactions courantes doit être inférieur à 2~secondes.
+Les tableaux de bord analytiques sont mis en cache (Caffeine, TTL 10~min) et
+invalidés sur événement. La génération d’un rapport PDF (JasperReports) ne doit
+pas dépasser 3~secondes pour un périmètre de 200~employés. \\
+\hline
+Ergonomie et accessibilité &
+L’interface doit être intuitive et adaptée aux profils non techniques (employés,
+responsables RH). La SPA Angular~21 est compatible avec les navigateurs modernes
+(Chrome, Firefox, Edge) et conçue pour fonctionner sur PC, tablette et mobile
+sans installation de plug-in. \\
+\hline
+Fiabilité et qualité des données &
+Le schéma Oracle est versionné par Flyway (V1–V11)~: toute base est initialisée
+à l’identique au démarrage, garantissant la reproductibilité et l’absence de perte
+de données. Les scores d’attrition et les KPIs analytiques reposent sur des données
+persistées, non calculées à la volée sur les tables transactionnelles. \\
+\hline
+Scalabilité et évolutivité &
+L’architecture microservices permet l’ajout d’un nouveau service sans modification
+des services existants. Chaque service est déployable et scalable indépendamment
+via Docker Compose~; une migration vers Kubernetes est envisageable sans refonte
+du code applicatif. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Identification des acteurs}
+
+Synapse compte sept acteurs~: six acteurs internes correspondant aux six rôles
+Keycloak organisationnels, et un acteur externe (le candidat) qui interagit avec
+le pipeline de recrutement sans compte Keycloak.
+
+\begin{table}[H]
+\centering
+\caption{Acteurs du système Synapse}
+\label{tab:acteurs}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Acteur} & \textbf{Rôle Keycloak} & \textbf{Responsabilités principales} \\
+\hline
+Administrateur RH & \texttt{ADMIN\_RH} & Gestion des employés, provisioning Keycloak, validation des demandes, rapports globaux \\
+\hline
+Chef de projet & \texttt{CHEF} & Validation équipe, gestion projets/tâches, évaluations \\
+\hline
+Employé & \texttt{EMPLOYE} & Dépôt de demandes, suivi personnel \\
+\hline
+Directeur général & \texttt{DIRECTEUR\_GENERAL} & Approbation des prêts (circuit DG) \\
+\hline
+Membre du comité & \texttt{COMITE} & Vote sur les demandes de crédit \\
+\hline
+Candidat & \textit{(non authentifié)} & Consultation des offres publiques et dépôt de candidature via \texttt{POST /api/public/apply} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Diagrammes de cas d’utilisation}
+
+\subsection{Diagramme global}
+
+% Insert figure: Diagramme de cas d’utilisation global Synapse
+% (à générer avec StarUML, PlantUML ou draw.io)
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth,height=0.50\textheight,keepaspectratio]{diagrams/uc_global_synapse.png}
+  \caption{Diagramme de cas d’utilisation global de Synapse}
+  \label{fig:usecase_global}
+\end{figure}
+
+\subsection{Cas d’utilisation~: Gestion des demandes RH}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uc_depot_validation_demande_rh.png}
+\caption{Diagramme de cas d’utilisation~: gestion des demandes RH}
+\label{fig:usecase_demandes}
+\end{figure}
+
+\subsection{Cas d’utilisation~: Gestion des employés}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uc_gerer_employes.png}
+  \caption{Diagramme de cas d’utilisation~: gestion des employés}
+  \label{fig:usecase_employes}
+\end{figure}
+
+\subsection{Cas d’utilisation~: Gestion des projets et tâches}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/uc_projets_taches_chef.png}
+  \caption{Diagramme de cas d’utilisation~: gestion des projets et tâches}
+  \label{fig:usecase_projets}
+\end{figure}
+
+\section{Architecture générale de Synapse}
+
+Synapse repose sur une architecture microservices composée de sept services Spring Boot
+indépendants, chacun dédié à un domaine fonctionnel précis~: \textit{employe-service},
+\textit{demandes-service}, \textit{chat-service}, \textit{notification-service},
+\textit{projets-service}, \textit{taches-service} et \textit{analytics-service}.
+Tous sont sécurisés par un serveur Keycloak centralisé via le protocole OAuth2/OIDC,
+communiquent de manière asynchrone via Apache Kafka pour les notifications,
+et sont conteneurisés sous Docker Compose pour garantir la reproductibilité
+de l'environnement.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth,height=0.52\textheight,keepaspectratio]{images/deployment_docker.png}
+\caption{Diagramme de déploiement~: architecture microservices et conteneurs Docker Compose}
+\label{fig:deployment}
+\end{figure}
+
+Le frontend Angular~21 consomme les API REST de chaque service via un Bearer token JWT.
+La base de données Oracle~23ai est partagée entre les services via un schéma unique
+(\texttt{GERAI}), versionné par Flyway. Les échanges synchrones utilisent HTTP/REST~; les échanges
+asynchrones transitent par des topics Kafka.
+
+\section{Modélisation des données}
+
+\subsection{Diagramme de classes principal}
+
+Le diagramme de classes de la figure~\ref{fig:class_diagram} représente les entités
+métier principales de Synapse et leurs associations. L'entité \texttt{Employee} est
+centrale~: elle est référencée par \texttt{Demande}, \texttt{Projet}, \texttt{Message}
+et \texttt{AttritionPrediction}. Chaque \texttt{Demande} possède un statut évoluant
+au fil du workflow de validation~; chaque \texttt{Projet} agrège des \texttt{Tache}
+dont les statuts déterminent le calcul automatique de la progression.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.58\textheight,keepaspectratio]{diagrams/class_diagram_principal.png}
+  \caption{Diagramme de classes des entités principales de Synapse}
+  \label{fig:class_diagram}
+\end{figure}
+
+\subsection{Schéma de base de données (extrait)}
+
+Le schéma entité-association de la figure~\ref{fig:schema_er} présente les tables
+Oracle~23ai correspondant aux domaines RH et projets. La table \texttt{EMPLOYEES}
+constitue la clé étrangère de référence pour \texttt{LEAVE\_REQUESTS},
+\texttt{PROJECTS} et \texttt{TASKS}. Les contraintes d'intégrité et les migrations sont gérées par Flyway~; onze scripts
+de migration (V1 à V11) ont été exécutés au démarrage pour initialiser le schéma
+complet. Le tableau~\ref{tab:flyway_map} résume l'affectation de chaque migration
+à son domaine fonctionnel.
+
+\begin{table}[H]
+\centering
+\caption{Affectation des migrations Flyway aux domaines fonctionnels}
+\label{tab:flyway_map}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Migration} & \textbf{Sprint} & \textbf{Domaine} \\
+\hline
+V1 & 1 & Core RH~: \texttt{EMPLOYEES}, \texttt{DEPARTMENTS}, \texttt{POSITIONS}, \texttt{CONTRACTS} \\
+\hline
+V2 & 1 (schéma) / 6 (implem.) & Projets, tâches, évaluations de performances \\
+\hline
+V3 & 1 (schéma) / 3 (implem.) & Demandes RH~: congés, prêts, formations, autorisations, documents \\
+\hline
+V4 & 1 (schéma) / 4-5 (implem.) & Communication~: conversations, messages, notifications \\
+\hline
+V5 & Hors scope & Présence et paie~: tables \texttt{ATTENDANCE}, \texttt{PAYSLIPS} (schéma défini pour extension future~; module non implémenté dans le périmètre du projet) \\
+\hline
+V6 & 7 & Reporting, audit (\texttt{AUDIT\_LOGS}) et prédictions ML \\
+\hline
+V7--V9 & 1 & Données de référence et jeux de démonstration \\
+\hline
+V10 & 7 & Vue analytique \texttt{V\_ALL\_DEMANDES} \\
+\hline
+V11 & 2 & Colonne \texttt{employee\_code} (\texttt{EMP-XXXX}) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth,height=0.52\textheight,keepaspectratio]{images/schema_er_oracle.png}
+  \caption{Schéma entité-association Oracle 23ai (extrait~: tables RH et projets)}
+  \label{fig:schema_er}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Environnement de développement}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Environnement matériel}
+
+La table~\ref{tab:hardware} ci-dessous présente les postes de travail utilisés pour
+le développement du projet.
+
+\begin{table}[H]
+\centering
+\caption{Environnement matériel}
+\label{tab:hardware}
+\begin{tabularx}{\textwidth}{VlVXVXV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Composant} & \textbf{Poste 1} & \textbf{Poste 2} \\
+\hline
+Processeur & Intel Core i5-1235U (12\textsuperscript{e} génération), 1,30~GHz, 10 cœurs & Intel Core i7-13700H (13\textsuperscript{e} génération), 2,4~GHz \\
+\hline
+RAM & 20 Go & 32 Go DDR4 \\
+\hline
+Système d’exploitation & Windows 11 Professionnel 64 bits & Windows 11 Professionnel 64 bits \\
+\hline
+Stockage & SSD 512 Go & SSD 1 To (Samsung NVMe) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Logiciels et environnements de développement}
+
+Le tableau~\ref{tab:tools_ides} présente les environnements de développement intégrés
+utilisés pour le codage, le débogage et l'exécution du projet.
+
+\begin{table}[H]
+\centering
+\caption{Environnements de développement intégrés}
+\label{tab:tools_ides}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_intellij.png} &
+IntelliJ IDEA\textsuperscript{[20]}, IDE retenu pour le développement backend de Synapse grâce à sa
+prise en charge native de Spring Boot, Maven et JPA~; il a servi à écrire,
+déboguer et tester les sept microservices Java tout au long des sept sprints \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_vscode.png} &
+Visual Studio Code\textsuperscript{[21]}, choisi pour le développement du frontend Angular~21 de
+Synapse~; les extensions Angular Language Service, ESLint et Prettier ont
+été configurées pour garantir la cohérence du code TypeScript entre les
+composants standalone \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_tests} présente les outils de test et de validation des API
+utilisés pour vérifier le bon fonctionnement des endpoints REST.
+
+\begin{table}[H]
+\centering
+\caption{Outils de test et validation d'API}
+\label{tab:tools_tests}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_postman.png} &
+Postman\textsuperscript{[22]}, utilisé pour valider les douze endpoints critiques de Synapse~;
+chaque requête de la collection porte un Bearer token JWT émis par Keycloak,
+ce qui permet de vérifier simultanément la logique métier et l'application
+des règles RBAC sur chaque microservice \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_devops} présente les outils de conteneurisation et
+d'infrastructure utilisés pour reproduire l'environnement d'exécution de Synapse.
+
+\begin{table}[H]
+\centering
+\caption{Conteneurisation et infrastructure}
+\label{tab:tools_devops}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_docker.png} &
+Docker Desktop, moteur de conteneurisation retenu pour isoler et reproduire
+l'infrastructure locale de Synapse~: Oracle~23ai, Keycloak~26, Apache Kafka,
+Zookeeper et MailHog sont démarrés en une seule commande
+\texttt{docker-compose up}, garantissant un environnement identique sur toute
+machine de développement \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_bdd} présente l'outil d'administration de base de données
+utilisé pour inspecter et requêter le schéma Oracle~23ai.
+
+\begin{table}[H]
+\centering
+\caption{Administration de base de données}
+\label{tab:tools_bdd}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_dbeaver.png} &
+DBeaver\textsuperscript{[28]}, client universel de base de données open source permettant
+l'administration, l'inspection et l'exécution de requêtes SQL directement
+sur la base Oracle~23ai de Synapse \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_conception} présente les outils de modélisation utilisés
+pour produire les diagrammes UML du rapport.
+
+\begin{table}[H]
+\centering
+\caption{Conception et modélisation UML}
+\label{tab:tools_conception}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_plantuml.png} &
+PlantUML\textsuperscript{[29]}, outil de génération de diagrammes UML à partir de fichiers source
+\texttt{.puml} versionnés~; les diagrammes de cas d'utilisation, séquence,
+déploiement et classes ont été générés dans le répertoire
+\texttt{docs/plantuml/} \\
+\hline
+\includegraphics[height=1.4cm,keepaspectratio]{images/logo_drawio.png} &
+draw.io\textsuperscript{[23]}, outil de diagrammatique en ligne utilisé pour la conception
+des maquettes d'architecture et des schémas de flux~; les fichiers \texttt{.drawio}
+ont servi de support de travail collaboratif avant exportation vers les formats
+définitifs intégrés au rapport \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_gestion} présente l'outil de gestion de version utilisé
+tout au long du projet.
+
+\begin{table}[H]
+\centering
+\caption{Gestion de version}
+\label{tab:tools_gestion}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_github.png} &
+GitHub\textsuperscript{[24]}, dépôt distant hébergeant les deux dépôts du projet Synapse
+(frontend Angular et backend Spring Boot)~; le workflow de branches
+(\texttt{feature} $\rightarrow$ \texttt{develop} $\rightarrow$ \texttt{main})
+a structuré le développement sprint par sprint et assuré la traçabilité
+des livraisons jusqu'à la version finale \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:tools_qualite} présente l'outil de mesure de couverture de tests
+intégré aux builds Maven de Synapse.
+
+\begin{table}[H]
+\centering
+\caption{Mesure de couverture de tests}
+\label{tab:tools_qualite}
+\begin{tabularx}{\textwidth}{V>{\centering\arraybackslash}m{3.2cm}|X|}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Logo} & \textbf{Description} \\
+\hline
+\centering\includegraphics[height=1.4cm,keepaspectratio]{images/logo_jacoco.png} &
+JaCoCo\textsuperscript{[30]} (Java Code Coverage), plugin Maven qui mesure la couverture d'instructions
+et de branches lors de l'exécution de la suite de tests~; intégré à
+l'\textit{analytics-service} et au \textit{projets-service} avec un seuil
+minimal de 50\,\% configuré dans \texttt{pom.xml} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Planification du projet}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Équipe Scrum et rôles}
+
+La table~\ref{tab:scrum_team} ci-dessous présente l'équipe Scrum et les rôles
+associés.
+
+\begin{table}[H]
+\centering
+\caption{Équipe Scrum et rôles}
+\label{tab:scrum_team}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Rôle} & \textbf{Acteur} & \textbf{Mission} \\
+\hline
+Product Owner & Mouadh Zidi & Définir et prioriser le backlog selon les besoins d'Arabsoft \\
+\hline
+Scrum Master & Sofiene Melki & Faciliter les cérémonies Scrum et lever les obstacles \\
+\hline
+Équipe de développement & Mariem Saadaoui \& Nour Elhouda Boussaidi & Concevoir, développer, tester et livrer la solution \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Planification des sprints}
+
+La table~\ref{tab:sprint_plan} présente la répartition des sprints par release
+avec leurs dates réelles de réalisation (projet débuté le 2~février~2026).
+
+\begin{table}[H]
+\centering
+\caption{Planification des sprints par release et période}
+\label{tab:sprint_plan}
+\begin{tabularx}{\textwidth}{VCVlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Release} & \textbf{Sprint} & \textbf{Contenu principal} & \textbf{Période} \\
+\hline
+\multirow{2}{*}{Release 1} & Sprint 1 & Infrastructure, Keycloak, Oracle, Angular & 02--15 fév. 2026 \\
+\hline
+& Sprint 2 & employe-service, sync Oracle--Keycloak, matricules & 16 fév.--01 mars 2026 \\
+\hline
+\multirow{3}{*}{Release 2} & Sprint 3 & Demandes RH (congés, formations, documents) & 02--15 mars 2026 \\
+\hline
+& Sprint 4 & Prêts/crédits, circuit DG/comité, Kafka & 16--29 mars 2026 \\
+\hline
+& Sprint 5 & Chat WebSocket, assistant IA Groq & 30 mars--12 avr. 2026 \\
+\hline
+\multirow{2}{*}{Release 3} & Sprint 6 & Projets, tâches, évaluation, recrutement IA & 13--26 avr. 2026 \\
+\hline
+& Sprint 7 & JasperReports, analytics, prédiction attrition & 27 avr.--10 mai 2026 \\
+\hline
+\end{tabularx}
+\end{table}
+
+% Insert figure: Feuille de route du projet (Gantt ou roadmap visuelle)
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth,height=0.52\textheight,keepaspectratio]{images/roadmap_projet.png}
+  \caption{Feuille de route du projet Synapse~: jalons et sprints (février--mai~2026)}
+  \label{fig:roadmap}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\input{choix_technologiques}
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+Ce chapitre a couvert l’analyse des besoins, l’architecture et les choix technologiques
+de Synapse. Les chapitres suivants détaillent la réalisation sprint par sprint.

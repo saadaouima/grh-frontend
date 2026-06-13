@@ -353,6 +353,11 @@
     background: rgba(245,158,11,.12);
     color: #d97706;
   }
+
+  &.role-admin {
+    background: rgba(139,92,246,.12);
+    color: #7c3aed;
+  }
 }
 
 // ── Responsive ────────────────────────────────────
@@ -459,6 +464,11 @@
     &.role-chef {
       background: rgba(245, 158, 11, 0.15) !important;
       color: #fbbf24 !important;
+    }
+
+    &.role-admin {
+      background: rgba(167, 139, 250, 0.15) !important;
+      color: #a78bfa !important;
     }
   }
 

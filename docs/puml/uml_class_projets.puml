@@ -1,0 +1,185 @@
+﻿@startuml uml_class_projets
+title Diagramme de classes  -  Projets, Tâches, Évaluations et Recrutement (Sprint 6)
+
+skinparam classBackgroundColor #EAF2FB
+skinparam classBorderColor #2C5F8A
+skinparam arrowColor #1A3A5C
+skinparam classAttributeIconSize 0
+
+class Project {
+  - id : Long
+  - nom : String
+  - description : String
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
+  - statut : ProjectStatus
+  - priorite : Priority
+  - progressPct : int
+  - chefId : Long
+  --
+  + getId() : Long
+  + getNom() : String
+  + getStatut() : ProjectStatus
+  + setStatut(s : ProjectStatus) : void
+  + getProgressPct() : int
+  + calculerProgression() : int
+  + cloture() : void
+}
+
+class Tache {
+  - id : Long
+  - titre : String
+  - description : String
+  - statut : TacheStatus
+  - priorite : Priority
+  - dateEcheance : LocalDate
+  - assigneeId : Long
+  - projectId : Long
+  --
+  + getId() : Long
+  + getTitre() : String
+  + getStatut() : TacheStatus
+  + setStatut(s : TacheStatus) : void
+  + estEnRetard() : boolean
+  + getAssigneeId() : Long
+}
+
+class ProjectMember {
+  - projectId : Long
+  - employeeId : Long
+  - role : String
+  - joinedAt : LocalDateTime
+  --
+  + getProjectId() : Long
+  + getEmployeeId() : Long
+  + getRole() : String
+}
+
+class PerformanceEval {
+  - id : Long
+  - employeeId : Long
+  - evaluateurId : Long
+  - campaignId : Long
+  - score : int
+  - commentaires : String
+  - periode : String
+  - statut : EvalStatus
+  - createdAt : LocalDateTime
+  --
+  + getId() : Long
+  + getScore() : int
+  + setScore(score : int) : void
+  + getStatut() : EvalStatus
+  + cloturer() : void
+}
+
+class EvalCampaign {
+  - id : Long
+  - titre : String
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
+  - statut : CampaignStatus
+  --
+  + getId() : Long
+  + isActive() : boolean
+  + cloturer() : void
+}
+
+class JobOffer {
+  - id : Long
+  - titre : String
+  - description : String
+  - departement : String
+  - localisation : String
+  - datePublication : LocalDate
+  - dateExpiration : LocalDate
+  - statut : OfferStatus
+  --
+  + getId() : Long
+  + getTitre() : String
+  + isExpired() : boolean
+  + publish() : void
+  + close() : void
+}
+
+class JobApplication {
+  - id : Long
+  - offerId : Long
+  - nomCandidat : String
+  - prenomCandidat : String
+  - email : String
+  - telephone : String
+  - cvPath : String
+  - lettreMotivation : String
+  - statut : ApplicationStatus
+  - appliedAt : LocalDateTime
+  --
+  + getId() : Long
+  + getEmail() : String
+  + getCvPath() : String
+  + getStatut() : ApplicationStatus
+  + accepter() : void
+  + rejeter() : void
+}
+
+enum ProjectStatus {
+  EN_COURS
+  SUSPENDU
+  TERMINE
+}
+
+enum TacheStatus {
+  A_FAIRE
+  EN_COURS
+  EN_REVISION
+  TERMINE
+}
+
+enum Priority {
+  BASSE
+  MOYENNE
+  HAUTE
+  CRITIQUE
+}
+
+enum EvalStatus {
+  EN_COURS
+  CLOTUREE
+}
+
+enum CampaignStatus {
+  ACTIVE
+  CLOTUREE
+}
+
+enum OfferStatus {
+  OUVERTE
+  CLOTUREE
+  ARCHIVEE
+}
+
+enum ApplicationStatus {
+  EN_ATTENTE
+  RETENUE
+  ENTRETIEN
+  ACCEPTEE
+  REFUSEE
+}
+
+' Associations
+Project        "1" o-- "n" Tache          : contient >
+Project        "1" o-- "n" ProjectMember  : implique >
+PerformanceEval "n" --> "1" EvalCampaign  : appartient à >
+JobApplication  "n" --> "1" JobOffer      : postule à >
+
+' Enums
+Project        --> ProjectStatus  : statut
+Project        --> Priority       : priorite
+Tache          --> TacheStatus    : statut
+Tache          --> Priority       : priorite
+PerformanceEval --> EvalStatus    : statut
+EvalCampaign   --> CampaignStatus : statut
+JobOffer       --> OfferStatus    : statut
+JobApplication --> ApplicationStatus : statut
+
+@enduml

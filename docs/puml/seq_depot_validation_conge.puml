@@ -1,0 +1,63 @@
+﻿@startuml seq_depot_validation_conge
+title Diagramme de séquence  -  Dépôt et validation d'une demande de congé
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Employé"  as emp
+actor "Chef"     as chef
+actor "Admin RH" as admin
+participant "Angular\n(Frontend)" as view
+participant "DemandeController" as ctrl
+participant "LeaveRequestService" as svc
+database "Oracle\n(LEAVE_REQUESTS, LEAVE_BALANCES)" as db
+participant "Kafka" as kafka
+participant "NotificationService" as notifSvc
+
+== Dépôt de la demande ==
+emp -> view : Saisit date début, date fin, motif
+view -> ctrl : POST /api/demandes/conges
+ctrl -> svc : createLeaveRequest(dto)
+
+alt Solde insuffisant
+  svc -> db : SELECT solde FROM LEAVE_BALANCES WHERE employe_id = ?
+  db -> svc : solde insuffisant
+  ctrl -> view : 422  -  Solde insuffisant
+  view -> emp : Erreur  -  solde de congés insuffisant
+else Solde suffisant
+  svc -> db : SELECT solde FROM LEAVE_BALANCES WHERE employe_id = ?
+  db -> svc : solde OK
+  svc -> db : INSERT INTO LEAVE_REQUESTS (statut = EN_ATTENTE, jours_calcules)
+  db -> svc : LeaveRequest {id}
+  svc -> kafka : Publie CONGE_DEPOSE → notifie chef (async)
+  kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+  ctrl -> view : 201 Created {id}
+  view -> emp : Demande déposée  -  en attente de validation
+end
+
+== Validation par le chef ==
+chef -> view : Ouvre la demande et valide
+view -> ctrl : PUT /api/demandes/conges/{id}/valider-chef
+ctrl -> svc : validateByChef(id)
+svc -> db : UPDATE LEAVE_REQUESTS SET statut = VALIDE_CHEF
+svc -> kafka : Publie CONGE_VALIDE_CHEF → notifie employé et RH (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+ctrl -> view : 200 OK
+view -> chef : Validation enregistrée
+
+== Validation finale par RH ==
+admin -> view : Ouvre la demande et valide
+view -> ctrl : PUT /api/demandes/conges/{id}/valider-rh
+ctrl -> svc : validateByRH(id)
+svc -> db : UPDATE LEAVE_REQUESTS SET statut = APPROUVE
+svc -> db : UPDATE LEAVE_BALANCES SET solde = solde - jours_calcules WHERE employe_id = ?
+svc -> kafka : Publie CONGE_APPROUVE → notifie employé (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+ctrl -> view : 200 OK
+view -> admin : Demande approuvée  -  solde mis à jour
+
+@enduml

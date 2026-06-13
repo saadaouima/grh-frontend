@@ -12,6 +12,7 @@ export interface Tache {
     description?: string;
     assigneNom?: string;
     assigneA?: string;
+    assignedTo?: number;
 }
 
 export interface TacheStats {
@@ -26,6 +27,7 @@ export interface TacheKanban {
     id: number;
     titre: string;
     projet: string;
+    projetId?: number;
     priorite: 'Haute' | 'Moyenne' | 'Basse';
     prioriteColor: string;
     statut: 'A_FAIRE' | 'EN_COURS' | 'TERMINEE';

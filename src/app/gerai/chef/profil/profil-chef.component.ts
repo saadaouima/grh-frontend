@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import Keycloak from 'keycloak-js';
+import { switchMap } from 'rxjs/operators';
+import { AuthService } from '../../services/auth.service';
 
 import { SharedModule }  from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
@@ -10,6 +11,7 @@ import {
   StatistiquesEmploye, ProfilComplet, UpdateProfilDTO, Langue
 } from '../../models/employe-profile.model';
 import { ProfilEmployeService } from '../../services/employe-profile.service';
+import { ToastService } from '../../services/toast.service';
 
 export type ProfileTab = 'infos' | 'contrat' | 'competences' | 'documents';
 
@@ -24,16 +26,15 @@ export type ProfileTab = 'infos' | 'contrat' | 'competences' | 'documents';
 export class ProfilChefComponent implements OnInit {
 
   private profilService = inject(ProfilEmployeService);
-  private keycloak      = inject(Keycloak);
+  private auth          = inject(AuthService);
   private cdr           = inject(ChangeDetectorRef);
+  private toast         = inject(ToastService);
 
   // ── State ─────────────────────────────────────────────
   loading    = true;
   editMode   = false;
   isSaving   = false;
   activeTab  : ProfileTab = 'infos';
-  successMsg : string | null = null;
-  errorMsg   : string | null = null;
 
   // ── New skill input state ─────────────────────────────
   newCompetence = '';
@@ -63,7 +64,9 @@ export class ProfilChefComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    this.profilService.getProfilComplet().subscribe({
+    this.profilService.syncProfil().pipe(
+      switchMap(() => this.profilService.getProfilComplet())
+    ).subscribe({
       next: (data: ProfilComplet) => {
         this.userInfo   = data.profil;
         this.backup     = this.deepCopy(data.profil);
@@ -206,7 +209,7 @@ export class ProfilChefComponent implements OnInit {
   }
 
   // ── Password ──────────────────────────────────────────
-  changePassword(): void { this.keycloak.accountManagement(); }
+  changePassword(): void { this.auth.logout(); }
 
   // ── Profile completion % ──────────────────────────────
   get completionPct(): number {
@@ -217,7 +220,7 @@ export class ProfilChefComponent implements OnInit {
       !!u.adresse, !!u.cin, !!u.nationalite,
       !!u.contactUrgenceNom, !!u.contactUrgenceTel,
       !!u.niveauEtudes, !!u.diplome,
-      u.competences.length > 0, u.langues.length > 0
+      (u.competences?.length ?? 0) > 0, (u.langues?.length ?? 0) > 0
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
@@ -229,11 +232,8 @@ export class ProfilChefComponent implements OnInit {
   }
 
   // ── Role helpers ──────────────────────────────────────
-  /** True when the connected user is chef or admin — hides the manager section */
   get isManagerVisible(): boolean {
-    const roles: string[] = (this.keycloak.tokenParsed as any)?.realm_access?.roles ?? [];
-    const elevated = ['chef', 'CHEF', 'admin', 'ADMIN'];
-    return !elevated.some(r => roles.includes(r));
+    return this.auth.role === 'employe';
   }
 
   // ── Display helpers ───────────────────────────────────
@@ -281,17 +281,9 @@ export class ProfilChefComponent implements OnInit {
   }
 
   // ── Private ───────────────────────────────────────────
-  private showSuccess(msg: string): void {
-    this.successMsg = msg; this.errorMsg = null;
-    setTimeout(() => { this.successMsg = null; this.cdr.markForCheck(); }, 4000);
-  }
-
-  private showError(msg: string): void {
-    this.errorMsg = msg; this.successMsg = null;
-    setTimeout(() => { this.errorMsg = null; this.cdr.markForCheck(); }, 5000);
-  }
-
-  private clearMessages(): void { this.successMsg = null; this.errorMsg = null; }
+  private showSuccess(msg: string): void { this.toast.success(msg); }
+  private showError(msg: string):   void { this.toast.error(msg);   }
+  private clearMessages(): void {}
 
   private deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
 }

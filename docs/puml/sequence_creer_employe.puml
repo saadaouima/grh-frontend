@@ -1,0 +1,47 @@
+﻿@startuml sequence_creer_employe
+title Diagramme de séquence  -  Création d'un employé avec synchronisation Oracle / Keycloak
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Admin RH" as admin
+participant "Angular\n(Frontend)" as view
+participant "EmployeController" as ctrl
+participant "EmployeeService" as svc
+database "Oracle\n(EMPLOYEES)" as db
+participant "KeycloakAdminService" as kcAdmin
+participant "Keycloak" as kc
+participant "Kafka" as kafka
+participant "NotificationService" as notifSvc
+
+== Saisie du formulaire ==
+admin -> view : Remplit le formulaire (nom, email, poste, département, rôle)
+view -> ctrl : POST /api/employes
+
+== Persistance Oracle ==
+ctrl -> svc : createEmployee(dto)
+svc -> db : INSERT INTO EMPLOYEES (matricule, nom, email, poste, departement_id, statut = ACTIF)
+note right of db : Le matricule EMP-XXXX\nest généré automatiquement\npar séquence Oracle
+db -> svc : Employee {id, matricule}
+
+== Synchronisation Keycloak ==
+svc -> kcAdmin : createKeycloakUser(email, rôle)
+kcAdmin -> kc : POST /admin/realms/synapse/users + assignRole
+kc -> kcAdmin : keycloakId (UUID)
+kcAdmin -> svc : keycloakId
+svc -> db : UPDATE EMPLOYEES SET keycloak_id = ? WHERE id = ?
+
+== Notification ==
+svc -> kafka : Publie EMPLOYE_CREE (matricule, email) → async
+kafka --> notifSvc : Consomme
+notifSvc -> db : INSERT INTO NOTIFICATIONS (employe_id, type = WELCOME, lu = false)
+
+== Réponse ==
+ctrl -> view : 201 Created {matricule, nom, email}
+view -> admin : "Employé créé  -  Matricule: EMP-XXXX"
+
+@enduml

@@ -1,0 +1,51 @@
+@startuml activity_attrition
+!theme plain
+skinparam activityBackgroundColor #EEF4FF
+skinparam activityBorderColor #3498DB
+skinparam arrowColor #555555
+skinparam activityFontSize 11
+skinparam activityDiamondBackgroundColor #FEF9E7
+skinparam activityDiamondBorderColor #E67E22
+
+title Diagramme d'activité — Algorithme de prédiction d'attrition
+
+|analytics-service|
+start
+:Recevoir la requête\n/api/analytics/attrition;
+:Vérifier le cache\nCaffeine (TTL 10 min);
+
+if (Données en cache ?) then (Oui)
+  :Retourner les prédictions\ncachées;
+  stop
+else (Non)
+  :Exécuter la requête native\nOracle sur V_ALL_DEMANDES\n+ LEAVE_REQUESTS + PROJECTS;
+endif
+
+:Calculer les 4 facteurs\npour chaque employé actif;
+
+fork
+  :Facteur 1 — Ancienneté\n(hire_date → mois d'ancienneté);
+fork again
+  :Facteur 2 — Absences\n(jours congés validés\nsur 12 mois glissants);
+fork again
+  :Facteur 3 — Taux de refus\n(demandes refusées /\ntotal demandes);
+fork again
+  :Facteur 4 — Charge projets\n(nombre de projets\nEN_COURS actifs);
+end fork
+
+:Appliquer la formule\nde scoring pondéré\n(0–100);
+
+if (Score > 70 ?) then (Oui — Risque élevé)
+  :Niveau : CRITIQUE\nRecommandation : entretien RH;
+else if (Score > 40 ?) then (Oui — Risque modéré)
+  :Niveau : MODÉRÉ\nRecommandation : suivi régulier;
+else (Non — Risque faible)
+  :Niveau : FAIBLE\nAucune action immédiate;
+endif
+
+:Construire la liste\nAttritionPredictionDto;
+:Mettre en cache\n(TTL 10 minutes);
+:Retourner les prédictions\nau frontend Angular;
+stop
+
+@enduml

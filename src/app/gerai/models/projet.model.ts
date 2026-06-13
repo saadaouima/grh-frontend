@@ -2,6 +2,7 @@ export interface Membre {
     id: number;
     nom: string;
     initiales: string;
+    photo?: string;
 }
 
 export enum StatutProjet {
@@ -24,8 +25,8 @@ export interface Projet {
   totalTaches: number;
   tachesCompletees: number;
   equipe: Membre[];
+  membres?: any[]; // any[] covers both Employe (mock) and MembreDTO (admin API)
   chefProjet?: string;
-  membres?: any[]; // legacy
 }
 
 export interface TacheProjet {

@@ -1,6 +1,6 @@
 import { Projet, StatutProjet } from 'src/app/gerai/models/projet.model';
 import { Tache } from 'src/app/gerai/models/tache.model';
-import { Employe } from 'src/app/gerai/models/employe.model';
+import { Employe } from 'src/app/theme/shared/interfaces/employe';
 
 export const MOCK_EMPLOYES: Employe[] = [
     { id: 1, nom: 'Ben Ali', prenom: 'Sami', email: 's.benali@synapse.tn', poste: 'Développeur', departement: 'Informatique', statut: 'ACTIF' },

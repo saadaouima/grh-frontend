@@ -1,0 +1,91 @@
+@startuml class_sprint3_demandes
+!theme plain
+skinparam classBackgroundColor #EEF4FF
+skinparam classBorderColor #3498DB
+skinparam arrowColor #555555
+skinparam classHeaderBackgroundColor #3498DB
+skinparam classHeaderFontColor #FFFFFF
+skinparam classFontSize 11
+skinparam classAttributeFontSize 10
+hide circle
+
+title Diagramme de classes — Sprint 3 : Domaine des demandes RH
+
+class Employee {
+  - id : Long
+  - employeeCode : String
+  - firstName : String
+  - lastName : String
+  - email : String
+  - status : String
+}
+
+abstract class AbstractDemande {
+  - id : Long
+  - status : DemandeStatus
+  - createdAt : LocalDateTime
+  - updatedAt : LocalDateTime
+  - commentaireChef : String
+  - commentaireRh : String
+}
+
+enum DemandeStatus {
+  EN_ATTENTE
+  VALIDE_CHEF
+  REFUSE_CHEF
+  APPROUVE
+  REFUSE_RH
+}
+
+class LeaveRequest {
+  - startDate : LocalDate
+  - endDate : LocalDate
+  - daysCount : Integer
+  - leaveType : String
+  - motif : String
+}
+
+class TrainingRequest {
+  - sessionId : Long
+  - motif : String
+}
+
+class DocumentRequest {
+  - documentType : String
+  - purpose : String
+}
+
+class AuthorizationRequest {
+  - startTime : LocalDateTime
+  - endTime : LocalDateTime
+  - destination : String
+}
+
+class LeaveBalance {
+  - id : Long
+  - year : Integer
+  - totalDays : Integer
+  - usedDays : Integer
+  - remainingDays : Integer
+}
+
+class Notification {
+  - id : Long
+  - message : String
+  - lien : String
+  - lue : Boolean
+  - createdAt : LocalDateTime
+}
+
+Employee "1" --> "0..*" AbstractDemande : soumet
+Employee "1" --> "1" LeaveBalance : possède
+
+AbstractDemande <|-- LeaveRequest
+AbstractDemande <|-- TrainingRequest
+AbstractDemande <|-- DocumentRequest
+AbstractDemande <|-- AuthorizationRequest
+
+AbstractDemande --> DemandeStatus
+Employee "1" --> "0..*" Notification : reçoit
+
+@enduml

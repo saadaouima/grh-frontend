@@ -1,0 +1,48 @@
+﻿@startuml uc_depot_validation_demande_rh
+title Diagramme de cas d'utilisation - Gestion des demandes RH
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 40
+skinparam ranksep 40
+
+top to bottom direction
+
+actor "Employe"  as emp
+actor "Chef"     as chef
+actor "Admin RH" as admin
+
+rectangle "Synapse - Module Demandes RH" {
+
+  usecase "Deposer une demande\n(conge, formation, document,\nautorisation de sortie)" as UC1
+  usecase "Choisir le type de demande"  as UC2
+  usecase "Verifier le solde de conge"  as UC3
+  usecase "Notifier le chef et l'admin" as UC4
+  usecase "Consulter ses demandes"      as UC5
+  usecase "Annuler une demande"         as UC6
+  usecase "Valider une demande (Chef)"  as UC7
+  usecase "Valider une demande (RH)"    as UC8
+  usecase "Rejeter avec commentaire"    as UC9
+  usecase "Notifier l'employe"          as UC10
+}
+
+emp   --> UC1
+emp   --> UC5
+emp   --> UC6
+chef  --> UC7
+admin --> UC8
+admin --> UC5
+
+UC1 ..> UC2  : <<include>>
+UC1 ..> UC4  : <<include>>
+UC3 ..> UC2  : <<extend>>\n[condition : type = CONGE]
+
+UC7 ..> UC10 : <<include>>
+UC8 ..> UC10 : <<include>>
+
+UC9 ..> UC7  : <<extend>>\n[condition : decision = REJET]
+UC9 ..> UC8  : <<extend>>\n[condition : decision = REJET]
+UC6 ..> UC5  : <<extend>>\n[condition : statut = EN_ATTENTE]
+
+@enduml

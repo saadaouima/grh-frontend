@@ -1,0 +1,568 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ══════════════════════════════════════════════════════════
+% COMPILATION SÉLECTIVE — plan gratuit Overleaf (OBLIGATOIRE)
+% ══════════════════════════════════════════════════════════
+% Le rapport complet dépasse la limite de 20s du plan gratuit.
+% → Décommenter UNE SEULE ligne selon le chapitre à vérifier.
+% → La numérotation des pages/figures reste correcte grâce aux .aux Overleaf.
+% → Pour le PDF final complet : compiler en LOCAL avec pdflatex.
+%
+% \includeonly{chapitre1}
+% \includeonly{chapitre2}
+% \includeonly{chapitre3}
+% \includeonly{chapitre4}
+% \includeonly{chapitre5}
+% \includeonly{chapitre6_securite}
+% \includeonly{chapitre7_tests}
+
+% ══════════════════════════════════════════════════════════
+% 1. ENCODAGE & LANGUE
+% ══════════════════════════════════════════════════════════
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\DeclareUnicodeCharacter{2019}{'}
+\usepackage[french]{babel}
+
+% ══════════════════════════════════════════════════════════
+% 2. MISE EN PAGE & POLICES
+% ══════════════════════════════════════════════════════════
+% Police : Times New Roman (identique à la référence académique)
+\usepackage{newtxtext,newtxmath}
+\usepackage[a4paper,
+            top=2.5cm,
+            bottom=2.5cm,
+            left=2.5cm,
+            right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\textfloatsep}{10pt}
+\setlength{\intextsep}{8pt}
+\setlength{\floatsep}{8pt}
+\usepackage{pdfpages}
+% Légendes : 9pt italique (identique à la référence)
+\usepackage[font={footnotesize,it},
+            labelfont={footnotesize,it},
+            labelsep=space]{caption}
+
+% ══════════════════════════════════════════════════════════
+% 3. MATHS & SYMBOLES
+% ══════════════════════════════════════════════════════════
+\usepackage{amsmath}
+\usepackage{pifont}
+
+% ══════════════════════════════════════════════════════════
+% 4. COULEURS & TABLEAUX
+% ══════════════════════════════════════════════════════════
+\usepackage[table]{xcolor}
+\definecolor{headerblue}{RGB}{52,152,219}
+\definecolor{rowgray}{gray}{0.95}
+
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{etoolbox}
+% longtable et xltabular supprimés (trop lents sur plan gratuit Overleaf)
+% xcolor déjà chargé ci-dessus — NE PAS recharger
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+% Fix colortbl : \rowcolor recouvre les \hline et les | classiques.
+% Solution : règles épaisses (1.5pt) en bleu foncé — visibles sur fond blanc ET sur fond headerblue.
+\setlength{\arrayrulewidth}{1.5pt}
+\arrayrulecolor{headerblue!20!black}
+\setlength{\extrarowheight}{2pt}
+\newcolumntype{V}{!{\color{headerblue!20!black}\vrule width 1.5pt}}
+% La police \caption{} (footnotesize italic) ne doit pas contaminer le corps
+% des tableaux — forcer \normalsize\normalfont à chaque ouverture de tabularx
+\AtBeginEnvironment{tabularx}{\small\normalfont}
+\AtBeginEnvironment{tabular}{\small\normalfont}
+
+% Fix débordement de \texttt dans les tableaux :
+%  • active la césure aux tirets existants (spring-security-test → break possible)
+%  • emergencystretch global évite les overfull hbox résiduels
+\setlength{\emergencystretch}{2em}
+\renewcommand{\texttt}[1]{{\ttfamily\hyphenchar\font=45\relax#1}}
+
+% ══════════════════════════════════════════════════════════
+% 5. BOÎTES — mdframed (léger, remplace tcolorbox)
+% ══════════════════════════════════════════════════════════
+\usepackage{mdframed}
+
+% Checkmark (pas de fontawesome5 ni wasysym lourd)
+\newcommand{\faCheckCircle}{$\checkmark$}
+
+% ══════════════════════════════════════════════════════════
+% 6. IMAGES
+% ══════════════════════════════════════════════════════════
+\usepackage{graphicx}
+\graphicspath{{images/}{diagrams/}}
+
+
+% ══ MODE RAPIDE (Overleaf plan gratuit) ══════════════════════════════
+% Décommenter la ligne ci-dessous pour remplacer les images par des
+% boîtes vides → compilation en ~20s au lieu de 60s.
+% RE-COMMENTER pour la version finale avec images.
+%\setkeys{Gin}{draft}
+% ══════════════════════════════════════════════════════════════════════
+
+% tikz supprimé (toutes les figures TikZ remplacées par des PNG)
+
+% ══════════════════════════════════════════════════════════
+% CODE LISTINGS — fancyvrb (compilaton immédiate, ~10x plus rapide que listings)
+% Pour la version finale avec coloration : remplacer fancyvrb par listings
+% ══════════════════════════════════════════════════════════
+\usepackage{fancyvrb}
+\fvset{frame=single, numbers=left, fontsize=\footnotesize,
+       xleftmargin=10pt, numbersep=4pt}
+% lstlisting redirigé vers Verbatim (ignore caption/label/style — acceptable en draft)
+\newenvironment{lstlisting}[1][]{\VerbatimEnvironment\begin{Verbatim}}{\end{Verbatim}}
+
+% ══════════════════════════════════════════════════════════
+% 7. LISTES, FLOTTANTS & URLS
+% ══════════════════════════════════════════════════════════
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{xurl}
+
+% ══════════════════════════════════════════════════════════
+% 8. EN-TÊTES & PIEDS DE PAGE
+% ══════════════════════════════════════════════════════════
+\usepackage{fancyhdr}
+\setlength{\headheight}{16pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Style plain pour les premières pages de chapitre
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+% ══════════════════════════════════════════════════════════
+% 9. TITRES — tailles exactes mesurées sur le rapport de référence
+% ══════════════════════════════════════════════════════════
+\usepackage{titlesec}
+
+% Chapitre : 20pt italique centré (TimesNewRomanPS-ItalicMT 20pt)
+\titleformat{\chapter}[display]
+    {\normalfont\fontsize{20}{24}\selectfont\itshape\centering}
+    {\normalfont\fontsize{14}{17}\selectfont\bfseries Chapitre \thechapter}
+    {12pt}
+    {}
+    [\vspace{4pt}{\color{headerblue}\rule{\textwidth}{1.5pt}}]
+\titlespacing*{\chapter}{0pt}{-10pt}{25pt}
+
+% Section : 17pt gras (TimesNewRomanPS-BoldMT 17pt)
+\titleformat{\section}
+    {\normalfont\fontsize{17}{20}\selectfont\bfseries}
+    {\thesection.}
+    {0.6em}{}
+
+% Sous-section : 15pt gras (TimesNewRomanPS-BoldMT 15pt)
+\titleformat{\subsection}
+    {\normalfont\fontsize{15}{18}\selectfont\bfseries}
+    {\thesubsection}
+    {0.6em}{}
+
+% Sous-sous-section : 13pt gras
+\titleformat{\subsubsection}
+    {\normalfont\fontsize{13}{16}\selectfont\bfseries}
+    {\thesubsubsection}
+    {0.6em}{}
+
+% ══════════════════════════════════════════════════════════
+% 10. TABLE DES MATIÈRES
+% OPTIMISATION : minitoc supprimé → gain 30-40% compilation
+% ══════════════════════════════════════════════════════════
+\usepackage{tocloft}
+\setlength{\cftbeforechapskip}{6pt}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+
+% ══════════════════════════════════════════════════════════
+% 11. HYPERREF & HYPCAP — toujours en dernier
+% ══════════════════════════════════════════════════════════
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks      = true,
+    linkcolor       = black,
+    urlcolor        = blue,
+    citecolor       = blue,
+    bookmarksnumbered = true,
+    pdfstartview    = {FitH},
+    pageanchor      = true,
+    pdftitle        = {Plateforme Synapse — Rapport de Projet},
+    pdfauthor       = {},
+    pdflang         = {fr}
+}
+\usepackage[all]{hypcap}
+
+% ══════════════════════════════════════════════════════════
+% DÉBUT DU DOCUMENT
+% ══════════════════════════════════════════════════════════
+\begin{document}
+
+
+% ── Page de garde ────────────────────────────────────────
+\pagenumbering{gobble}
+\includepdf[pages=1]{page_de_garde.pdf}
+\clearpage
+\null\thispagestyle{empty}\clearpage
+
+% ── Dédicace — Mariem ─────────────────────────────────────
+\pagenumbering{roman}
+\setcounter{page}{1}
+\phantomsection
+\chapter*{Dédicaces}
+
+\vspace*{2cm}
+\begin{center}
+\textbf{À Dieu tout-puissant,}\\[0.4em]
+C'est dans Ta grâce que j'ai trouvé la force de tenir~;\\
+ce travail Te revient avant tout.\\[1.2em]
+
+\textbf{À ma mère,}\\[0.4em]
+Tu es l'origine silencieuse de tout ce que je suis\\
+et de tout ce que je construis.\\[1.2em]
+
+\textbf{À mon père,}\\[0.4em]
+Tu es le pilier discret mais inébranlable autour duquel tout ce que je suis s'est construit.\\[1.2em]
+
+\textbf{À mon frère,}\\[0.4em]
+Tu m'as montré la voie avant même que je sache\\
+où j'allais.\\[1.2em]
+
+\textbf{À ma sœur,}\\[0.4em]
+Ta présence seule a suffi, dans les moments les plus difficiles,\\
+à tout remettre en place.\\[1.2em]
+
+\textbf{Aux miens,}\\[0.4em]
+Votre affection discrète et vos prières ont été,\\
+tout au long de ce parcours, mon ancre invisible.\\[1.2em]
+
+\textbf{À mes amis,}\\[0.4em]
+Pour les rires, la loyauté et cette façon unique\\
+de rendre les choses plus légères~— merci.\\[2em]
+
+\textit{Mariem Saadaoui}
+
+\end{center}
+
+\cleardoublepage
+
+% ── Dédicace — Nour ───────────────────────────────────────
+\phantomsection
+\chapter*{Dédicaces}
+
+\vspace*{2cm}
+\begin{center}
+\textbf{À Dieu,}\\[0.4em]
+Pour Sa guidance, Sa sagesse et la force qu'Il m'a accordée\\
+à chaque étape de ce parcours.\\[1.2em]
+
+\textbf{À ma mère et à mon père,}\\[0.4em]
+Pour votre amour, vos sacrifices et votre confiance inébranlable.\\
+Tout ce que je réalise aujourd'hui porte l'empreinte de votre soutien.\\[1.2em]
+
+\textbf{À mes deux sœurs,}\\[0.4em]
+Pour votre présence, votre affection et tous les moments\\
+qui ont rendu ce chemin plus léger et plus beau.\\[1.2em]
+
+\textbf{À moi-même,}\\[0.4em]
+Pour avoir persévéré malgré les défis, gardé le cap\\
+dans les moments de doute et transformé chaque difficulté\\
+en une occasion d'avancer.\\[1.2em]
+
+\textbf{À tous ceux qui occupent une place précieuse dans ma vie,}\\[0.4em]
+en particulier à mes amis~: que vous trouviez dans ces quelques lignes\\
+l'expression de ma sincère gratitude pour votre soutien,\\
+votre confiance et votre bienveillance.\\[2em]
+
+\textit{Nour El Houda Boussaidi}
+
+\end{center}
+
+\cleardoublepage
+
+% ── Reconnaissances ───────────────────────────────────
+\phantomsection
+\chapter*{Reconnaissances}
+
+\vspace*{1cm}
+Nous tenons à exprimer notre profonde gratitude à toutes les personnes qui ont
+contribué, de près ou de loin, à la réalisation de ce projet de fin d'études.
+
+\medskip
+Nos sincères reconnaissances s'adressent à \textbf{Monsieur Mouadh Zidi}, notre
+encadrant professionnel au sein d'Arabsoft, pour son accompagnement constant, sa
+grande disponibilité et la pertinence de ses conseils tout au long de notre mission.
+
+\medskip
+Nous remercions vivement \textbf{Monsieur Sofien Melki}, notre encadrant académique,
+pour son suivi rigoureux, ses orientations éclairées et ses remarques constructives
+qui ont sensiblement enrichi notre travail.
+
+\medskip
+Notre gratitude va également à l'ensemble de l'équipe d'Arabsoft pour la chaleur
+de leur accueil, leur soutien bienveillant et le cadre de travail stimulant qu'ils
+nous ont offert.
+
+\medskip
+Enfin, nous adressons nos remerciements aux membres du jury ainsi qu'à nos
+enseignants, pour leur précieuse contribution à notre formation et pour l'attention
+qu'ils portent à l'évaluation de ce travail.
+
+\bigskip
+\noindent À toutes et à tous, merci sincèrement.
+
+\cleardoublepage
+
+% ── Table des matières ──────────────────────────────────
+% Compiler DEUX FOIS pour que les numéros de page soient corrects.
+\tableofcontents
+\cleardoublepage
+
+% ── Liste des figures ───────────────────────────────────
+\listoffigures
+\addcontentsline{toc}{chapter}{Liste des figures}
+\cleardoublepage
+
+% ── Liste des tableaux ──────────────────────────────────
+\listoftables
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\cleardoublepage
+
+% ── Liste des sigles et acronymes ───────────────────────
+\input{acronymes}
+\cleardoublepage
+
+% ── Introduction générale ───────────────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\phantomsection
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+\markboth{Introduction Générale}{Introduction Générale}
+
+La transformation numérique des entreprises tunisiennes s'est considérablement
+accélérée ces dernières années, portée par le développement du tissu local de
+sociétés de services et d'ingénierie informatique\textsuperscript{[25]}. Les PME et ETI du secteur
+technologique font désormais face à une double exigence~: moderniser leurs propres
+processus internes pour gagner en efficacité opérationnelle, tout en continuant
+à investir dans leurs capacités de développement au service de leurs clients. La
+fonction Ressources Humaines, longtemps gérée par des outils bureautiques génériques,
+se retrouve ainsi au cœur de cette transformation~: elle doit s'outiller sans
+alourdir des budgets contraints par les coûts des licences logicielles commerciales
+libellées en devises étrangères.
+
+La gestion des ressources humaines dans une organisation de taille moyenne génère,
+par sa nature même, un flux continu de données hétérogènes~: demandes de congés,
+inscriptions à des formations, prêts au personnel, documents administratifs,
+affectations à des projets, cycles d'évaluation. Traiter ce flux par des outils génériques (tableurs, échanges de courriels,
+circuits de validation informels) n'est viable que pour les plus petites structures. Au-delà d'un certain seuil
+d'effectifs, cette approche engendre des incohérences de données, des délais de
+traitement non maîtrisés et une incapacité pratique à produire des indicateurs
+fiables pour piloter les décisions RH.
+
+Les solutions commerciales standardisées apportent une réponse fonctionnelle reconnue, mais leur coût de licence récurrent, leur rigidité face aux spécificités organisationnelles et légales du contexte tunisien, et leur architecture fermée limitant l'exploitation analytique des données, les rendent inadaptées aux structures de taille intermédiaire disposant de compétences techniques internes.
+
+Face à cette double contrainte (défaillance des outils internes et inadéquation
+des solutions commerciales du marché), la problématique centrale de ce projet
+est la suivante~: \textit{comment concevoir et développer, pour Arabsoft, une
+plateforme GRH centralisée sur mesure qui automatise les workflows de demandes RH,
+pilote la gestion collaborative des projets et des équipes, et fournit des indicateurs
+analytiques et prédictifs fiables, tout en garantissant la sécurité des accès dans
+un environnement multi-rôles~?}
+
+Pour répondre à cette problématique, le projet \textbf{Synapse} poursuit
+quatre objectifs principaux~:
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Automatiser} les workflows de demandes RH afin d'éliminer
+        les échanges e-mail informels et garantir la traçabilité des décisions~;
+  \item \textbf{Centraliser} les données des 85 collaborateurs d'Arabsoft dans
+        un référentiel unique et cohérent, synchronisé avec le serveur d'identité~;
+  \item \textbf{Piloter} les projets, les tâches et les évaluations de performances
+        depuis un tableau de bord unifié par rôle organisationnel~;
+  \item \textbf{Prédire} les risques d'attrition du personnel afin d'anticiper
+        les décisions RH stratégiques.
+\end{itemize}
+
+La plateforme \textbf{Synapse} répond à cette problématique en adoptant une architecture microservices combinant développement \textit{full-stack} et intelligence artificielle générative, sécurisée par un contrôle d'accès centralisé à six rôles organisationnels et déployée sur une infrastructure entièrement conteneurisée.
+
+Ce rapport documente le cycle de développement complet de Synapse, de l'analyse
+des besoins au déploiement. Le \textbf{premier chapitre} présente l'entreprise
+partenaire Arabsoft, dresse un état des lieux de l'existant et formule la
+problématique. Le \textbf{deuxième chapitre} couvre l'analyse des besoins, les
+choix technologiques justifiés par comparaison d'alternatives, la modélisation
+UML et la planification Scrum. Le \textbf{troisième chapitre} retrace les
+sprints~1 et~2~: mise en place de l'infrastructure technique (Keycloak, RBAC,
+Oracle via Flyway) et module de gestion des employés. Le
+\textbf{quatrième chapitre} décrit les sprints~3 à~5~: workflows de demandes
+RH, notifications Kafka, messagerie WebSocket et assistant IA Groq. Le
+\textbf{cinquième chapitre} clôt les sprints~6 et~7~: gestion des projets et tâches,
+évaluation des performances par campagnes, pipeline de recrutement intégrant le
+scoring de CV par IA, puis reporting JasperReports, tableaux de bord analytiques et
+module de prédiction d'\textit{attrition}. Le \textbf{sixième
+chapitre} détaille l'architecture de sécurité de la plateforme~: authentification
+OAuth2/PKCE, RBAC Keycloak, sécurisation des microservices et couverture OWASP
+Top~10. Le \textbf{septième chapitre} présente la stratégie de test et les
+résultats de validation~: tests unitaires JUnit/Mockito, tests de contexte Spring
+et scénarios bout-en-bout.
+
+% ── Chapitres ───────────────────────────────────────────
+\include{chapitre1}
+\include{chapitre2}
+\include{chapitre3}
+\include{chapitre4}
+\include{chapitre5}
+\include{chapitre6_securite}
+\include{chapitre7_tests}
+
+% ── Bibliographie ────────────────────────────────────────
+\input{bibliographie}
+
+% ══════════════════════════════════════════════════════════
+%  CONCLUSION GÉNÉRALE
+% ══════════════════════════════════════════════════════════
+\phantomsection
+\chapter*{Conclusion Générale}
+\addcontentsline{toc}{chapter}{Conclusion Générale}
+\markboth{Conclusion Générale}{Conclusion Générale}
+
+Ce rapport a présenté la conception et le développement complet de
+\textbf{Synapse}, une plateforme de gestion des ressources humaines développée sur
+mesure pour répondre aux besoins opérationnels d'Arabsoft. Conduit en sept sprints
+de deux semaines sur une durée de quatre mois selon la méthodologie Scrum,
+le projet a livré sept microservices Spring Boot indépendants, un frontend Angular~21
+et une infrastructure Oracle~23ai, Keycloak et Kafka, couvrant fonctionnellement
+les besoins d'Arabsoft à un coût maîtrisé.
+
+La \textbf{première release} a établi les fondations techniques de la plateforme.
+La configuration du RBAC Keycloak, la mise en place des migrations Flyway et
+l'implémentation du \textit{JwtAuthenticationConverter} partagé entre tous les
+microservices ont constitué le socle sur lequel tous les microservices suivants s'appuient
+pour l'authentification et le contrôle d'accès. La synchronisation bidirectionnelle
+Oracle--Keycloak, validée dès le sprint~2, garantit que toute création ou
+désactivation d'employé se répercute instantanément dans les deux systèmes, éliminant
+les risques d'incohérence d'accès.
+
+La \textbf{deuxième release} a livré le cœur fonctionnel de Synapse. L'automatisation
+des cinq types de demandes RH, assortie d'un workflow de validation hiérarchique
+configurable, répond directement à la problématique identifiée lors de l'analyse des
+besoins~: tracer, prioriser et notifier chaque demande sans intervention manuelle.
+L'introduction d'Apache Kafka comme bus d'événements découple les producteurs
+(le \textit{demandes-service}) des consommateurs (le \textit{notification-service}
+et l'\textit{analytics-service}), garantissant qu'aucun événement n'est perdu même
+en cas d'indisponibilité temporaire d'un service. Le \textit{chat-service}, enrichi
+d'un assistant conversationnel IA propulsé par Groq, complète cette release en
+apportant une dimension d'interaction naturelle jusqu'alors absente des outils
+disponibles chez Arabsoft.
+
+La \textbf{troisième release} a couvert les dimensions collaborative et décisionnelle
+de la plateforme. La gestion des projets et des tâches, avec le calcul automatique de
+l'avancement, fournit aux chefs de projet une visibilité en temps réel sans saisie
+manuelle d'indicateurs. Le module d'attrition, fondé sur quatre facteurs comportementaux
+mesurables directement depuis la base Oracle, apporte une capacité d'anticipation
+des risques de départ qui dépasse le périmètre traditionnel d'un SIRH. Enfin,
+la génération de rapports JasperReports, filtrés automatiquement selon le rôle
+de l'utilisateur connecté, clôt la plateforme par un outil de reporting multi-format.
+
+Sur le plan architectural, le choix d'une approche microservices fondée sur des
+technologies éprouvées (Spring Boot, Keycloak, Oracle~23ai, Apache Kafka)
+s'est révélé pertinent~: chaque service est déployable et scalable indépendamment,
+les migrations de base de données sont versionnées et reproductibles, et l'ensemble
+de l'infrastructure peut être lancé en une seule commande via Docker Compose,
+garantissant la reproductibilité de l'environnement entre les machines de
+développement.
+
+% ──────────────────────────────────────────────────────────
+\phantomsection
+\section*{Perspectives d'évolution}
+\addcontentsline{toc}{section}{Perspectives d'évolution}
+% ──────────────────────────────────────────────────────────
+
+Trois évolutions prioritaires ont été identifiées à l'issue du projet.
+
+\paragraph{Tableaux de bord décisionnels (Power BI).}
+L'intégration de \textbf{Power BI} connecté à la base Oracle, prévue dans la
+planification initiale mais non finalisée par contrainte de temps, représente la
+première priorité d'évolution. Elle permettrait aux décideurs de consulter directement depuis Synapse des tableaux
+de bord interactifs (taux d'absentéisme, répartition des effectifs, avancement des
+projets) sans export manuel.
+
+\paragraph{Déploiement en production.}
+La conteneurisation complète de la plateforme via \textbf{Docker Compose} est
+partiellement réalisée. Une évolution naturelle consisterait à orchestrer les
+microservices avec \textbf{Kubernetes}, d'y associer un pipeline CI/CD
+(GitHub Actions) et de déployer \textbf{Synapse} en environnement cloud pour
+assurer une disponibilité continue et une montée en charge automatique.
+
+\paragraph{Intelligence artificielle avancée.}
+Le module de prédiction de l'\textit{attrition} calcule un score de risque par
+employé à partir de quatre indicateurs comportementaux directement disponibles en base. À court terme, ce module pourrait être enrichi par des algorithmes
+d'apprentissage automatique plus élaborés (forêts aléatoires, \textit{gradient
+boosting}) entraînés sur l'historique complet des départs, et complété par des
+recommandations de formations personnalisées fondées sur le profil et les
+évaluations de performance de chaque employé.
+
+\bigskip
+
+\noindent \textbf{Synapse} établit qu'une plateforme GRH à couverture fonctionnelle
+large (workflows métier, communication temps réel, IA et analyse prédictive)
+peut être conçue et livrée en quatre mois sur une base technologique open-source,
+sans dépendance à des licences propriétaires, et avec une architecture suffisamment
+modulaire pour évoluer indépendamment service par service.
+
+% ── ANNEXES ──────────────────────────────────────────────────────────
+\appendix
+\renewcommand{\thechapter}{\Roman{chapter}}
+\titleformat{\chapter}[block]
+    {\normalfont\fontsize{14}{17}\selectfont\centering}
+    {\bfseries Annexe~\thechapter~---~}
+    {0pt}
+    {\itshape}
+    [\vspace{4pt}{\color{headerblue}\rule{\textwidth}{1.5pt}}]
+\include{annexe}
+
+% ══════════════════════════════════════════════════════════
+%  RÉSUMÉ (en fin de rapport)
+% ══════════════════════════════════════════════════════════
+\cleardoublepage
+\pagenumbering{gobble}
+\phantomsection
+\chapter*{Résumé}
+
+Ce rapport présente la conception et le développement de \textbf{Synapse}, une
+plateforme de gestion des ressources humaines sur mesure, réalisée dans le cadre
+d'un projet de fin d'études pour l'entreprise Arabsoft. Face aux limites des SIRH commerciaux (coûts de licence récurrents, workflows
+rigides et absence d'analytique décisionnelle adaptée aux contraintes locales), une solution
+full-stack a été conçue, articulée autour de sept microservices \textbf{Spring Boot},
+d'un frontend \textbf{Angular~21} et d'une base de données \textbf{Oracle~23ai}
+sécurisée par \textbf{Keycloak}. La plateforme automatise les demandes RH à travers
+un circuit de validation multi-niveaux, intègre une messagerie interne temps réel
+via \textbf{WebSocket (STOMP/SockJS)}, un assistant conversationnel IA propulsé
+par l'API \textbf{Groq}, la génération de rapports PDF et Excel via
+\textbf{JasperReports}, et un module de prédiction de l'\textit{attrition} du
+personnel. Le développement a été conduit en sept sprints selon la méthodologie
+\textbf{Scrum} sur une durée de quatre mois, livrant 30 user stories en trois
+releases pour six rôles organisationnels et couvrant huit domaines fonctionnels RH.
+La solution est validée par une suite de 56 tests automatisés et quatre scénarios
+métier bout-en-bout.
+
+\bigskip
+\noindent\textbf{Mots-clés~:} Gestion des ressources humaines, microservices,
+Spring Boot, Angular, Keycloak, Apache Kafka, WebSocket, Intelligence artificielle,
+JasperReports, Oracle, Scrum, Attrition.
+
+\end{document}

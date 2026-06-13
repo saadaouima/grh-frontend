@@ -1,0 +1,68 @@
+﻿% !TEX root = ./rapport.tex
+% ══════════════════════════════════════════════════════════════════════
+%  ÉTUDE THÉORIQUE — Prédiction de l'attrition
+%  Inclus dans chapitre 5 avant le Sprint 7
+% ══════════════════════════════════════════════════════════════════════
+
+\subsection{Étude théorique~: Prédiction de l'attrition du personnel}
+
+Lors de l'analyse des besoins du sprint~7, la conception d'un module
+capable d'anticiper les départs volontaires s'est imposée~: l'objectif n'était pas de
+prédire avec certitude qui allait partir, mais d'identifier les profils présentant
+des signaux comportementaux qui, dans la littérature RH, sont associés à une
+probabilité de départ plus élevée. Ce module devait être opérationnel dès le
+déploiement initial de Synapse, sans historique de départs numérisé.
+
+\subsection{Qu'est-ce que l'attrition~?}
+
+L'attrition désigne le départ non remplacé d'employés d'une organisation. Elle
+représente un coût significatif~: au-delà du recrutement, la perte de compétences
+accumulées et la baisse de productivité durant la période d'intégration du
+remplaçant constituent un coût souvent sous-estimé. Détecter les signaux
+précurseurs d'un départ permet d'agir en amont~: entretien de carrière,
+revalorisation, ou affectation à un projet plus stimulant.
+
+\subsection{Choix de l'approche~: scoring par règles}
+
+Deux grandes familles d'approches existent pour modéliser l'attrition.
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des approches de modélisation de l'attrition}
+\label{tab:attrition_approaches_theory}
+\begin{tabularx}{\textwidth}{|l|L|L|}
+\hline
+\rowcolor{headerblue!55}
+\textbf{Approche} & \textbf{Conditions requises} & \textbf{Application à Synapse} \\
+\hline
+\rowcolor{rowgray}
+Scoring par règles métier & Indicateurs observables, règles connues & \textbf{Retenue}~: applicable dès le déploiement \\
+\hline
+Machine Learning supervisé & Historique de départs étiquetés (200+ cas minimum) & Perspective~: à envisager après 12--24 mois d'exploitation \\
+\hline
+\rowcolor{rowgray}
+Modèles de survie & Données de durée d'ancienneté complètes & Avancée, non prioritaire \\
+\hline
+\end{tabularx}
+\end{table}
+
+L'approche par machine learning supervisé a été écartée car Arabsoft ne dispose pas, au
+moment du déploiement, d'un historique suffisant de départs numérisés pour entraîner
+un modèle fiable. Un modèle entraîné sur quelques dizaines d'exemples produirait
+des prédictions peu exploitables. L'approche par règles, fondée sur des indicateurs
+directement mesurables dans la base Oracle de Synapse, est donc la plus cohérente
+avec la réalité du terrain.
+
+\subsection{Facteurs retenus et leur signification}
+
+Les quatre facteurs retenus sont documentés dans la littérature comme des signaux précurseurs de départ\textsuperscript{[26,27]}~: l'\textbf{ancienneté courte} (faible attachement organisationnel)~; un \textbf{volume d'absences élevé} (corrélé à l'insatisfaction)~; un \textbf{taux de rejet élevé des demandes} (perception d'injustice diminuant l'engagement)~; et l'\textbf{absence de projets actifs} (marginalisation professionnelle). Ces quatre indicateurs sont calculables directement depuis les tables Oracle de Synapse (\texttt{EMPLOYEES}, \texttt{LEAVE\_REQUESTS}, \texttt{V\_ALL\_DEMANDES}, \texttt{PROJECT\_MEMBERS}).
+
+\subsection{Limites reconnues}
+
+Ce module produit un score de risque, non une prédiction certifiée. Plusieurs facteurs d'attrition reconnus (rémunération, évolutions de
+carrière, dynamique managériale) ne sont pas encore intégrés au schéma de Synapse.
+De plus, le scoring est déterministe~: deux employés avec les mêmes indicateurs
+obtiennent le même score, sans tenir compte des interactions entre facteurs. Ces
+limites sont assumées et définissent la feuille de route naturelle du module~: à
+mesure que l'historique s'accumule et que le schéma s'enrichit, une transition vers
+un modèle supervisé deviendra viable.

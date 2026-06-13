@@ -210,6 +210,87 @@
   }
 }
 
+// ── Reject Modal ──────────────────────────────────────
+.reject-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.reject-box {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+
+.reject-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
+
+  h6 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #EF4444;
+  }
+}
+
+.reject-close {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #94A3B8;
+  transition: all .15s;
+
+  &:hover { background: #F1F5F9; color: #1E293B; }
+  i { font-size: 16px; }
+}
+
+.reject-body {
+  padding: 20px;
+
+  .reject-desc {
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 12px;
+  }
+
+  textarea.form-control {
+    resize: none;
+    font-size: 13px;
+    border-radius: 8px;
+    border-color: #E2E8F0;
+
+    &:focus { border-color: #EF4444; box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+  }
+}
+
+.reject-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid #F1F5F9;
+  background: #FAFAFA;
+}
+
 // ── STYLE MODE DARK - Correctif Filtre ────────────────
 :host-context(.dark) ::ng-deep {
 

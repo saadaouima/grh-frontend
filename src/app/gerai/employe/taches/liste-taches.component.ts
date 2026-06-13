@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
@@ -20,11 +21,17 @@ export class ListeTachesComponent implements OnInit {
 
   private cdr          = inject(ChangeDetectorRef);
   private tacheService = inject(TacheService);
+  private route        = inject(ActivatedRoute);
 
   viewMode: 'kanban' | 'list' = 'kanban';
 
   taches        : TacheKanban[] = [];
   tachesFiltrees: TacheKanban[] = [];
+
+  // Stable column arrays — CDK tracks these by reference across CD cycles
+  columnAFaire  : TacheKanban[] = [];
+  columnEnCours : TacheKanban[] = [];
+  columnTerminee: TacheKanban[] = [];
 
   totalTaches   = 0;
   tachesAFaire  = 0;
@@ -40,11 +47,14 @@ export class ListeTachesComponent implements OnInit {
 
   // ── Lifecycle ────────────────────────────────────
   ngOnInit(): void {
+    const prefilter = this.route.snapshot.queryParamMap.get('projet');
+    if (prefilter) this.selectedProjet = prefilter;
+
     this.tacheService.getTaches().subscribe({
       next: taches => {
-        this.taches         = taches;
-        this.tachesFiltrees = [...taches];
+        this.taches = taches;
         this.calculateStats();
+        this.filterTaches();
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -63,24 +73,27 @@ export class ListeTachesComponent implements OnInit {
     this.tachesTerminees= this.taches.filter(t => t.statut === 'TERMINEE').length;
   }
 
-  getTachesByStatut(statut: TacheKanban['statut']): TacheKanban[] {
-    return this.tachesFiltrees.filter(t => t.statut === statut);
+  private buildColumns(): void {
+    this.columnAFaire   = this.tachesFiltrees.filter(t => t.statut === 'A_FAIRE');
+    this.columnEnCours  = this.tachesFiltrees.filter(t => t.statut === 'EN_COURS');
+    this.columnTerminee = this.tachesFiltrees.filter(t => t.statut === 'TERMINEE');
   }
 
   // ── Drag & Drop ─────────────────────────────────
   onDrop(event: CdkDragDrop<TacheKanban[]>): void {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      this.cdr.markForCheck();
       return;
     }
 
-    const tache    = event.previousContainer.data[event.previousIndex];
-    const newStatut = this.statutFromContainerId(event.container.id);
-
+    const tache      = event.previousContainer.data[event.previousIndex];
+    const newStatut  = this.statutFromData(event.container.data);
     const newProgression =
       newStatut === 'A_FAIRE'  ? 0 :
       newStatut === 'EN_COURS' ? Math.max(tache.progression, 1) : 100;
 
+    // Mutate the stable column arrays directly — CDK references stay valid
     transferArrayItem(
       event.previousContainer.data,
       event.container.data,
@@ -88,19 +101,21 @@ export class ListeTachesComponent implements OnInit {
       event.currentIndex
     );
 
-    // Optimistic update then sync to backend
+    // Keep the model in sync for list view and stats
     tache.statut      = newStatut;
     tache.progression = newProgression;
     this.calculateStats();
     this.cdr.markForCheck();
 
     this.tacheService.updateTache(tache.id, { statut: newStatut, progression: newProgression })
-      .subscribe(); // fire-and-forget; backend MSW will persist
+      .subscribe();
   }
 
-  private statutFromContainerId(id: string): TacheKanban['statut'] {
-    if (id.includes('todo'))       return 'A_FAIRE';
-    if (id.includes('inProgress')) return 'EN_COURS';
+  // Compare by reference against stable column arrays — CDK auto-generates IDs like
+  // "cdk-drop-list-0" so string-based matching on container.id is unreliable.
+  private statutFromData(data: TacheKanban[]): TacheKanban['statut'] {
+    if (data === this.columnAFaire)  return 'A_FAIRE';
+    if (data === this.columnEnCours) return 'EN_COURS';
     return 'TERMINEE';
   }
 
@@ -114,6 +129,7 @@ export class ListeTachesComponent implements OnInit {
       const matchPriorite = !this.selectedPriorite || t.priorite === this.selectedPriorite;
       return matchSearch && matchProjet && matchPriorite;
     });
+    this.buildColumns();
     this.calculateStats();
   }
 
@@ -126,6 +142,70 @@ export class ListeTachesComponent implements OnInit {
 
   get projetsUniques(): string[] {
     return [...new Set(this.taches.map(t => t.projet))];
+  }
+
+  // ── List view status change ───────────────────────
+  changeStatut(tache: TacheKanban, newStatut: TacheKanban['statut']): void {
+    if (tache.statut === newStatut) return;
+
+    const oldStatut      = tache.statut;
+    const oldProgression = tache.progression;
+    const newProgression =
+      newStatut === 'A_FAIRE'  ? 0 :
+      newStatut === 'EN_COURS' ? Math.max(tache.progression, 1) : 100;
+
+    tache.statut      = newStatut;
+    tache.progression = newProgression;
+    this.buildColumns();
+    this.calculateStats();
+    this.cdr.markForCheck();
+
+    this.tacheService.updateTache(tache.id, { statut: newStatut, progression: newProgression })
+      .subscribe({
+        error: () => {
+          tache.statut      = oldStatut;
+          tache.progression = oldProgression;
+          this.buildColumns();
+          this.calculateStats();
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // ── Progress slider (list view) ──────────────────
+  liveProgressUpdate(tache: TacheKanban, value: number): void {
+    tache.progression = value;
+    this.cdr.markForCheck();
+  }
+
+  updateProgression(tache: TacheKanban, value: number): void {
+    const oldProgression = tache.progression;
+    const oldStatut      = tache.statut;
+
+    tache.progression = value;
+
+    if (value === 100 && tache.statut !== 'TERMINEE') {
+      tache.statut = 'TERMINEE';
+    } else if (value === 0 && tache.statut !== 'A_FAIRE') {
+      tache.statut = 'A_FAIRE';
+    } else if (value > 0 && value < 100 && tache.statut === 'A_FAIRE') {
+      tache.statut = 'EN_COURS';
+    }
+
+    this.buildColumns();
+    this.calculateStats();
+    this.cdr.markForCheck();
+
+    this.tacheService.updateTache(tache.id, { statut: tache.statut, progression: value })
+      .subscribe({
+        error: () => {
+          tache.progression = oldProgression;
+          tache.statut      = oldStatut;
+          this.buildColumns();
+          this.calculateStats();
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   getStatutLabel(statut: string): string {

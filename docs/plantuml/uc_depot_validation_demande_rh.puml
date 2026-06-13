@@ -1,0 +1,145 @@
+@startuml uc_depot_validation_demande_rh
+title Diagramme de cas d'utilisation raffiné\nDépôt et validation d'une demande RH
+
+left to right direction
+
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor     #4A6FBF
+  ArrowColor      #333333
+}
+skinparam actor {
+  BackgroundColor #FAFAFA
+  BorderColor     #4A6FBF
+}
+skinparam packageStyle rectangle
+skinparam packageBorderColor  #4A6FBF
+skinparam packageBackgroundColor #F8FAFF
+skinparam noteBorderColor     #CCAA00
+skinparam noteBackgroundColor #FFFDE7
+
+' ─── Acteurs ───────────────────────────────────────────────
+actor "Employé"                   as Emp
+actor "Chef d'équipe"             as Chef
+actor "Responsable RH"            as RH
+actor "Direction / DG\n[admin_rh / directeur_general]" as DRH
+actor "Commission de prêt"        as Commission
+note right of Chef
+  Étape conditionnelle
+  **selon paramétrage**
+  (si MANAGER_ID configuré)
+end note
+
+note right of Commission
+  Créée si le prêt
+  **nécessite une commission**
+  (NEEDS_COMMISSION = vrai)
+end note
+
+' ─── Système ───────────────────────────────────────────────
+rectangle "Système de gestion des demandes RH" {
+
+  ' ── Dépôt ──────────────────────────────────────────────
+  package "Dépôt d'une demande" {
+    usecase "Déposer une\ndemande RH"                       as UC_Deposer
+    usecase "Sélectionner le type\nde demande"              as UC_SelectType
+    usecase "Renseigner les\ninformations"                  as UC_Renseigner
+    usecase "Calculer la capacité\nd'endettement (auto)"    as UC_CapEndet
+    usecase "Joindre un justificatif\nmédical"              as UC_Justif
+    usecase "Téléverser une\npièce jointe"                  as UC_PJ
+    usecase "Annuler une demande\n(→ ANNULÉE)"              as UC_Annuler
+    usecase "Consulter ses demandes"                        as UC_ConsultEmp
+    usecase "Suivre l'état\n(timeline)"                     as UC_Suivi
+  }
+
+  ' ── Avis hiérarchique (selon paramétrage) ──────────────
+  package "Avis hiérarchique — Chef d'équipe\n(selon paramétrage)" {
+    usecase "Consulter les demandes\nde l'équipe"           as UC_ConsultChef
+    usecase "Donner un avis favorable\n(→ VALIDÉE_CHEF)"   as UC_ValiderChef
+    usecase "Rejeter une demande\n(→ REJETÉE)"              as UC_RejeterChef
+    usecase "Saisir le motif\nde rejet"                     as UC_MotifChef
+  }
+
+  ' ── Validation RH — demandes générales ─────────────────
+  package "Validation — Responsable RH\n(demandes hors prêt)" {
+    usecase "Consulter toutes\nles demandes"                as UC_ConsultRH
+    usecase "Valider une demande\n(→ VALIDÉE_RH)"           as UC_ValiderRH
+    usecase "Rejeter une demande\n(→ REJETÉE)"              as UC_RejeterRH
+    usecase "Saisir le motif\nde rejet"                     as UC_MotifRH
+  }
+
+  ' ── Commission de prêt ─────────────────────────────────
+  package "Étude prêt — Commission de prêt\n(si NEEDS_COMMISSION = vrai)" {
+    usecase "Consulter les prêts\nen attente (EN_ETUDE_DG)" as UC_ConsultComm
+    usecase "Étudier la demande\nde prêt"                   as UC_EtudierPret
+    usecase "Identifier le type\nde prêt applicable"        as UC_TypePret
+    usecase "Émettre un avis\n(FAVORABLE / DEFAVORABLE)"   as UC_Avis
+    usecase "Suggérer montant\net nb de tranches"           as UC_Suggestion
+  }
+
+  ' ── Décision finale Direction / DG ─────────────────────
+  package "Décision finale — Direction / DG\n[admin_rh / directeur_general]\n(endpoint : PUT /api/demandes/credit/{id}/decision-dg)" {
+    usecase "Consulter les prêts\navec avis favorable"      as UC_ConsultDRH
+    usecase "Valider définitivement\n(→ APPROUVÉ)"          as UC_ValiderDRH
+    usecase "Rejeter définitivement\n(→ REFUSÉ)"            as UC_RejeterDRH
+    usecase "Saisir le motif\nde rejet"                     as UC_MotifDRH
+  }
+
+  ' ── Notifications ──────────────────────────────────────
+  package "Notifications temps réel" {
+    usecase "Recevoir une\nnotification"                    as UC_Notif
+    usecase "S'abonner aux\nnotifications (WebSocket)"      as UC_Subscribe
+  }
+
+}
+
+' ─── Relations Employé ──────────────────────────────────────
+Emp --> UC_Deposer
+Emp --> UC_Annuler
+Emp --> UC_ConsultEmp
+Emp --> UC_Suivi
+UC_Deposer    ..> UC_SelectType   : <<include>>
+UC_Deposer    ..> UC_Renseigner   : <<include>>
+UC_Deposer    ..> UC_Justif       : <<extend>>\n[si type médical]
+UC_Deposer    ..> UC_PJ           : <<extend>>\n[pièce jointe facultative]
+UC_Deposer    ..> UC_CapEndet     : <<extend>>\n[si type prêt]
+UC_ConsultEmp ..> UC_Suivi        : <<extend>>
+
+' ─── Relations Chef ─────────────────────────────────────────
+Chef --> UC_ConsultChef
+Chef --> UC_ValiderChef
+Chef --> UC_RejeterChef
+
+UC_RejeterChef ..> UC_MotifChef   : <<include>>
+
+' ─── Relations Responsable RH ───────────────────────────────
+RH --> UC_ConsultRH
+RH --> UC_ValiderRH
+RH --> UC_RejeterRH
+
+UC_RejeterRH ..> UC_MotifRH       : <<include>>
+
+' ─── Relations Commission de prêt ───────────────────────────
+Commission --> UC_ConsultComm
+Commission --> UC_EtudierPret
+
+UC_EtudierPret ..> UC_TypePret    : <<include>>
+UC_EtudierPret ..> UC_Avis        : <<include>>
+UC_Avis        ..> UC_Suggestion  : <<extend>>\n[si FAVORABLE]
+
+' ─── Relations Direction RH ─────────────────────────────────
+DRH --> UC_ConsultDRH
+DRH --> UC_ValiderDRH
+DRH --> UC_RejeterDRH
+UC_RejeterDRH ..> UC_MotifDRH     : <<include>>
+
+' ─── Notifications ───────────────────────────────────────────
+Emp        --> UC_Notif
+Chef       --> UC_Notif
+RH         --> UC_Notif
+Commission --> UC_Notif
+
+UC_Notif ..> UC_Subscribe         : <<include>>
+
+@enduml

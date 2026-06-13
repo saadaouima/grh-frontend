@@ -9,10 +9,11 @@ import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
 import { environment } from './environments/environment';
 
-// Build a URL-pattern that matches the configured API host at runtime so the
-// Keycloak interceptor works correctly in every environment without hardcoding.
-const apiOrigin = new URL(environment.apiUrl).origin; // e.g. "http://localhost:8085"
-const apiOriginPattern = new RegExp(`^${apiOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\/.*)?$`, 'i');
+// Match any request that goes through the /api/ proxy path (Angular dev server
+// proxies /api/* to the backend services) or directly to a backend port.
+// This ensures the Bearer token is attached regardless of whether the call
+// uses a relative /api/... URL or an absolute http://localhost:808x/... URL.
+const apiOriginPattern = /\/(api|uploads)\//i;
 
 import {
   provideKeycloak,
@@ -21,7 +22,10 @@ import {
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
   IncludeBearerTokenCondition
 } from 'keycloak-angular';
+import { ErrorHandler } from '@angular/core';
 
+import { httpErrorInterceptor } from './app/gerai/services/http-error.interceptor';
+import { GlobalErrorHandler }   from './app/gerai/services/global-error-handler';
 import { enableMocking } from './app/mocks/browser';
 
 if (environment.production) enableProdMode();
@@ -31,8 +35,8 @@ const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
 });
 
 async function main() {
-  if (!environment.production) {
-    await enableMocking(); // ✅ start MSW in dev
+  if (!environment.production && environment.useMocks) {
+    await enableMocking();
   }
 
   bootstrapApplication(AppComponent, {
@@ -40,8 +44,10 @@ async function main() {
       provideRouter(routes),
 
       provideHttpClient(
-        withInterceptors([includeBearerTokenInterceptor])
+        withInterceptors([includeBearerTokenInterceptor, httpErrorInterceptor])
       ),
+
+      { provide: ErrorHandler, useClass: GlobalErrorHandler },
 
       {
         provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
@@ -55,11 +61,12 @@ async function main() {
           clientId: environment.keycloak.clientId
         },
         initOptions: {
-          onLoad: 'login-required',
+          onLoad: 'check-sso',
+          silentCheckSsoRedirectUri: window.location.origin + '/assets/silent-check-sso.html',
           checkLoginIframe: false,
           pkceMethod: 'S256',
           flow: 'standard',
-          redirectUri: window.location.origin // ✅ safer without trailing slash
+          redirectUri: window.location.origin
         }
       })
     ]

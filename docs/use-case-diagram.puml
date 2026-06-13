@@ -1,0 +1,106 @@
+@startuml uc_global_synapse
+!theme plain
+left to right direction
+
+skinparam nodesep 40
+skinparam ranksep 80
+skinparam padding 8
+skinparam actorStyle awesome
+
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor     #3498DB
+  ArrowColor      #444444
+  FontSize        10
+}
+skinparam actor {
+  FontSize        11
+  FontStyle       bold
+}
+skinparam rectangle {
+  BorderColor     #3498DB
+  FontColor       #1A252F
+  FontStyle       bold
+  FontSize        11
+  BackgroundColor #F8FBFF
+}
+
+title \nDiagramme de cas d'utilisation global — Plateforme Synapse\n
+
+' ═══════════ ACTEURS ═══════════
+actor "Candidat"          as CAND   #E67E22
+actor "Employé"           as EMP    #2980B9
+actor "Chef de projet"    as CHEF   #27AE60
+actor "Administrateur RH" as ADMIN  #8E44AD
+actor "Comité de crédit"  as COMITE #16A085
+actor "Directeur Général" as DG     #C0392B
+
+CAND   -[hidden]down-> EMP
+EMP    -[hidden]down-> CHEF
+CHEF   -[hidden]down-> ADMIN
+ADMIN  -[hidden]down-> COMITE
+COMITE -[hidden]down-> DG
+
+' ═══════════ USE CASES ═══════════
+
+rectangle "Candidature" {
+  usecase "Postuler à une\noffre d'emploi" as UC_POSTULER
+}
+
+rectangle "Espace Employé" {
+  usecase "Gérer son profil"              as UC_PROFIL
+  usecase "Gérer ses demandes"            as UC_DEMANDES
+  usecase "Consulter projets\net tâches"  as UC_PROJETS
+}
+
+rectangle "Pilotage Chef" {
+  usecase "Valider les demandes"          as UC_VALIDER
+  usecase "Gérer équipe\net projets"      as UC_EQUIPE
+  usecase "Évaluer & former"              as UC_EVAL
+}
+
+rectangle "Administration RH" {
+  usecase "Gérer les employés"            as UC_EMPLOYES
+  usecase "Gérer le recrutement"          as UC_REC
+  usecase "Analytique &\nreporting"       as UC_ANALYTICS
+}
+
+rectangle "Crédits & Prêts" {
+  usecase "Instruire les\ndemandes de prêt" as UC_PRET
+  usecase "Émettre un avis"               as UC_AVIS
+  usecase "Approuver / modifier"          as UC_APPROUVER
+}
+
+rectangle "Communication" {
+  usecase "Messagerie\ninterne"           as UC_CHAT
+  usecase "Recevoir\nnotifications"       as UC_NOTIF
+}
+
+' ═══════════ ASSOCIATIONS ═══════════
+
+CAND   --> UC_POSTULER
+
+EMP    --> UC_PROFIL
+EMP    --> UC_DEMANDES
+EMP    --> UC_PROJETS
+EMP    --> UC_CHAT
+EMP    --> UC_NOTIF
+
+CHEF   --> UC_VALIDER
+CHEF   --> UC_EQUIPE
+CHEF   --> UC_EVAL
+CHEF   --> UC_CHAT
+CHEF   --> UC_NOTIF
+
+ADMIN  --> UC_EMPLOYES
+ADMIN  --> UC_REC
+ADMIN  --> UC_ANALYTICS
+ADMIN  --> UC_PRET
+ADMIN  --> UC_CHAT
+ADMIN  --> UC_NOTIF
+
+COMITE --> UC_AVIS
+
+DG     --> UC_APPROUVER
+
+@enduml

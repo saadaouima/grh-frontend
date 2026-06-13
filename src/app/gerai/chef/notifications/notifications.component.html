@@ -1,96 +1,118 @@
-<!-- [ breadcrumb ] -->
 <app-breadcrumb></app-breadcrumb>
 
-<div class="row">
-  <div class="col-xl-8 col-lg-10 col-12 mx-auto">
+@if (afficherToast && derniereNotification) {
+<div class="notification-toast" [class]="'toast-' + derniereNotification.type">
+  <div class="toast-icone">
+    <i [class]="derniereNotification.icone"></i>
+  </div>
+  <div class="toast-contenu">
+    <div class="toast-titre">{{ derniereNotification.titre }}</div>
+    <div class="toast-message">{{ derniereNotification.message }}</div>
+  </div>
+  <button class="toast-close" (click)="fermerToast()">
+    <i class="ti ti-x"></i>
+  </button>
+</div>
+}
 
-    <!-- ── Header ──────────────────────────────────────── -->
-    <div class="notif-header">
-      <div>
-        <h4 class="notif-title">
-          <i class="ti ti-bell"></i> Notifications
-          @if (totalNonLues > 0) {
-            <span class="badge-count">{{ totalNonLues }}</span>
-          }
-        </h4>
-        <p class="notif-sub">{{ notifications.length }} notification(s) au total</p>
-      </div>
-      <div class="header-actions">
-        @if (totalNonLues > 0) {
-          <button class="btn-action btn-lire" (click)="marquerToutesLues()">
-            <i class="ti ti-checks"></i> Tout marquer comme lu
-          </button>
-        }
-        @if (notifications.length > 0) {
-          <button class="btn-action btn-supprimer" (click)="supprimerToutes()">
-            <i class="ti ti-trash"></i> Tout supprimer
-          </button>
-        }
-      </div>
+<div class="notifications-wrapper">
+
+  <div class="notifications-header">
+    <div class="header-title">
+      <i class="ti ti-bell"></i>
+      <h4>Notifications</h4>
+      @if (totalNonLues > 0) {
+        <span class="badge-nonlus">{{ totalNonLues }}</span>
+      }
     </div>
-
-    <!-- ── Filtres ─────────────────────────────────────── -->
-    <div class="filtres-bar">
-      @for (f of filtres; track f.value) {
-        <button class="filtre-btn" [class.active]="filtreActif === f.value"
-          (click)="setFiltre(f.value)">
-          <i [class]="f.icone"></i>
-          {{ f.label }}
-          @if (f.value === 'non-lues' && totalNonLues > 0) {
-            <span class="filtre-count">{{ totalNonLues }}</span>
-          }
+    <div class="header-actions">
+      @if (totalNonLues > 0) {
+        <button class="btn-action" (click)="marquerToutesLues()">
+          <i class="ti ti-check"></i>
+          <span>Tout marquer comme lu</span>
+        </button>
+      }
+      @if (notifications.length > 0) {
+        <button class="btn-action btn-danger" (click)="supprimerToutes()">
+          <i class="ti ti-trash"></i>
+          <span>Tout supprimer</span>
         </button>
       }
     </div>
+  </div>
 
-    <!-- ── Liste notifications ─────────────────────────── -->
-    <div class="notif-list">
-      @for (notif of notificationsFiltrees; track notif.id) {
-        <div class="notif-card" [class.non-lue]="!notif.lue"
-          [class]="'notif-card notif-' + notif.type + (!notif.lue ? ' non-lue' : '')"
-          (click)="marquerLue(notif)">
+  <div class="notifications-filters">
+    @for (filtre of filtres; track filtre.value) {
+      <button class="filter-btn" [class.active]="filtreActif === filtre.value" (click)="setFiltre(filtre.value)">
+        <i [class]="filtre.icone"></i>
+        <span>{{ filtre.label }}</span>
+        @if (getNombreParFiltre(filtre.value) > 0) {
+          <span class="filter-badge">{{ getNombreParFiltre(filtre.value) }}</span>
+        }
+      </button>
+    }
+  </div>
 
-          <!-- Icone type -->
-          <div class="notif-icon-wrap" [ngClass]="'icon-' + notif.type">
-            <i [class]="notif.icone"></i>
+  <div class="notifications-list">
+
+    @if (notificationsFiltrees.length === 0) {
+      <div class="empty-state">
+        <i class="ti ti-bell-off"></i>
+        <h5>Aucune notification</h5>
+        <p>
+          @if (filtreActif === 'toutes') { Vous n'avez pas encore de notifications. }
+          @else if (filtreActif === 'non-lues') { Toutes vos notifications sont lues. }
+          @else { Aucune notification de type "{{ filtreActif }}". }
+        </p>
+      </div>
+    }
+
+    @for (notif of notificationsFiltrees; track notif.id) {
+      <div class="notification-item" [class]="getClasseType(notif.type)" [class.non-lue]="!notif.lue">
+
+        <div class="notif-icone" (click)="marquerLue(notif)">
+          <i [class]="notif.icone"></i>
+        </div>
+
+        <div class="notif-contenu" (click)="marquerLue(notif)">
+          <div class="notif-titre">
+            {{ notif.titre }}
+            @if (!notif.lue) {
+              <span class="badge-nouveau">Nouveau</span>
+            }
           </div>
-
-          <!-- Contenu -->
-          <div class="notif-body">
-            <div class="notif-top">
-              <span class="notif-titre" [class.fw-bold]="!notif.lue">{{ notif.titre }}</span>
-              <span class="notif-temps">{{ tempsRelatif(notif.heure) }}</span>
-            </div>
-            <p class="notif-message">{{ notif.message }}</p>
-            <div class="notif-footer">
-              @if (!notif.lue) {
-                <span class="dot-nonlue"></span>
-              }
-              @if (notif.lien) {
-                <span class="notif-lien"><i class="ti ti-arrow-right"></i> Voir détails</span>
-              }
-            </div>
+          <div class="notif-message">{{ notif.message }}</div>
+          <div class="notif-footer">
+            <span class="notif-heure">
+              <i class="ti ti-clock"></i>
+              {{ tempsRelatif(notif.heure) }}
+            </span>
+            @if (notif.lien) {
+              <button class="btn-ouvrir" (click)="ouvrirLien(notif, $event)">
+                <i class="ti ti-external-link"></i>
+                <span>Ouvrir</span>
+              </button>
+            }
           </div>
+        </div>
 
-          <!-- Supprimer -->
-          <button class="btn-suppr" (click)="supprimerNotif(notif, $event)" title="Supprimer">
-            <i class="ti ti-x"></i>
+        <div class="notif-actions">
+          <button class="btn-action-icon btn-delete" (click)="supprimerNotif(notif, $event)">
+            <i class="ti ti-trash"></i>
           </button>
         </div>
-      }
 
-      <!-- Empty state -->
-      @if (notificationsFiltrees.length === 0) {
-        <div class="empty-notif">
-          <div class="empty-icon"><i class="ti ti-bell-off"></i></div>
-          <h6>Aucune notification</h6>
-          <p>
-            @if (filtreActif === 'non-lues') { Toutes vos notifications ont été lues. }
-            @else { Vous n'avez aucune notification dans cette catégorie. }
-          </p>
-        </div>
-      }
-    </div>
+      </div>
+    }
 
   </div>
 </div>
+
+<app-confirm-modal
+  [open]="deleteAllConfirm"
+  title="Tout supprimer ?"
+  [message]="'Supprimer les ' + notifications.length + ' notifications ? Cette action est irréversible.'"
+  confirmLabel="Tout supprimer"
+  (confirmed)="confirmDeleteAll()"
+  (cancelled)="deleteAllConfirm = false"
+/>

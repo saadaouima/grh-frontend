@@ -1,0 +1,130 @@
+﻿@startuml class_sprint3_demandes
+title Diagramme de classes  -  Domaine des demandes RH (Sprint 3)
+
+skinparam classBackgroundColor #EAF2FB
+skinparam classBorderColor #2C5F8A
+skinparam arrowColor #1A3A5C
+skinparam classAttributeIconSize 0
+
+abstract class AbstractDemande {
+  # id : Long
+  # employeeId : Long
+  # statut : DemandeStatus
+  # createdAt : LocalDateTime
+  # updatedAt : LocalDateTime
+  # commentaireChef : String
+  # commentaireRH : String
+  --
+  + getId() : Long
+  + getEmployeeId() : Long
+  + getStatut() : DemandeStatus
+  + setStatut(statut : DemandeStatus) : void
+  + getCommentaireChef() : String
+  + setCommentaireChef(c : String) : void
+  + getCommentaireRH() : String
+  + setCommentaireRH(c : String) : void
+}
+
+class LeaveRequest {
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
+  - nombreJours : int
+  - motif : String
+  - typeConge : String
+  --
+  + getDateDebut() : LocalDate
+  + getDateFin() : LocalDate
+  + getNombreJours() : int
+  + calculerJoursOuvrables() : int
+}
+
+class LoanRequest {
+  - montant : BigDecimal
+  - dureeRemboursement : int
+  - motif : String
+  - needsCommission : boolean
+  - montantAccorde : BigDecimal
+  - dureeAccordee : int
+  --
+  + getMontant() : BigDecimal
+  + isNeedsCommission() : boolean
+  + setNeedsCommission(b : boolean) : void
+  + getMontantAccorde() : BigDecimal
+  + getEcheanceMensuelle() : BigDecimal
+}
+
+class TrainingRequest {
+  - theme : String
+  - dateFormation : LocalDate
+  - organisme : String
+  - dureeJours : int
+  --
+  + getTheme() : String
+  + getDateFormation() : LocalDate
+  + getOrganisme() : String
+}
+
+class AuthorizationRequest {
+  - dateDebut : LocalDateTime
+  - dateFin : LocalDateTime
+  - motif : String
+  --
+  + getDateDebut() : LocalDateTime
+  + getDureeTotale() : long
+}
+
+class LoanVote {
+  - id : Long
+  - loanRequestId : Long
+  - membreId : Long
+  - avis : VoteAvis
+  - commentaire : String
+  - votedAt : LocalDateTime
+  --
+  + getId() : Long
+  + getAvis() : VoteAvis
+  + getMembreId() : Long
+}
+
+class LeaveBalance {
+  - id : Long
+  - employeeId : Long
+  - typeConge : String
+  - soldeDisponible : int
+  - soldeConsomme : int
+  - annee : int
+  --
+  + getSoldeDisponible() : int
+  + debiter(jours : int) : void
+  + crediter(jours : int) : void
+}
+
+enum DemandeStatus {
+  EN_ATTENTE
+  VALIDE_CHEF
+  VALIDE_RH
+  EN_ETUDE_DG
+  APPROUVE_DG
+  APPROUVE
+  REJETE
+}
+
+enum VoteAvis {
+  FAVORABLE
+  DEFAVORABLE
+  ABSTENTION
+}
+
+' Inheritance
+LeaveRequest        --|> AbstractDemande
+LoanRequest         --|> AbstractDemande
+TrainingRequest     --|> AbstractDemande
+AuthorizationRequest --|> AbstractDemande
+
+' Associations
+AbstractDemande --> DemandeStatus : statut
+LoanVote "n" --> "1" LoanRequest  : concerne >
+LoanVote --> VoteAvis             : avis
+LeaveBalance "1" --> "1" LeaveRequest : solde vérifié par >
+
+@enduml

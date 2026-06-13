@@ -1,12 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
 import { DemandeService } from  'src/app/gerai/services/demande.service';
 import { Demande, StatutDemande } from 'src/app/gerai/models/demande.model';
 import { ChangeDetectorRef }   from '@angular/core';
+import { NotificationWebSocketService } from 'src/app/gerai/services/notification-websocket.service';
 
 @Component({
   selector: 'app-demandes-chef',
@@ -15,21 +17,42 @@ import { ChangeDetectorRef }   from '@angular/core';
   templateUrl: './demandes.component.html',
   styleUrls: ['./demandes.component.scss']
 })
-export class DemandesChefComponent implements OnInit {
-  
+export class DemandesChefComponent implements OnInit, OnDestroy {
+
   constructor(private cd: ChangeDetectorRef) {}
 
- private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private route          = inject(ActivatedRoute);
+  private router         = inject(Router);
   private demandeService = inject(DemandeService);
+  private notifWs        = inject(NotificationWebSocketService);
+  private notifSub?: Subscription;
 
   employeIdFiltre: string | null = null;
   employeNomFiltre: string = '';
   demandeSelectionnee: Demande | null = null;
   filtreStatut: StatutDemande | '' = '';
 
+  rejectTarget: Demande | null = null;
+  rejectMotif = '';
+
   toutesLesDemandes: Demande[] = [];
   demandesFiltrees: Demande[] = [];
+  loading = true;
+  loadError: string | null = null;
+
+  private static readonly CHIP_MAP: Record<string, {cls: string; icon: string; label: string}> = {
+    EN_ATTENTE   : { cls: 'sc-pending',   icon: 'ti ti-clock',        label: 'En attente' },
+    VALIDEE_CHEF : { cls: 'sc-chef',      icon: 'ti ti-circle-check', label: 'Validée chef' },
+    VALIDEE_RH   : { cls: 'sc-approved',  icon: 'ti ti-checks',       label: 'Approuvée RH' },
+    VALIDEE      : { cls: 'sc-approved',  icon: 'ti ti-checks',       label: 'Validée' },
+    REJETEE      : { cls: 'sc-rejected',  icon: 'ti ti-circle-x',     label: 'Rejetée' },
+    ANNULEE      : { cls: 'sc-cancelled', icon: 'ti ti-ban',          label: 'Annulée' },
+  };
+
+  statutChip(statut: string) {
+    return DemandesChefComponent.CHIP_MAP[statut]
+      ?? { cls: 'sc-cancelled', icon: 'ti ti-dots', label: statut };
+  }
 
   readonly statuts: { valeur: StatutDemande | ''; label: string }[] = [
     { valeur: '',            label: 'Toutes'       },
@@ -41,18 +64,41 @@ export class DemandesChefComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // Charger toutes les demandes depuis le service
-    this.demandeService.getDemandes().subscribe(demandes => {
-      this.toutesLesDemandes = demandes;
-      this.appliquerFiltre();
-      this.cd.markForCheck();
-    });
-
     this.route.queryParams.subscribe(params => {
       this.employeIdFiltre = params['employeId'] ? String(params['employeId']) : null;
       this.filtreStatut = (params['statut'] as StatutDemande) || '';
       this.appliquerFiltre();
       this.cd.markForCheck();
+    });
+
+    this.loadDemandes();
+
+    this.notifSub = this.notifWs.nouvelleNotification$.subscribe(() => {
+      this.loadDemandes();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.notifSub?.unsubscribe();
+  }
+
+  private loadDemandes(): void {
+    this.demandeService.getDemandes().subscribe({
+      next: (demandes) => {
+        this.loading = false;
+        this.toutesLesDemandes = demandes;
+        this.appliquerFiltre();
+        this.cd.markForCheck();
+      },
+      error: (err) => {
+        this.loading = false;
+        if (err.status === 422) {
+          this.loadError = 'Votre compte n\'est pas lié à un dossier employé. Contactez l\'administrateur RH pour associer votre compte Keycloak à votre fiche employé.';
+        } else {
+          this.loadError = `Erreur lors du chargement des demandes (${err.status ?? 'réseau'}).`;
+        }
+        this.cd.markForCheck();
+      }
     });
   }
 
@@ -95,7 +141,9 @@ export class DemandesChefComponent implements OnInit {
   }
 
   valider(id: number): void {
-    this.demandeService.validerDemande(id).subscribe(updated => {
+    const d = this.toutesLesDemandes.find(d => d.id === id);
+    if (!d) return;
+    this.demandeService.validerDemande(id, d.type).subscribe(updated => {
       const index = this.toutesLesDemandes.findIndex(d => d.id === id);
       if (index !== -1) {
         this.toutesLesDemandes[index] = updated;
@@ -104,9 +152,24 @@ export class DemandesChefComponent implements OnInit {
     });
   }
 
-  refuser(id: number): void {
-    const motif = 'Motif de refus simulé';
-    this.demandeService.refuserDemande(id, motif).subscribe(updated => {
+  openReject(id: number): void {
+    const d = this.toutesLesDemandes.find(d => d.id === id);
+    if (!d) return;
+    this.rejectTarget = d;
+    this.rejectMotif  = '';
+  }
+
+  cancelReject(): void {
+    this.rejectTarget = null;
+    this.rejectMotif  = '';
+  }
+
+  confirmReject(): void {
+    if (!this.rejectTarget || !this.rejectMotif.trim()) return;
+    const { id, type } = this.rejectTarget;
+    const motif = this.rejectMotif.trim();
+    this.cancelReject();
+    this.demandeService.refuserDemande(id, type, motif).subscribe(updated => {
       const index = this.toutesLesDemandes.findIndex(d => d.id === id);
       if (index !== -1) {
         this.toutesLesDemandes[index] = updated;
@@ -116,7 +179,7 @@ export class DemandesChefComponent implements OnInit {
   }
 
   voirDemande(demande: Demande): void {
-    this.router.navigate(['/chef/demandes', demande.id]);
+    this.router.navigate(['/chef/demandes', demande.id], { state: { demande } });
   }
 
 }

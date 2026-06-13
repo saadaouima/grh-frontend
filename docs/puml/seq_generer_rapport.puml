@@ -1,0 +1,49 @@
+﻿@startuml seq_generer_rapport
+title Diagramme de séquence  -  Génération d'un rapport JasperReports (PDF/Excel)
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Admin RH" as admin
+participant "RapportsComponent\n(Angular)" as view
+participant "ReportController" as ctrl
+participant "ReportService" as svc
+database "Oracle" as db
+participant "JasperReports" as jasper
+
+== Sélection des paramètres ==
+admin -> view : Sélectionne type, période et format (PDF / XLSX)
+view -> ctrl : GET /api/rapports/{type}?dateDebut=...&dateFin=...&format=...
+
+== Récupération des données ==
+ctrl -> svc : generateReport(type, dateDebut, dateFin, format)
+
+alt type = CONGES
+  svc -> db : SELECT lr.*, e.nom, e.departement\nFROM LEAVE_REQUESTS lr JOIN EMPLOYEES e ON lr.employe_id = e.id\nWHERE date_debut BETWEEN ? AND ?
+else type = PRETS
+  svc -> db : SELECT lr.*, e.nom, e.departement\nFROM LOAN_REQUESTS lr JOIN EMPLOYEES e ON lr.employe_id = e.id\nWHERE date_demande BETWEEN ? AND ?
+else type = EFFECTIF
+  svc -> db : SELECT e.*, d.nom AS departement\nFROM EMPLOYEES e JOIN DEPARTMENTS d ON e.departement_id = d.id\nWHERE e.statut = 'ACTIF'
+end
+
+db -> svc : Jeu de données du rapport
+
+== Génération JasperReports ==
+svc -> jasper : fillReport(template.jrxml, dataSource)
+jasper -> jasper : Compile et produit JasperPrint
+
+alt Format PDF
+  jasper -> svc : JRPdfExporter → byte[]
+  ctrl -> view : 200 OK  -  Content-Type: application/pdf
+else Format XLSX
+  jasper -> svc : JRXlsxExporter → byte[]
+  ctrl -> view : 200 OK  -  Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+end
+
+view -> admin : Déclenche le téléchargement du fichier
+
+@enduml

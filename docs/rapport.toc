@@ -1,0 +1,219 @@
+\babel@toc {french}{}\relax 
+\contentsline {chapter}{Liste des figures}{xii}{chapter*.6}%
+\contentsline {chapter}{Liste des tableaux}{xvi}{chapter*.6}%
+\contentsline {chapter}{Liste des sigles et acronymes}{xvii}{chapter*.8}%
+\contentsline {chapter}{Introduction Générale}{1}{chapter*.10}%
+\contentsline {chapter}{\numberline {1}Cadre général du projet}{3}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Introduction}{3}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Présentation de l'organisme d'accueil}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Étude de l'existant}{4}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Description du système actuel}{4}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Critique de l'existant}{5}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}Étude comparative des solutions du marché}{5}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}Problématique}{6}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Solution proposée~: la plateforme Synapse}{7}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}Vision générale}{7}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}Périmètre fonctionnel}{7}{subsection.1.5.2}%
+\contentsline {section}{\numberline {1.6}Méthodologie de gestion de projet}{8}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}L'approche Agile}{8}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}Le cadre Scrum}{8}{subsection.1.6.2}%
+\contentsline {section}{\numberline {1.7}Conclusion}{9}{section.1.7}%
+\contentsline {chapter}{\numberline {2}Analyse, Conception et Choix Technologiques}{10}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Introduction}{10}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Spécification des besoins}{10}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Besoins fonctionnels}{10}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Product Backlog}{12}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Besoins non fonctionnels}{14}{subsection.2.2.3}%
+\contentsline {section}{\numberline {2.3}Identification des acteurs}{15}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Diagrammes de cas d’utilisation}{16}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Diagramme global}{16}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Cas d’utilisation~: Gestion des demandes RH}{17}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Cas d’utilisation~: Gestion des employés}{17}{subsection.2.4.3}%
+\contentsline {subsection}{\numberline {2.4.4}Cas d’utilisation~: Gestion des projets et tâches}{17}{subsection.2.4.4}%
+\contentsline {section}{\numberline {2.5}Architecture générale de Synapse}{17}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Modélisation des données}{18}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Diagramme de classes principal}{18}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}Schéma de base de données (extrait)}{19}{subsection.2.6.2}%
+\contentsline {section}{\numberline {2.7}Environnement de développement}{21}{section.2.7}%
+\contentsline {subsection}{\numberline {2.7.1}Environnement matériel}{21}{subsection.2.7.1}%
+\contentsline {subsection}{\numberline {2.7.2}Logiciels et environnements de développement}{21}{subsection.2.7.2}%
+\contentsline {section}{\numberline {2.8}Planification du projet}{23}{section.2.8}%
+\contentsline {subsection}{\numberline {2.8.1}Équipe Scrum et rôles}{23}{subsection.2.8.1}%
+\contentsline {subsection}{\numberline {2.8.2}Planification des sprints}{24}{subsection.2.8.2}%
+\contentsline {section}{\numberline {2.9}Étude et justification des choix technologiques}{25}{section.2.9}%
+\contentsline {subsection}{\numberline {2.9.1}Architecture applicative~: microservices vs monolithique}{25}{subsection.2.9.1}%
+\contentsline {subsection}{\numberline {2.9.2}Framework frontend~: Angular 21}{26}{subsection.2.9.2}%
+\contentsline {subsection}{\numberline {2.9.3}Framework backend~: Spring Boot 3.5}{27}{subsection.2.9.3}%
+\contentsline {subsection}{\numberline {2.9.4}Base de données relationnelle transactionnelle~: Oracle 23ai}{28}{subsection.2.9.4}%
+\contentsline {subsection}{\numberline {2.9.5}Serveur d'identité centralisé~: Keycloak 26}{30}{subsection.2.9.5}%
+\contentsline {subsection}{\numberline {2.9.6}Système de messagerie asynchrone publish/subscribe~: Apache Kafka}{31}{subsection.2.9.6}%
+\contentsline {subsection}{\numberline {2.9.7}Protocole de communication temps réel~: WebSocket avec STOMP/SockJS}{32}{subsection.2.9.7}%
+\contentsline {subsection}{\numberline {2.9.8}API d'intelligence artificielle générative~: Groq (Llama 3.3)}{33}{subsection.2.9.8}%
+\contentsline {subsection}{\numberline {2.9.9}Moteur de génération de rapports~: JasperReports}{35}{subsection.2.9.9}%
+\contentsline {subsection}{\numberline {2.9.10}Gestion des migrations de schéma~: Flyway}{36}{subsection.2.9.10}%
+\contentsline {subsection}{\numberline {2.9.11}Cache applicatif en mémoire JVM~: Caffeine}{37}{subsection.2.9.11}%
+\contentsline {subsection}{\numberline {2.9.12}Environnement de conteneurisation~: Docker Compose}{37}{subsection.2.9.12}%
+\contentsline {subsection}{\numberline {2.9.13}Récapitulatif des choix technologiques}{38}{subsection.2.9.13}%
+\contentsline {section}{\numberline {2.10}Conclusion}{39}{section.2.10}%
+\contentsline {chapter}{\numberline {3}Sprints 1 et 2~: Infrastructure et Gestion des Employés}{40}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduction}{40}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Sprint 1~: Initialisation et infrastructure de base}{40}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Objectifs du sprint}{40}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Conception UML}{41}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Implémentation backend}{43}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Implémentation frontend}{44}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.5}Interfaces de l’application}{44}{subsection.3.2.5}%
+\contentsline {subsection}{\numberline {3.2.6}Sprint review}{45}{subsection.3.2.6}%
+\contentsline {paragraph}{Obstacle résolu~: configuration JWT/RBAC.}{46}{paragraph*.70}%
+\contentsline {section}{\numberline {3.3}Sprint 2~: Gestion des employés}{46}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Objectifs du sprint}{46}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Conception UML}{47}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Implémentation backend}{49}{subsection.3.3.3}%
+\contentsline {paragraph}{Génération du matricule {\ttfamilyFB \hyphenchar \font =45\relax EMP-XXXX}.}{49}{paragraph*.75}%
+\contentsline {subsection}{\numberline {3.3.4}Implémentation frontend}{50}{subsection.3.3.4}%
+\contentsline {subsection}{\numberline {3.3.5}Interfaces de l’application}{51}{subsection.3.3.5}%
+\contentsline {subsection}{\numberline {3.3.6}Sprint review}{51}{subsection.3.3.6}%
+\contentsline {paragraph}{Obstacle résolu~: synchronisation Oracle--Keycloak.}{52}{paragraph*.82}%
+\contentsline {section}{\numberline {3.4}Conclusion}{52}{section.3.4}%
+\contentsline {chapter}{\numberline {4}Sprints 3 à 5~: Demandes RH, Kafka et Communication Temps Réel}{53}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduction}{53}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Sprint 3~: Workflows de demandes RH}{53}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Objectifs du sprint}{53}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Conception UML}{54}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Implémentation backend}{58}{subsection.4.2.3}%
+\contentsline {paragraph}{Cycle de vie complet des formations.}{58}{paragraph*.90}%
+\contentsline {paragraph}{Résolution de l'identité employé depuis le JWT.}{59}{paragraph*.91}%
+\contentsline {subsection}{\numberline {4.2.4}Implémentation frontend}{59}{subsection.4.2.4}%
+\contentsline {subsection}{\numberline {4.2.5}Interfaces de l’application}{60}{subsection.4.2.5}%
+\contentsline {subsection}{\numberline {4.2.6}Sprint review}{61}{subsection.4.2.6}%
+\contentsline {paragraph}{Fonctionnalité complémentaire~: gestion des actifs.}{61}{paragraph*.96}%
+\contentsline {paragraph}{Obstacles rencontrés.}{61}{paragraph*.97}%
+\contentsline {paragraph}{Congés médicaux~: circuit de validation spécifique.}{61}{paragraph*.98}%
+\contentsline {paragraph}{Amélioration apportée~: validation du solde de congés côté frontend.}{62}{paragraph*.99}%
+\contentsline {section}{\numberline {4.3}Sprint 4~: Demandes financières et notifications Kafka}{62}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Objectifs du sprint}{62}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Conception UML}{63}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Implémentation backend}{65}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Implémentation frontend}{66}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}Interfaces de l'application}{66}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Sprint review}{67}{subsection.4.3.6}%
+\contentsline {paragraph}{Obstacle résolu~: fiabilité des notifications Kafka et sessions WebSocket.}{67}{paragraph*.109}%
+\contentsline {section}{\numberline {4.4}Sprint 5~: Messagerie temps réel et assistant IA}{67}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Objectifs du sprint}{67}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Étude théorique~: Intelligence artificielle dans Synapse}{68}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Les grands modèles de langage (LLM)}{68}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}Prompt engineering}{69}{subsection.4.4.4}%
+\contentsline {subsection}{\numberline {4.4.5}Sécurité~: injection de prompt}{69}{subsection.4.4.5}%
+\contentsline {subsection}{\numberline {4.4.6}Conception UML}{70}{subsection.4.4.6}%
+\contentsline {subsection}{\numberline {4.4.7}Implémentation backend}{71}{subsection.4.4.7}%
+\contentsline {paragraph}{Base de connaissances RH.}{71}{paragraph*.116}%
+\contentsline {subsection}{\numberline {4.4.8}Interfaces de l'application}{73}{subsection.4.4.8}%
+\contentsline {subsection}{\numberline {4.4.9}Implémentation frontend}{74}{subsection.4.4.9}%
+\contentsline {subsection}{\numberline {4.4.10}Sprint review}{74}{subsection.4.4.10}%
+\contentsline {paragraph}{Obstacle résolu~: validation JWT sur le canal WebSocket/STOMP.}{74}{paragraph*.123}%
+\contentsline {section}{\numberline {4.5}Conclusion}{74}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Sprints 6 et 7~: Projets, Évaluation, Recrutement, Reporting et Analytique Décisionnelle}{76}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Introduction}{76}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Sprint 6~: Projets, tâches, évaluation des performances et recrutement}{76}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Objectifs du sprint}{76}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Conception UML}{77}{subsection.5.2.2}%
+\contentsline {paragraph}{Note sur l'auto-évaluation.}{80}{paragraph*.130}%
+\contentsline {subsection}{\numberline {5.2.3}Implémentation backend}{81}{subsection.5.2.3}%
+\contentsline {subsection}{\numberline {5.2.4}Interfaces de l’application}{82}{subsection.5.2.4}%
+\contentsline {subsection}{\numberline {5.2.5}Implémentation frontend}{84}{subsection.5.2.5}%
+\contentsline {subsection}{\numberline {5.2.6}Sprint review}{85}{subsection.5.2.6}%
+\contentsline {paragraph}{Obstacle résolu~: robustesse du parsing JSON Groq.}{85}{paragraph*.140}%
+\contentsline {section}{\numberline {5.3}Sprint 7~: Reporting JasperReports et analytique décisionnelle}{86}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Objectifs du sprint}{86}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Étude théorique~: Prédiction de l'attrition du personnel}{86}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Qu'est-ce que l'attrition~?}{86}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Choix de l'approche~: scoring par règles}{87}{subsection.5.3.4}%
+\contentsline {subsection}{\numberline {5.3.5}Facteurs retenus et leur signification}{87}{subsection.5.3.5}%
+\contentsline {subsection}{\numberline {5.3.6}Limites reconnues}{87}{subsection.5.3.6}%
+\contentsline {subsection}{\numberline {5.3.7}Conception UML}{88}{subsection.5.3.7}%
+\contentsline {subsection}{\numberline {5.3.8}Modélisation de l’algorithme d’attrition}{90}{subsection.5.3.8}%
+\contentsline {subsection}{\numberline {5.3.9}Implémentation backend}{92}{subsection.5.3.9}%
+\contentsline {subsection}{\numberline {5.3.10}Interfaces de l’application}{92}{subsection.5.3.10}%
+\contentsline {subsection}{\numberline {5.3.11}Implémentation frontend}{95}{subsection.5.3.11}%
+\contentsline {subsection}{\numberline {5.3.12}Sprint review}{96}{subsection.5.3.12}%
+\contentsline {paragraph}{Obstacle résolu~: compatibilité JasperReports/Java~21 et stratégie OnPush.}{96}{paragraph*.156}%
+\contentsline {section}{\numberline {5.4}Conclusion}{96}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Sécurité de la Plateforme}{97}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduction}{97}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Architecture de sécurité globale}{97}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Périmètre et surface d’attaque}{97}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Modèle Zero Trust appliqué}{98}{subsection.6.2.2}%
+\contentsline {section}{\numberline {6.3}Authentification OAuth2/OpenID Connect avec Keycloak}{98}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Flux d’authentification PKCE}{98}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Structure du JWT émis par Keycloak}{99}{subsection.6.3.2}%
+\contentsline {subsection}{\numberline {6.3.3}Configuration keycloak-angular côté frontend}{99}{subsection.6.3.3}%
+\contentsline {section}{\numberline {6.4}Contrôle d’accès basé sur les rôles (RBAC)}{100}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Matrice des rôles et permissions}{100}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Implémentation du RBAC côté backend}{100}{subsection.6.4.2}%
+\contentsline {paragraph}{1. KeycloakJwtRoleConverter.}{100}{paragraph*.160}%
+\contentsline {paragraph}{2. SecurityConfig par service.}{100}{paragraph*.161}%
+\contentsline {subsection}{\numberline {6.4.3}Implémentation du RBAC côté frontend}{100}{subsection.6.4.3}%
+\contentsline {section}{\numberline {6.5}Sécurisation des microservices Spring Boot}{101}{section.6.5}%
+\contentsline {subsection}{\numberline {6.5.1}Session stateless (JWT)}{101}{subsection.6.5.1}%
+\contentsline {subsection}{\numberline {6.5.2}Validation du JWT}{101}{subsection.6.5.2}%
+\contentsline {subsection}{\numberline {6.5.3}Configuration CORS}{101}{subsection.6.5.3}%
+\contentsline {subsection}{\numberline {6.5.4}Désactivation de CSRF}{102}{subsection.6.5.4}%
+\contentsline {subsection}{\numberline {6.5.5}HikariCP et isolation de la base de données}{102}{subsection.6.5.5}%
+\contentsline {section}{\numberline {6.6}Sécurisation du canal WebSocket STOMP}{102}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}Défi de sécurité WebSocket}{102}{subsection.6.6.1}%
+\contentsline {subsection}{\numberline {6.6.2}WebSocketAuthChannelInterceptor}{102}{subsection.6.6.2}%
+\contentsline {subsection}{\numberline {6.6.3}Isolation des conversations}{103}{subsection.6.6.3}%
+\contentsline {section}{\numberline {6.7}Prévention des vulnérabilités OWASP}{103}{section.6.7}%
+\contentsline {subsection}{\numberline {6.7.1}Protection contre l'injection SQL}{104}{subsection.6.7.1}%
+\contentsline {subsection}{\numberline {6.7.2}Protection contre le XSS}{105}{subsection.6.7.2}%
+\contentsline {subsection}{\numberline {6.7.3}Protection contre les attaques de type Broken Object Level Authorization}{105}{subsection.6.7.3}%
+\contentsline {section}{\numberline {6.8}Gestion des données sensibles}{105}{section.6.8}%
+\contentsline {subsection}{\numberline {6.8.1}Externalisation des secrets}{105}{subsection.6.8.1}%
+\contentsline {subsection}{\numberline {6.8.2}Données personnelles et RGPD}{105}{subsection.6.8.2}%
+\contentsline {subsection}{\numberline {6.8.3}Gestion sécurisée des fichiers uploadés}{106}{subsection.6.8.3}%
+\contentsline {subsection}{\numberline {6.8.4}Traçabilité et journalisation des audits}{106}{subsection.6.8.4}%
+\contentsline {section}{\numberline {6.9}Conclusion}{107}{section.6.9}%
+\contentsline {chapter}{\numberline {7}Tests et Validation}{108}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Introduction}{108}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Stratégie de test}{108}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}Pyramide de test de Synapse}{108}{subsection.7.2.1}%
+\contentsline {subsection}{\numberline {7.2.2}Frameworks et outils de test}{109}{subsection.7.2.2}%
+\contentsline {section}{\numberline {7.3}Tests unitaires des microservices}{110}{section.7.3}%
+\contentsline {subsection}{\numberline {7.3.1}Tests unitaires du \textit {demandes-service}}{110}{subsection.7.3.1}%
+\contentsline {subsection}{\numberline {7.3.2}Setup du contexte de test JWT}{111}{subsection.7.3.2}%
+\contentsline {subsection}{\numberline {7.3.3}Tests unitaires de l'\textit {analytics-service} — Algorithme d'attrition}{111}{subsection.7.3.3}%
+\contentsline {subsection}{\numberline {7.3.4}Tests unitaires du \textit {projets-service}}{112}{subsection.7.3.4}%
+\contentsline {paragraph}{Formule de progression.}{112}{paragraph*.171}%
+\contentsline {subsection}{\numberline {7.3.5}Tests de contrôle d'accès RBAC — \textit {employe-service}}{113}{subsection.7.3.5}%
+\contentsline {subsection}{\numberline {7.3.6}Test du producteur Kafka — \textit {demandes-service}}{114}{subsection.7.3.6}%
+\contentsline {section}{\numberline {7.4}Tests de démarrage du contexte Spring}{114}{section.7.4}%
+\contentsline {subsection}{\numberline {7.4.1}Tests {\ttfamilyFB \hyphenchar \font =45\relax @SpringBootTest}}{114}{subsection.7.4.1}%
+\contentsline {subsection}{\numberline {7.4.2}Configuration de test~: isolation Oracle et Keycloak}{115}{subsection.7.4.2}%
+\contentsline {section}{\numberline {7.5}Tests d'intégration API}{115}{section.7.5}%
+\contentsline {subsection}{\numberline {7.5.1}Approche de validation via Postman}{115}{subsection.7.5.1}%
+\contentsline {subsection}{\numberline {7.5.2}Scénarios de test API par service}{116}{subsection.7.5.2}%
+\contentsline {section}{\numberline {7.6}Validation des scénarios métier}{116}{section.7.6}%
+\contentsline {subsection}{\numberline {7.6.1}Scénario 1~: Workflow complet d'une demande de congé}{116}{subsection.7.6.1}%
+\contentsline {subsection}{\numberline {7.6.2}Scénario 2~: Workflow de prêt avec comité de crédit}{117}{subsection.7.6.2}%
+\contentsline {subsection}{\numberline {7.6.3}Scénario 3~: Prédiction d'attrition avec cache Caffeine}{117}{subsection.7.6.3}%
+\contentsline {subsection}{\numberline {7.6.4}Scénario 4~: Connexion WebSocket et envoi de message}{118}{subsection.7.6.4}%
+\contentsline {section}{\numberline {7.7}Bilan de la couverture}{119}{section.7.7}%
+\contentsline {subsection}{\numberline {7.7.1}Récapitulatif des tests implémentés}{119}{subsection.7.7.1}%
+\contentsline {subsection}{\numberline {7.7.2}Résultats d'exécution Maven}{120}{subsection.7.7.2}%
+\contentsline {subsection}{\numberline {7.7.3}Rapport de couverture JaCoCo}{120}{subsection.7.7.3}%
+\contentsline {paragraph}{Interprétation.}{121}{paragraph*.184}%
+\contentsline {subsection}{\numberline {7.7.4}Couverture par microservice}{121}{subsection.7.7.4}%
+\contentsline {subsection}{\numberline {7.7.5}Points non couverts et perspectives}{122}{subsection.7.7.5}%
+\contentsline {section}{\numberline {7.8}Conclusion}{122}{section.7.8}%
+\contentsline {chapter}{Références bibliographiques}{123}{chapter*.188}%
+\contentsline {chapter}{Conclusion Générale}{125}{chapter*.190}%
+\contentsline {section}{Perspectives d'évolution}{126}{section*.191}%
+\contentsline {paragraph}{Tableaux de bord décisionnels (Power BI).}{126}{paragraph*.192}%
+\contentsline {paragraph}{Déploiement en production.}{126}{paragraph*.193}%
+\contentsline {paragraph}{Intelligence artificielle avancée.}{126}{paragraph*.194}%
+\contentsline {chapter}{Plan des annexes}{127}{appendix*.195}%
+\contentsline {chapter}{\numberline {I}Formulaire de création d'un employé}{128}{chapter.A}%
+\contentsline {chapter}{\numberline {II}Tableau de bord employé~: suivi des demandes}{128}{chapter.B}%
+\contentsline {chapter}{\numberline {III}Interface d'entretiens~: planification}{129}{chapter.C}%
+\contentsline {chapter}{\numberline {IV}Vue de prédiction d'attrition}{129}{chapter.D}%
+\contentsline {chapter}{\numberline {V}Matrice RBAC de Synapse}{130}{chapter.E}%

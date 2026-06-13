@@ -1,29 +1,37 @@
+<div class="mb-3">
+  <button class="btn btn-outline-secondary btn-sm" (click)="retour()">
+    <i class="ti ti-arrow-left me-1"></i>Retour aux demandes
+  </button>
+</div>
+
 <div class="card shadow-sm">
   <div class="card-header d-flex align-items-center justify-content-between">
     <h3 class="mb-0">Détails de la demande</h3>
-    <span class="badge"
-          [ngClass]="{
-           'badge-success': demande?.statut === 'VALIDEE' 
-                         || demande?.statut === 'VALIDEE_CHEF' 
-                         || demande?.statut === 'VALIDEE_RH',
-            'badge-warning': demande?.statut === 'EN_ATTENTE',
-            'badge-danger': demande?.statut === 'REJETEE'
-          }">
-      {{ demande?.statutLabel }}
-    </span>
+    @if (demande) {
+      <span class="status-chip" [ngClass]="statutChip(demande.statut).cls">
+        <i [class]="statutChip(demande.statut).icon" aria-hidden="true"></i>
+        {{ statutChip(demande.statut).label }}
+      </span>
+    }
   </div>
 
   @if (demande; as d) {
     <div class="card-body">
       <!-- Employé -->
       <div class="d-flex align-items-center mb-3">
-        <img [src]="d.employePhoto"
-             alt="{{ d.employePrenom }} {{ d.employeNom }}"
-             width="70" height="70"
-             class="rounded-circle me-3 object-fit-cover border">
+        @if (d.employePhoto) {
+          <img [src]="d.employePhoto"
+               alt="{{ d.employePrenom }} {{ d.employeNom }}"
+               width="70" height="70"
+               class="rounded-circle me-3 object-fit-cover border flex-shrink-0">
+        } @else {
+          <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                style="width:70px;height:70px;font-size:1.4rem;font-weight:600">
+            {{ d.employeInitiales || ((d.employePrenom?.[0] ?? '') + (d.employeNom?.[0] ?? '')) | uppercase }}
+          </span>
+        }
         <div>
           <h5 class="mb-1">{{ d.employePrenom }} {{ d.employeNom }}</h5>
-          <small class="text-muted">ID: {{ d.employeId }}</small>
         </div>
       </div>
 
@@ -39,12 +47,18 @@
         <li class="list-group-item">
           <strong>Date de création :</strong> {{ d.dateCreation | date:'dd/MM/yyyy' }}
         </li>
-        <li class="list-group-item">
-          <strong>Période :</strong> {{ d.dateDebut }} → {{ d.dateFin }}
-        </li>
-        <li class="list-group-item">
-          <strong>Jours ouvrés :</strong> {{ d.joursOuvres }}
-        </li>
+        @if (d.dateDebut || d.dateFin) {
+          <li class="list-group-item">
+            <strong>Période :</strong>
+            {{ d.dateDebut | date:'dd/MM/yyyy' }}
+            @if (d.dateFin) { → {{ d.dateFin | date:'dd/MM/yyyy' }} }
+          </li>
+        }
+        @if (d.joursOuvres != null) {
+          <li class="list-group-item">
+            <strong>Durée :</strong> {{ d.joursOuvres }} jour(s)
+          </li>
+        }
       </ul>
 
       <!-- Commentaires -->

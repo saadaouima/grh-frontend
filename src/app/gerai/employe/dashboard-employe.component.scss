@@ -50,6 +50,32 @@
     margin: 0 !important;
   }
 
+  .new-request-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    background: linear-gradient(135deg, #4F46E5, #6366F1) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 100px !important;
+    padding: 10px 22px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    letter-spacing: 0.2px !important;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+
+    i { font-size: 16px !important; }
+
+    &:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 22px rgba(79, 70, 229, 0.45) !important;
+    }
+
+    &:active { transform: translateY(0) !important; }
+  }
+
   .date-chip {
     display: inline-flex !important;
     align-items: center !important;
@@ -190,6 +216,60 @@
     font-size: 11px !important; font-weight: 600 !important;
     color: #6366F1 !important; background: #EEF2FF !important;
     border-radius: 100px !important; padding: 3px 10px !important;
+  }
+
+  // ── Task stat grid ──────────────────────────────────
+  .task-stat-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .task-stat-item {
+    border-radius: 10px !important;
+    padding: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+
+    .task-stat-value {
+      font-size: 24px !important;
+      font-weight: 700 !important;
+      line-height: 1 !important;
+    }
+
+    .task-stat-label {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: .4px !important;
+    }
+
+    &.task-stat--total  { background: #F1F5F9 !important; .task-stat-value { color: #1E293B !important; } .task-stat-label { color: #64748B !important; } }
+    &.task-stat--done   { background: #D1FAE5 !important; .task-stat-value { color: #065F46 !important; } .task-stat-label { color: #059669 !important; } }
+    &.task-stat--active { background: #DBEAFE !important; .task-stat-value { color: #1E40AF !important; } .task-stat-label { color: #3B82F6 !important; } }
+    &.task-stat--late   { background: #FEE2E2 !important; .task-stat-value { color: #991B1B !important; } .task-stat-label { color: #EF4444 !important; } }
+  }
+
+  .task-progress-bar {
+    height: 6px !important;
+    background: #F1F5F9 !important;
+    border-radius: 100px !important;
+    overflow: hidden !important;
+
+    .task-progress-fill {
+      height: 100% !important;
+      background: linear-gradient(90deg, #10B981, #34D399) !important;
+      border-radius: 100px !important;
+      transition: width .4s ease !important;
+    }
+  }
+
+  .task-progress-label {
+    font-size: 12px !important;
+    color: #64748B !important;
+    margin: 4px 0 0 !important;
+    text-align: right !important;
   }
 
   .notif-badge {
@@ -651,6 +731,28 @@
     transition: width 0.8s cubic-bezier(0.4,0,0.2,1) !important;
   }
 
+  // ── KPI background variants ───────────────────────
+  .kpi-blue   { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%) !important; }
+  .kpi-purple { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important; }
+  .kpi-amber  { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important; }
+  .kpi-green  { background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important; }
+
+  // ── Performance icon color variants ──────────────
+  .pi-indigo { background: #EEF2FF !important; color: #6366F1 !important; }
+  .pi-red    { background: #FEF2F2 !important; color: #EF4444 !important; }
+  .pi-green  { background: #ECFDF5 !important; color: #059669 !important; }
+  .pi-amber  { background: #FFFBEB !important; color: #D97706 !important; }
+
+  // ── Performance fill color variants ──────────────
+  .pf-indigo { background: #6366F1 !important; }
+  .pf-red    { background: #EF4444 !important; }
+  .pf-green  { background: #059669 !important; }
+  .pf-amber  { background: #D97706 !important; }
+
+  // ── Icon accent utilities ─────────────────────────
+  .icon-indigo { color: #6366F1 !important; }
+  .icon-green  { color: #10B981 !important; }
+
   .perf-sub {
     font-size: 11px !important; color: #94A3B8 !important; font-weight: 500 !important;
   }
@@ -685,6 +787,11 @@ body.dark & {
 
   .welcome-name { color: #ffffff !important; }
   .welcome-greeting, .welcome-email { color: #94a3b8 !important; }
+
+  .new-request-btn {
+    background: linear-gradient(135deg, #4338CA, #4F46E5) !important;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5) !important;
+  }
 
   .date-chip {
     background: rgba(255, 255, 255, 0.05) !important;

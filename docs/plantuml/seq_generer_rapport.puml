@@ -1,0 +1,67 @@
+@startuml seq_generer_rapport
+!theme plain
+skinparam sequenceArrowColor #2C3E50
+skinparam sequenceParticipantBackgroundColor #EEF4FF
+skinparam sequenceParticipantBorderColor #3498DB
+skinparam noteBackgroundColor #FFFAF0
+skinparam noteBorderColor #E67E22
+
+title Sequence diagram -- Report generation via JasperReports
+
+actor "Admin RH\n(Angular)" as Admin
+participant "analytics-service\n:8083" as AnaSvc
+participant "Oracle 23ai\n(V_ALL_DEMANDES\nEMPLOYEES)" as DB
+participant "Caffeine Cache\n(JVM)" as Cache
+participant "JasperReports\nEngine" as Jasper
+participant "Filesystem\n(exports/analytics)" as FS
+
+== Phase 1: Report form submission ==
+
+Admin -> AnaSvc : POST /api/rapports/generer\n{type:CONGES, departement:IT,\nperiode:{start:2026-01, end:2026-06},\nformat:PDF}
+note right of AnaSvc : JWT role ADMIN_RH\ngrants access to all departments\n(CHEF role: own dept only)
+
+== Phase 2: Data extraction ==
+
+AnaSvc -> Cache : get("rapport_CONGES_IT_2026H1")
+Cache --> AnaSvc : MISS (not cached)
+
+AnaSvc -> DB : SELECT lr.*, e.first_name, e.last_name,\nd.name AS departement\nFROM LEAVE_REQUESTS lr\nJOIN EMPLOYEES e ON lr.employee_id = e.employee_id\nJOIN DEPARTMENTS d ON e.dept_id = d.dept_id\nWHERE d.name = 'IT'\nAND lr.start_date BETWEEN :start AND :end\nAND lr.status = 'VALIDE_RH'\nORDER BY lr.start_date
+DB --> AnaSvc : List<LeaveReportRow> (32 rows)
+
+AnaSvc -> Cache : put("rapport_CONGES_IT_2026H1", data, TTL=10min)
+
+== Phase 3: JasperReports compilation ==
+
+AnaSvc -> Jasper : fillReport(template="conges_report.jrxml",\nparams={departement:"IT", periode:"S1 2026",\nlogoUrl:"/images/synapse_logo.png"},\ndataSource=JRBeanCollectionDataSource(rows))
+
+note right of Jasper
+  JRXML template defines:
+  - Header with logo and period
+  - Table: name, type, start, end, days, status
+  - Footer with page numbers
+  - Group subtotals by leave type
+end note
+
+Jasper --> AnaSvc : JasperPrint (compiled report)
+
+== Phase 4: Export and download ==
+
+alt format = PDF
+    AnaSvc -> Jasper : JasperExportManager.exportReportToPdf(print)
+    Jasper --> AnaSvc : byte[] (PDF file)
+    AnaSvc -> FS : save("conges_IT_2026H1_20260531.pdf")
+    AnaSvc --> Admin : 200 OK\nContent-Type: application/pdf\nContent-Disposition: attachment\nbody: PDF bytes
+else format = EXCEL
+    AnaSvc -> Jasper : JRXlsxExporter.export(print)
+    Jasper --> AnaSvc : byte[] (XLSX file)
+    AnaSvc -> FS : save("conges_IT_2026H1_20260531.xlsx")
+    AnaSvc --> Admin : 200 OK\nContent-Type: application/vnd.openxmlformats...\nbody: XLSX bytes
+end
+
+note over Admin
+  Browser triggers automatic download.
+  File is also saved server-side
+  for audit trail.
+end note
+
+@enduml

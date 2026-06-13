@@ -1,0 +1,120 @@
+@startuml deployment_docker
+!theme plain
+skinparam nodeBackgroundColor #EEF4FF
+skinparam nodeBorderColor #3498DB
+skinparam componentBackgroundColor #F0FFF0
+skinparam componentBorderColor #27AE60
+skinparam artifactBackgroundColor #FFF9F0
+skinparam artifactBorderColor #E67E22
+skinparam databaseBackgroundColor #FFF0F0
+skinparam databaseBorderColor #C0392B
+
+title Diagramme de déploiement — Infrastructure Docker Compose de Synapse
+
+node "Machine de développement\n(Windows 11 / WSL2)" as HOST {
+
+  node "Docker Desktop\n(réseau : gerai_default)" as DOCKER {
+
+    ' ─── Infrastructure ─────────────────────────────────────
+    node "Oracle Free 23-slim\n:1521 / :5500" as ORACLE_NODE {
+      database "Schéma GERAI\n(Oracle 23ai)" as ORACLE_DB
+    }
+
+    node "Keycloak 26\n:8080" as KC_NODE {
+      component "Realm : gerai\n6 rôles organisationnels\nClient : gerai-app (PKCE)" as KC_REALM
+    }
+
+    node "Apache Kafka\n:9092" as KAFKA_NODE {
+      component "Topic :\nnotification-events\n(4 producteurs, 2 consommateurs)" as KAFKA_TOPIC
+    }
+
+    node "Zookeeper\n:2181" as ZK_NODE
+    node "MailHog\n:1025 (SMTP)\n:8025 (UI)" as MAIL_NODE
+
+    ' ─── Microservices Spring Boot ────────────────────────────
+    artifact "employe-service.jar\n:8081\nSpring Boot 3.5\nKafka Producer" as SVC_EMP
+    artifact "demandes-service.jar\n:8085\nSpring Boot 3.5\nKafka Producer" as SVC_DEM
+    artifact "notification-service.jar\n:8084\nKafka Consumer\nWebSocket STOMP\nSMTP Client" as SVC_NOT
+    artifact "analytics-service.jar\n:8083\nKafka Consumer\nCache Caffeine\nJasperReports" as SVC_ANA
+    artifact "chat-service.jar\n:8086\nWebSocket STOMP\nGroq AI Client" as SVC_CHAT
+    artifact "projets-service.jar\n:8087\nKafka Producer\nGroq CV Scoring" as SVC_PROJ
+    artifact "taches-service.jar\n:8088\nKafka Producer" as SVC_TAC
+  }
+
+  ' ─── Frontend Angular ─────────────────────────────────────
+  node "Node.js\nng serve\n:4200" as NG_NODE {
+    component "Angular 21 SPA\n(keycloak-angular 21)\n(STOMP/SockJS)" as NG_APP
+    component "Proxy Angular Dev\nproxy.conf.json\n/api/* → backends\n/ws → :8086 (WS chat)\n/ws-notifications → :8084 (WS notif)\n/uploads → :8086 (fichiers)" as NG_PROXY
+  }
+}
+
+' ─── Navigateur client ─────────────────────────────────────
+node "Navigateur Web\n(Chrome / Firefox)" as BROWSER {
+  component "Application SPA\n(JS bundle Angular)" as BROWSER_APP
+}
+
+' ─── API externe ──────────────────────────────────────────
+cloud "Groq Cloud API\nhttps://api.groq.com/openai/v1\n(Llama 3.3 70B)" as GROQ_CLOUD
+
+' ═══ Relations ═══════════════════════════════════════════════
+
+BROWSER_APP --> NG_APP : HTTP :4200\n(navigation SPA)
+
+NG_APP --> KC_NODE   : OAuth2 PKCE\nOIDC (auth)
+NG_APP --> NG_PROXY  : REST /api/* + WebSocket
+
+' ── Proxy → Services REST ──────────────────────────────────
+NG_PROXY --> SVC_EMP  : HTTP :8081\n(/api/employes, /api/equipe,\n/api/employe, /api/keycloak)
+NG_PROXY --> SVC_DEM  : HTTP :8085\n(/api/demandes, /api/conges,\n/api/formations, /api/actifs,\n/api/departs)
+NG_PROXY --> SVC_ANA  : HTTP :8083\n(/api/analytics, /api/rapports,\n/api/reports, /api/admin/attrition)
+NG_PROXY --> SVC_NOT  : HTTP :8084\n(/api/notifications)
+NG_PROXY --> SVC_PROJ : HTTP :8087\n(/api/admin, /api/chef, /api/affectation,\n/api/projets, /api/evaluations,\n/api/public)
+NG_PROXY --> SVC_TAC  : HTTP :8088\n(/api/taches)
+NG_PROXY --> SVC_CHAT : HTTP :8086\n(/api/chat, /uploads)
+
+' ── Proxy → WebSocket ──────────────────────────────────────
+NG_PROXY --> SVC_CHAT : WebSocket STOMP\n(/ws → :8086 — chat temps réel)
+NG_PROXY --> SVC_NOT  : WebSocket STOMP\n(/ws-notifications → :8084 — notifs temps réel)
+
+' ── Services → Oracle ──────────────────────────────────────
+SVC_EMP  --> ORACLE_DB : JDBC HikariCP
+SVC_DEM  --> ORACLE_DB : JDBC HikariCP
+SVC_ANA  --> ORACLE_DB : JDBC HikariCP
+SVC_CHAT --> ORACLE_DB : JDBC HikariCP
+SVC_PROJ --> ORACLE_DB : JDBC HikariCP
+SVC_TAC  --> ORACLE_DB : JDBC HikariCP
+SVC_NOT  --> ORACLE_DB : JDBC HikariCP
+
+note bottom of ORACLE_DB
+  Base de données partagée (Oracle 23ai)
+  Flyway migrations V1–V11
+  Tous les services partagent
+  le même schéma GERAI
+end note
+
+' ── Services → Keycloak ────────────────────────────────────
+SVC_EMP  --> KC_NODE : keycloak-admin-client\n(provisionnement utilisateurs)
+note right of KC_NODE
+  <b>Validation JWT (tous les services) :</b>
+  Chaque microservice Spring Boot
+  valide le token via la clé publique
+  RSA de Keycloak (JWKS endpoint)
+end note
+
+' ── Services → Kafka (Producteurs) ────────────────────────
+SVC_EMP  --> KAFKA_TOPIC : produce\nEmployeeEvent
+SVC_DEM  --> KAFKA_TOPIC : produce\nDemandeEvent
+SVC_PROJ --> KAFKA_TOPIC : produce\nNotificationEvent
+SVC_TAC  --> KAFKA_TOPIC : produce\nNotificationEvent
+
+' ── Services → Kafka (Consommateurs) ──────────────────────
+SVC_NOT  --> KAFKA_TOPIC : consume\n@KafkaListener\n(notification-service-group)
+SVC_ANA  --> KAFKA_TOPIC : consume\n@KafkaListener\n(analytics-group)
+
+' ── Autres relations ───────────────────────────────────────
+SVC_NOT  --> MAIL_NODE   : SMTP (e-mail optionnel)
+KAFKA_NODE --> ZK_NODE   : coordination
+SVC_CHAT --> GROQ_CLOUD  : REST API (chatbot IA)
+SVC_PROJ --> GROQ_CLOUD  : REST API (scoring CV)
+
+@enduml

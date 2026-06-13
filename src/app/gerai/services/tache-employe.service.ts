@@ -1,17 +1,31 @@
-// ✅ Injectable et inject viennent de @angular/core
 import { Injectable, inject } from '@angular/core';
-
-// ✅ HttpClient vient de @angular/common/http
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { TacheKanban } from 'src/app/gerai/models/tache.model';
+import { ProjetService } from './projet-employe.service';
+
 @Injectable({ providedIn: 'root' })
 export class TacheService {
-    private http = inject(HttpClient);
+    private http          = inject(HttpClient);
+    private projetService = inject(ProjetService);
     private API = '/api/taches';
 
     getTaches(): Observable<TacheKanban[]> {
-        return this.http.get<TacheKanban[]>(this.API);
+        return forkJoin({
+            taches: this.http.get<TacheKanban[]>(this.API),
+            projets: this.projetService.getProjets().pipe(catchError(() => of([])))
+        }).pipe(
+            map(({ taches, projets }) => {
+                const projetMap = new Map<number, string>(
+                    projets.map(p => [p.id, p.nom] as [number, string])
+                );
+                return taches.map(t => ({
+                    ...t,
+                    projet: (t.projet || projetMap.get(t.projetId!) || '—') as string
+                }));
+            })
+        );
     }
 
     updateTache(id: number, changes: Partial<TacheKanban>): Observable<TacheKanban> {

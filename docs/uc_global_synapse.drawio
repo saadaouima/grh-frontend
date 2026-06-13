@@ -1,0 +1,228 @@
+<mxfile host="app.diagrams.net" version="29.6.6">
+  <diagram id="uc-global-synapse" name="UC Global Synapse">
+    <mxGraphModel dx="1500" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="99" value="Diagramme de cas d&#39;utilisation global — Plateforme Synapse" style="text;html=1;align=center;verticalAlign=middle;resizable=0;strokeColor=none;fillColor=none;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="500" y="8" width="1200" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- System boundary -->
+        <mxCell id="100" value="Synapse — Plateforme GRH" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=none;strokeColor=#2C5F8A;strokeWidth=2;align=center;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="200" y="40" width="1580" height="980" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 1 — Authentification  (y=45) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="201" value="Authentification" style="swimlane;startSize=22;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="45" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="301" value="S&#39;authentifier (OAuth2/OIDC)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#2C5F8A;fontSize=11;" vertex="1" parent="201">
+          <mxGeometry x="313" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="302" value="Se déconnecter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#2C5F8A;fontSize=11;" vertex="1" parent="201">
+          <mxGeometry x="926" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 2 — Gestion des employés  (y=160) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="202" value="Gestion des employés" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="160" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="311" value="Gérer les employés" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="202">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="312" value="Consulter son profil" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="202">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="313" value="Consulter la liste" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="202">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 3 — Demandes RH  (y=275) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="203" value="Demandes RH" style="swimlane;startSize=22;fillColor=#ffe6cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="275" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="321" value="Déposer une demande RH" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="203">
+          <mxGeometry x="68" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="322" value="Consulter ses demandes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="203">
+          <mxGeometry x="436" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="323" value="Valider une demande" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="203">
+          <mxGeometry x="804" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="324" value="Annuler une demande" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="203">
+          <mxGeometry x="1172" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 4 — Prêts et Crédits  (y=390) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="204" value="Prêts et Crédits" style="swimlane;startSize=22;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="390" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="331" value="Déposer une demande de prêt" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="204">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="332" value="Voter sur un dossier" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="204">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="333" value="Approuver un prêt (DG)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="204">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 5 — Projets et Tâches  (y=505) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="205" value="Projets et Tâches" style="swimlane;startSize=22;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="505" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="341" value="Gérer un projet" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="205">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="342" value="Affecter des membres" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="205">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="343" value="Gérer ses tâches" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="205">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 6 — Communication et IA  (y=620) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="206" value="Communication et IA" style="swimlane;startSize=22;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="620" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="351" value="Envoyer un message" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="206">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="352" value="Consulter l&#39;assistant IA" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="206">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="353" value="Recevoir des notifications" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="206">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 7 — Rapports et Analytique  (y=735) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="207" value="Rapports et Analytique" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="735" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="361" value="Générer un rapport" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="207">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="362" value="Consulter les KPI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="207">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="363" value="Consulter le score d&#39;attrition" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="207">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PACKAGE 8 — Recrutement  (y=850) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="208" value="Recrutement (public)" style="swimlane;startSize=22;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;align=left;container=1;collapsible=0;" vertex="1" parent="100">
+          <mxGeometry x="10" y="850" width="1560" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="371" value="Consulter les offres" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="208">
+          <mxGeometry x="160" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="372" value="Déposer une candidature" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="208">
+          <mxGeometry x="620" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="373" value="Traiter une candidature" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="208">
+          <mxGeometry x="1080" y="25" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ACTEURS GAUCHE -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="401" value="Employé" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="320" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="402" value="Chef de projet" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="590" width="50" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ACTEURS DROITE -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="403" value="Admin RH" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1855" y="260" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="404" value="Comité" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1855" y="455" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="405" value="Directeur Général" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1855" y="650" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="406" value="Candidat&#xa;(non authentifié)" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1855" y="880" width="50" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ASSOCIATIONS — Employé (gauche) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="501" value="" edge="1" source="401" target="301" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="502" value="" edge="1" source="401" target="312" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="503" value="" edge="1" source="401" target="321" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="504" value="" edge="1" source="401" target="322" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="505" value="" edge="1" source="401" target="324" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="506" value="" edge="1" source="401" target="331" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="507" value="" edge="1" source="401" target="343" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="508" value="" edge="1" source="401" target="351" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="509" value="" edge="1" source="401" target="352" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ASSOCIATIONS — Chef de projet (gauche) -->
+        <mxCell id="511" value="" edge="1" source="402" target="301" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="512" value="" edge="1" source="402" target="323" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="513" value="" edge="1" source="402" target="341" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="514" value="" edge="1" source="402" target="342" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="515" value="" edge="1" source="402" target="351" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="516" value="" edge="1" source="402" target="362" style="endArrow=open;endFill=0;html=1;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ASSOCIATIONS — Admin RH (droite) -->
+        <mxCell id="521" value="" edge="1" source="403" target="311" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="522" value="" edge="1" source="403" target="313" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="523" value="" edge="1" source="403" target="323" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="524" value="" edge="1" source="403" target="361" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="525" value="" edge="1" source="403" target="362" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="526" value="" edge="1" source="403" target="363" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="527" value="" edge="1" source="403" target="373" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ASSOCIATIONS — Comité (droite) -->
+        <mxCell id="531" value="" edge="1" source="404" target="332" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ASSOCIATIONS — Directeur Général (droite) -->
+        <mxCell id="541" value="" edge="1" source="405" target="333" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="542" value="" edge="1" source="405" target="362" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="543" value="" edge="1" source="405" target="363" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ASSOCIATIONS — Candidat (droite) -->
+        <mxCell id="551" value="" edge="1" source="406" target="371" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="552" value="" edge="1" source="406" target="372" style="endArrow=open;endFill=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- RELATIONS <<extend>> / <<include>> -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <mxCell id="601" value="&lt;&lt;extend&gt;&gt;" edge="1" source="323" target="321" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="602" value="&lt;&lt;extend&gt;&gt;" edge="1" source="324" target="321" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="603" value="&lt;&lt;extend&gt;&gt;" edge="1" source="332" target="331" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="604" value="&lt;&lt;extend&gt;&gt;" edge="1" source="333" target="332" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="605" value="&lt;&lt;extend&gt;&gt;" edge="1" source="363" target="362" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="606" value="&lt;&lt;include&gt;&gt;" edge="1" source="342" target="341" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="607" value="&lt;&lt;extend&gt;&gt;" edge="1" source="372" target="371" style="dashed=1;endArrow=open;endFill=0;html=1;fontSize=10;" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

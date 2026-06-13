@@ -144,3 +144,12 @@
 
   </div>
 </div>
+
+<app-confirm-modal
+  [open]="deleteAllConfirm"
+  title="Tout supprimer ?"
+  [message]="'Supprimer les ' + notifications.length + ' notifications ? Cette action est irréversible.'"
+  confirmLabel="Tout supprimer"
+  (confirmed)="confirmDeleteAll()"
+  (cancelled)="deleteAllConfirm = false"
+/>

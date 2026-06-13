@@ -1,0 +1,66 @@
+@startuml uc_rapport_admin
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F0FFF8
+  BorderColor #1ABC9C
+}
+skinparam actor {
+  BackgroundColor #1ABC9C
+  FontColor #FFFFFF
+  BorderColor #148F77
+}
+left to right direction
+
+title Cas d'utilisation -- Reporting et Analytique (Admin RH / Chef)
+
+actor "Admin RH\n[ADMIN_RH]" as Admin
+actor "Chef\n[CHEF]" as Chef
+
+rectangle "Reporting -- analytics-service :8083" {
+
+  usecase "Generer rapport\nconges PDF/Excel\n(filtrable par departement)" as UC_RPT_CONGE
+  usecase "Generer rapport\nformation PDF/Excel" as UC_RPT_FORM
+  usecase "Consulter tableau\nde bord analytique\n(KPIs globaux)" as UC_DASH
+  usecase "Consulter distribution\npar departement\net par statut" as UC_DIST
+  usecase "Consulter prediction\nd'attrition\n(score 0-100, 3 niveaux)" as UC_ATTRITION
+  usecase "Voir detail attrition\n(facteurs de risque\n+ recommandations)" as UC_ATT_DETAIL
+  usecase "Rafraichir le cache\ndes predictions" as UC_REFRESH
+
+  usecase "Generer rapport\nequipe PDF/Excel" as UC_RPT_CHEF
+
+}
+
+Admin --> UC_RPT_CONGE
+Admin --> UC_RPT_FORM
+Admin --> UC_DASH
+Admin --> UC_DIST
+Admin --> UC_ATTRITION
+Admin --> UC_ATT_DETAIL
+Admin --> UC_REFRESH
+
+Chef  --> UC_RPT_CHEF
+Chef  --> UC_DASH
+
+UC_ATTRITION .> UC_ATT_DETAIL : inclut
+UC_ATT_DETAIL .> UC_REFRESH   : peut declencher
+
+note right of UC_ATTRITION
+  Modele de scoring (4 facteurs) :
+  - Anciennete (0-25 pts)
+  - Absences sur 12 mois (0-25 pts)
+  - Taux de refus demandes (0-25 pts)
+  - Engagement projets actifs (0-25 pts)
+  FAIBLE < 40 | MOYEN 40-70 | ELEVE >= 70
+end note
+
+note right of UC_RPT_CONGE
+  Export via JasperReports :
+  - Format PDF (impression)
+  - Format Excel (analyse)
+  Filtre automatique par role JWT :
+  ADMIN_RH -> tous departements
+  CHEF -> son departement seulement
+end note
+
+@enduml

@@ -1,0 +1,83 @@
+@startuml class_sprint7_analytics
+!theme plain
+skinparam classBackgroundColor #EEF4FF
+skinparam classBorderColor #3498DB
+skinparam arrowColor #555555
+skinparam classHeaderBackgroundColor #3498DB
+skinparam classHeaderFontColor #FFFFFF
+skinparam classFontSize 11
+skinparam classAttributeFontSize 10
+hide circle
+
+title Diagramme de classes — Sprint 7 : Analytique, Reporting et Attrition
+
+class Employee {
+  - id : Long
+  - employeeCode : String
+  - firstName : String
+  - lastName : String
+  - hireDate : LocalDate
+  - status : String
+}
+
+class AttritionPrediction {
+  - id : Long
+  - score : Integer
+  - riskLevel : RiskLevel
+  - absenceDays : Integer
+  - totalDemandes : Integer
+  - demandesRefusees : Integer
+  - projetsActifs : Integer
+  - computedAt : LocalDateTime
+}
+
+enum RiskLevel {
+  FAIBLE
+  MOYEN
+  ELEVE
+}
+
+class AbsenceStat {
+  - id : Long
+  - month : YearMonth
+  - totalDays : Integer
+  - employeeCount : Integer
+}
+
+class ReportLog {
+  - id : Long
+  - reportType : String
+  - generatedBy : Long
+  - format : String
+  - generatedAt : LocalDateTime
+}
+
+class AuditLog {
+  - id : Long
+  - action : String
+  - entityType : String
+  - entityId : Long
+  - performedBy : Long
+  - performedAt : LocalDateTime
+}
+
+interface AnalyticsController {
+  + getDashboard() : DashboardDto
+  + getAttritionPredictions() : List<AttritionPredictionDto>
+  + getAbsenceStats() : List<AbsenceStatDto>
+}
+
+interface ReportController {
+  + generatePdf(params) : byte[]
+  + generateExcel(params) : byte[]
+}
+
+Employee "1" --> "0..*" AttritionPrediction : évaluée par
+AttritionPrediction --> RiskLevel
+Employee "1" --> "0..*" AbsenceStat : contribue à
+Employee "1" --> "0..*" ReportLog : génère
+AnalyticsController ..> AttritionPrediction : retourne
+AnalyticsController ..> AbsenceStat : agrège
+ReportController ..> ReportLog : trace
+
+@enduml

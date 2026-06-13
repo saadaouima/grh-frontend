@@ -65,6 +65,19 @@
     }
   }
 
+  // Icon-only action buttons — fixed square, no text overflow
+  .btn-icon-sm {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+  }
+
   .membre-cell {
     display: flex !important;
     align-items: center !important;
@@ -606,6 +619,171 @@
     margin-top: 20px;
     border-top: 1px solid #F1F5F9;
   }
+
+  // ── Project pills (table & profile) ──────────────────
+  .projet-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .projet-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ── Modal subtitle (project context) ─────────────────
+  .modal-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748B;
+    margin: 2px 0 0;
+  }
+
+  .projet-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  // ── No-project state ─────────────────────────────────
+  .no-project-state {
+    text-align: center;
+    padding: 12px 8px 8px;
+
+    .np-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #FEF9C3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+
+      i { font-size: 28px; color: #D97706; }
+    }
+
+    .np-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1E293B;
+      margin-bottom: 8px;
+    }
+
+    .np-desc {
+      font-size: 13px;
+      color: #64748B;
+      max-width: 340px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+  }
+
+  // ── Project select list ──────────────────────────────
+  .projet-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .projet-select-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+      border-color: #3B82F6;
+      background: #F0F7FF;
+    }
+
+    .psc-color {
+      width: 12px;
+      height: 36px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .psc-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .psc-nom {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .psc-meta {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+
+    .psc-sep {
+      margin: 0 4px;
+    }
+
+    .psc-arrow {
+      color: #CBD5E1;
+      font-size: 16px;
+      transition: transform 0.15s;
+    }
+
+    &:hover .psc-arrow {
+      transform: translateX(3px);
+      color: #3B82F6;
+    }
+  }
+
+  // ── Empty team state ─────────────────────────────────
+  .empty-team-state {
+    text-align: center;
+    padding: 40px 16px;
+    color: #94A3B8;
+
+    .empty-team-icon {
+      font-size: 48px;
+      color: #CBD5E1;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    h6 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 13px;
+      max-width: 320px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+  }
 }
 
 // ── STYLE MODE DARK COMPLÉTÉ ──────────────────────────
@@ -805,5 +983,31 @@
 
   .profil-footer {
     border-top-color: #334155 !important;
+  }
+
+  .no-project-state {
+    .np-icon-wrap {
+      background: rgba(217, 119, 6, 0.15) !important;
+    }
+    .np-title { color: #F8FAFC !important; }
+    .np-desc  { color: #64748B !important; }
+  }
+
+  .projet-select-card {
+    border-color: #334155 !important;
+    &:hover {
+      border-color: #60A5FA !important;
+      background: rgba(59, 130, 246, 0.08) !important;
+    }
+    .psc-nom  { color: #F8FAFC !important; }
+    .psc-meta { color: #64748B !important; }
+    &:hover .psc-arrow { color: #60A5FA !important; }
+  }
+
+  .modal-subtitle { color: #64748B !important; }
+
+  .empty-team-state {
+    h6 { color: #94A3B8 !important; }
+    .empty-team-icon { color: #334155 !important; }
   }
 }

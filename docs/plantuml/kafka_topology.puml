@@ -1,0 +1,75 @@
+@startuml kafka_topology
+!theme plain
+skinparam componentBackgroundColor #EEF4FF
+skinparam componentBorderColor #3498DB
+skinparam queueBackgroundColor #FFF9F0
+skinparam queueBorderColor #E67E22
+skinparam databaseBackgroundColor #F0FFF0
+skinparam databaseBorderColor #27AE60
+skinparam packageBackgroundColor #FAFBFF
+skinparam packageBorderColor #BDC3C7
+skinparam arrowColor #2C3E50
+skinparam ArrowFontSize 10
+
+title Topologie Apache Kafka — Plateforme Synapse
+
+' ─── Producteurs ─────────────────────────────────────────────
+package "Producteurs Kafka (Producers)" {
+  component "demandes-service :8085\n(KafkaTemplate.send)" as P_DEM  #FFE4CC
+  component "projets-service :8087\n(KafkaTemplate.send)"  as P_PROJ #FFE4CC
+  component "taches-service :8088\n(KafkaTemplate.send)"   as P_TAC  #FFE4CC
+  component "employe-service :8081\n(KafkaTemplate.send)"  as P_EMP  #FFE4CC
+}
+
+' ─── Topic Kafka ──────────────────────────────────────────────
+queue "Topic Kafka\n**notification-events**\n(partition=1, retention=7j)" as TOPIC_NOTIF #FFF0AA
+
+' ─── Consommateurs ───────────────────────────────────────────
+package "Consommateurs Kafka (Consumers)" {
+  component "notification-service :8084\n(@KafkaListener\ngroup: notification-service-group)" as C_NOT  #CCE5FF
+  component "analytics-service :8083\n(@KafkaListener\ngroup: analytics-group)"               as C_ANA  #CCE5FF
+}
+
+' ─── Destinations finales ─────────────────────────────────────
+database "Oracle 23ai\n(NOTIFICATIONS)" as DB_NOT #CCFFCC
+database "Oracle 23ai\n(Compteurs analytiques)" as DB_ANA #CCFFCC
+component "MailHog SMTP :1025\n(e-mail optionnel)" as SMTP #E8CCF0
+component "WebSocket STOMP\n(notification temps réel)" as WS #FFCCCC
+
+' ─── Structure des événements ─────────────────────────────────
+note as NOTE_EVENT
+  **NotificationEvent / DemandeEvent**
+  ──────────────────────────────────
+  recipientId : String (Keycloak UUID)
+  recipientEmail : String
+  title : String
+  message : String
+  type : DEMANDE | TACHE | PROJET | EMPLOYE
+  requestId : Long (optionnel)
+  timestamp : LocalDateTime
+end note
+
+' ─── Flux ─────────────────────────────────────────────────────
+P_DEM  --> TOPIC_NOTIF : DemandeEvent\n(congé, prêt, formation...)
+P_PROJ --> TOPIC_NOTIF : NotificationEvent\n(projet créé, tâche assignée)
+P_TAC  --> TOPIC_NOTIF : NotificationEvent\n(statut tâche modifié)
+P_EMP  --> TOPIC_NOTIF : NotificationEvent\n(employé créé / désactivé)
+
+TOPIC_NOTIF --> C_NOT : offset commit\ngroup-id
+TOPIC_NOTIF --> C_ANA : offset commit\ngroup-id (indépendant)
+
+C_NOT --> DB_NOT  : INSERT NOTIFICATIONS
+C_NOT --> WS      : broadcast WebSocket
+C_NOT --> SMTP    : sendEmail()\n(si MAIL_ENABLED=true)
+
+C_ANA --> DB_ANA  : UPDATE compteurs\n+ CacheEvict Caffeine
+
+note bottom of TOPIC_NOTIF
+  **Garantie de livraison :**
+  Les messages sont persistés sur disque (7 jours).
+  Si un consommateur est hors ligne, il reprend
+  à son dernier offset commité au redémarrage.
+  → Aucun événement RH n'est perdu.
+end note
+
+@enduml

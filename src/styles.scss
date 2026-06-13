@@ -36,17 +36,54 @@
 
 // ── Navigation Sidebar (Global Styles) ─────────────────
 .pc-caption {
-  padding: 20px 15px 8px !important;
+  padding: 20px 16px 6px !important;
   margin: 0 !important;
   list-style: none !important;
+  position: relative !important;
+
+  // Divider above every section except the very first
+  &:not(:first-child) {
+    padding-top: 14px !important;
+    margin-top: 4px !important;
+
+    &::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 16px !important;
+      right: 16px !important;
+      height: 1px !important;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(100, 116, 139, 0.18) 20%,
+        rgba(100, 116, 139, 0.18) 80%,
+        transparent
+      ) !important;
+    }
+  }
 
   label {
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
-    color: #94A3B8 !important;
+    letter-spacing: 1.1px !important;
+    color: #64748B !important;
     margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+
+    // Short dash before the section name
+    &::before {
+      content: '' !important;
+      display: inline-block !important;
+      width: 14px !important;
+      height: 1.5px !important;
+      background: #94A3B8 !important;
+      border-radius: 2px !important;
+      flex-shrink: 0 !important;
+    }
   }
 }
 
@@ -64,7 +101,7 @@
     font-size: 14px !important;
     text-decoration: none !important;
     transition: all 0.2s ease !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
 
     .pc-micon {
       width: 20px !important;
@@ -91,7 +128,7 @@
       background: #F8FAFC !important;
 
       .pc-micon i {
-        color: #0891B2 !important;
+        color: #4F46E5 !important;
         transform: scale(1.1) !important;
       }
 
@@ -104,17 +141,17 @@
   // Active state
   &.active .pc-link,
   &.pc-trigger .pc-link {
-    background: linear-gradient(90deg, rgba(8,145,178,0.1), rgba(6,182,212,0.05)) !important;
-    border-left: 3px solid #0891B2 !important;
+    background: linear-gradient(90deg, rgba(79,70,229,0.1), rgba(129,140,248,0.05)) !important;
+    border-left: 3px solid #4F46E5 !important;
     margin-left: -3px !important;
 
     .pc-micon i {
-      color: #0891B2 !important;
+      color: #4F46E5 !important;
       font-weight: 700 !important;
     }
 
     .pc-mtext {
-      color: #0891B2 !important;
+      color: #4F46E5 !important;
       font-weight: 600 !important;
     }
   }
@@ -136,17 +173,17 @@
       background: #F8FAFC !important;
 
       .pc-micon i {
-        color: #0891B2 !important;
+        color: #4F46E5 !important;
       }
 
       .pc-mtext {
-        color: #0891B2 !important;
+        color: #4F46E5 !important;
         font-weight: 600 !important;
       }
 
       &::after {
         transform: rotate(180deg) !important;
-        color: #0891B2 !important;
+        color: #4F46E5 !important;
       }
     }
 
@@ -177,8 +214,8 @@
   }
 
   .pc-item.active .pc-link {
-    background: #EFF6FF !important;
-    color: #0891B2 !important;
+    background: #EEF2FF !important;
+    color: #4F46E5 !important;
     font-weight: 600 !important;
     border-left: none !important;
     margin-left: 0 !important;
@@ -272,7 +309,7 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border: 2px solid #0891B2 !important;
+        border: 2px solid #4F46E5 !important;
         z-index: 10 !important;
 
         i {
@@ -375,7 +412,7 @@
   }
 
   .link-primary {
-    color: #0891B2 !important;
+    color: #4F46E5 !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     text-decoration: none !important;
@@ -412,7 +449,7 @@
     &:hover {
       background: #F8FAFC !important;
       color: #1E293B !important;
-      i { color: #0891B2 !important; }
+      i { color: #4F46E5 !important; }
     }
 
     &.text-danger {
@@ -428,11 +465,40 @@
   }
 }
 
+// ── Skip link (accessibility) ──────────────────────────
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  background: #4f46e5;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 0 0 8px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s;
+
+  &:focus {
+    top: 0;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+// ── Global focus ring ──────────────────────────────────
+:focus-visible {
+  outline: 2px solid #4f46e5 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
 // ── Utility Classes ────────────────────────────────────
 .cursor-pointer { cursor: pointer !important; }
 :root {
   // ── Fonds ───────────────────────────────────────────
-  --bg-page        : #f1f5f9;
+  --bg-page        : #F8FAFC;
   --bg-card        : #ffffff;
   --bg-card-hover  : #f8fafc;
   --bg-raised      : #f8fafc;
@@ -450,10 +516,19 @@
   --border-strong  : #cbd5e1;
 
   // ── Accent (teal SYNAPSE) ─────────────────────────────
-  --accent         : #0891b2;
-  --accent-light   : #06b6d4;
-  --accent-subtle  : #eff6ff;
-  --accent-text    : #0891b2;
+  --accent         : #4f46e5;
+  --accent-light   : #818cf8;
+  --accent-subtle  : #eef2ff;
+  --accent-text    : #4f46e5;
+
+  /* ── Primary scale ──────────────────────────────── */
+  --primary-50  : #eef2ff;
+  --primary-100 : #e0e7ff;
+  --primary-200 : #c7d2fe;
+  --primary-400 : #818cf8;
+  --primary-600 : #4f46e5;
+  --primary-700 : #4338ca;
+  --primary-900 : #312e81;
 
   // ── Statuts ─────────────────────────────────────────
   --success        : #10b981;
@@ -477,8 +552,8 @@
   // ── Sidebar/Header (light = teal) ───────────────────
   --sidebar-bg     : #ffffff;
   --sidebar-text   : #475569;
-  --sidebar-active : #0891b2;
-  --header-bg      : linear-gradient(90deg, #0c4a6e, #0369a1);
+  --sidebar-active : #4f46e5;
+  --header-bg      : linear-gradient(90deg, #312e81, #4f46e5);
 }
 
 // ══════════════════════════════════════════════════════
@@ -507,7 +582,7 @@ body.dark {
   // ── Accent (indigo dark mode) ───────────────────────
   --accent         : #6366f1;
   --accent-light   : #818cf8;
-  --accent-subtle  : rgba(99,102,241,0.12);
+  --accent-subtle  : rgba(79,70,229,0.12);
   --accent-text    : #818cf8;
 
   // ── Statuts adaptés dark ─────────────────────────────
@@ -715,3 +790,136 @@ body.dark {
 
 
 
+
+// ── Desktop sidebar icon rail ────────────────────────────────────────────────
+@media (min-width: 1025px) {
+
+  // Sibling margin: override Berry's 20px with icon-rail width
+  .pc-sidebar.navbar-collapsed {
+    ~ .pc-container,
+    ~ .pc-footer {
+      margin-left: 64px !important;
+      transition: margin-left 0.25s ease-in-out;
+    }
+  }
+
+  // Inner nav: shrink to 64px icon rail
+  .navbar-collapsed nav.pc-sidebar {
+    width: 64px !important;
+    transition: width 0.25s ease-in-out !important;
+
+    .navbar-wrapper { width: 64px !important; }
+
+    // Hide text and decorative elements
+    .pc-mtext,
+    .pc-caption,
+    .pc-arrow  { display: none !important; }
+
+    // Collapse any open submenus
+    .pc-submenu { max-height: 0 !important; overflow: hidden !important; }
+
+    // Hide submenu expand arrow
+    .pc-hasmenu > .pc-link::after { display: none !important; }
+
+    // Center nav icons
+    .pc-navbar .pc-item .pc-link {
+      justify-content: center !important;
+      padding: 10px 8px !important;
+      border-left: none !important;
+      margin: 2px 8px !important;
+      border-radius: 10px !important;
+    }
+
+    // Active: pill highlight instead of left border
+    .pc-navbar .pc-item.active .pc-link,
+    .pc-navbar .pc-item.pc-trigger .pc-link {
+      border-left: none !important;
+      margin: 2px 8px !important;
+    }
+
+    // Logout icon centered
+    .sidebar-logout-link {
+      justify-content: center !important;
+      padding: 10px 0 !important;
+      margin: 0 8px !important;
+      border-radius: 10px !important;
+    }
+  }
+}
+
+// ── Status chips (global, all views) ────────────────────────────────────────
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+
+  i { font-size: 12px; flex-shrink: 0; }
+
+  &.sc-pending   { background: #FEF3C7; color: #92400E; }
+  &.sc-chef      { background: #D1FAE5; color: #065F46; }
+  &.sc-approved  { background: #D1FAE5; color: #065F46; }
+  &.sc-rejected  { background: #FEE2E2; color: #991B1B; }
+  &.sc-study     { background: #EDE9FE; color: #5B21B6; }
+  &.sc-committee { background: #DBEAFE; color: #1E40AF; }
+  &.sc-medical   { background: #FFE4E6; color: #9F1239; }
+  &.sc-cancelled { background: #F1F5F9; color: #64748B; }
+}
+
+// ── Skeleton / Shimmer atoms (global) ───────────────────────────────────────
+@keyframes sk-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.sk {
+  background     : linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 400% 100%;
+  border-radius  : 6px;
+  animation      : sk-shimmer 1.4s ease-in-out infinite;
+  display        : block;
+}
+.sk-av    { width: 40px; height: 40px; border-radius: 50% !important; flex-shrink: 0; }
+.sk-av-lg { width: 80px; height: 80px; border-radius: 50% !important; flex-shrink: 0; }
+.sk-xl    { height: 20px; }
+.sk-md    { height: 13px; }
+.sk-sm    { height: 11px; }
+.sk-xs    { height:  9px; }
+.sk-pill  { height: 24px; width: 72px; border-radius: 20px !important; }
+.sk-btn   { width: 32px; height: 32px; border-radius: 8px !important; flex-shrink: 0; }
+
+// ── Empty state atoms (global) ───────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 6px;
+
+  &__icon {
+    font-size: 2.75rem;
+    color: #CBD5E1;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #475569;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: #94A3B8;
+    margin: 0;
+    max-width: 320px;
+  }
+}

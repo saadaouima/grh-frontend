@@ -1,0 +1,126 @@
+@startuml seq_authentifier
+' ============================================================
+'  Diagramme de séquence — S'authentifier (OAuth2 PKCE)
+'  Synapse – Plateforme GRH
+' ============================================================
+
+scale 1.4
+skinparam dpi 150
+
+skinparam defaultFontName  "Times New Roman"
+skinparam defaultFontSize  12
+skinparam backgroundColor  #FFFFFF
+skinparam sequenceMessageAlign center
+
+skinparam participant {
+  BackgroundColor #D6EAF8
+  BorderColor     #2980B9
+  FontColor       #1A252F
+  FontSize        12
+}
+
+skinparam actor {
+  BackgroundColor #D6EAF8
+  BorderColor     #2980B9
+  FontColor       #1A252F
+  FontSize        12
+}
+
+skinparam sequence {
+  ArrowColor          #2980B9
+  ArrowFontSize       11
+  ArrowFontColor      #1A252F
+  LifeLineBorderColor #2980B9
+  LifeLineBackgroundColor #EBF5FB
+  DividerBackgroundColor  #EBF5FB
+  DividerBorderColor      #2980B9
+  DividerFontSize         11
+  GroupBackgroundColor    #FEF9E7
+  GroupBorderColor        #F39C12
+  GroupFontSize           11
+}
+
+skinparam note {
+  BackgroundColor #FEF9E7
+  BorderColor     #F39C12
+  FontSize        10
+}
+
+' ── Participants ─────────────────────────────────────────────
+actor       "Utilisateur"   as U
+participant "Angular 21\n(Navigateur)"  as ANG
+participant "Keycloak 26"   as KC
+participant "Spring Boot\n(API REST)"   as API
+
+' ── Flux principal ───────────────────────────────────────────
+U -> ANG : Accès à l'application\n(ex. /admin/dashboard)
+
+activate ANG
+ANG -> ANG : requireRoleGuard détecte\nl'absence de session JWT
+
+ANG -> KC : Redirection vers la page de connexion\n(Authorization Code + PKCE code_challenge)
+activate KC
+
+KC --> U : Affichage de la page\nde connexion Keycloak
+deactivate ANG
+
+U -> KC : Saisie des identifiants\n(email + mot de passe)
+
+KC -> KC : Vérification des\nidentifiants
+
+alt Identifiants valides
+  KC --> ANG : Redirection vers redirect_uri\n+ authorization_code
+  activate ANG
+
+  ANG -> KC : POST /token\n(authorization_code + code_verifier PKCE)
+
+  KC -> KC : Vérification du\ncode_verifier
+
+  KC --> ANG : access_token (JWT)\n+ refresh_token
+  deactivate KC
+
+  ANG -> ANG : Lecture des rôles\ndepuis realm_access.roles
+
+  ANG -> API : GET /api/employes\nAuthorization: Bearer <JWT>
+  activate API
+
+  API -> KC : Récupération de la\nclé publique (JWKS)
+  activate KC
+  KC --> API : Clé publique RSA
+  deactivate KC
+
+  API -> API : Validation de la\nsignature JWT + rôles
+
+  API --> ANG : 200 OK + données
+  deactivate API
+
+  ANG --> U : Redirection vers le tableau de bord\nselon le rôle (realm_access.roles) :\n• comite → /admin/comite-credit\n• admin / admin_rh / directeur_general → /admin/dashboard\n• chef → /chef/dashboard\n• employe → /employe/dashboard
+  deactivate ANG
+
+else Identifiants incorrects
+  KC --> U : Message d'erreur Keycloak\n(nouvelle tentative possible)
+  deactivate KC
+
+else Compte désactivé
+  KC --> U : Message : compte inactif\n(contacter l'administrateur)
+  deactivate KC
+end
+
+' ── Flux de rafraîchissement (token expiré) ──────────────────
+|||
+== Rafraîchissement automatique du token ==
+|||
+
+ANG -> KC : POST /token\n(grant_type=refresh_token)
+activate ANG
+activate KC
+KC --> ANG : Nouveau access_token (JWT)
+deactivate KC
+note right of ANG
+  Transparent pour l'utilisateur :
+  aucune reconnexion manuelle
+  n'est requise
+end note
+deactivate ANG
+
+@enduml

@@ -52,6 +52,16 @@ export interface CreateDemandeDTO {
     motif?: string;
 }
 
+// Absence d'un collègue visible par l'équipe
+export interface TeamAbsence {
+  employeId: string;
+  nom: string;
+  prenom: string;
+  type: 'ANNUEL' | 'MALADIE' | 'RTT' | 'SANS_SOLDE';
+  dateDebut: string;
+  dateFin: string;
+}
+
 // Réponse complète avec toutes les données
 export interface CongesComplet {
     solde: SoldeConge;

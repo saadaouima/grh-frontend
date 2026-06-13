@@ -81,9 +81,7 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th>#</th>
               <th>Nom du Projet</th>
-              <th>Chef</th>
               <th>Équipe</th>
               <th>Date début</th>
               <th>Date fin</th>
@@ -95,7 +93,6 @@
           <tbody>
             @for (projet of filteredProjets; track projet.id; let i = $index) {
               <tr>
-                <td>{{ i + 1 }}</td>
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="project-icon me-2">
@@ -107,13 +104,19 @@
                     </div>
                   </div>
                 </td>
-                <td>{{ projet.chefProjet ?? '—' }}</td>
                 <td>
                   <div class="avatar-group">
                   @for (m of (projet.equipe ?? []) | slice:0:3; track m.id) {
-                    <span class="avatar-badge" [title]="m.nom">
-                      {{ m.initiales }}
-                    </span>
+                    @if (m.photo) {
+                      <img [src]="m.photo" [title]="m.nom"
+                           class="avatar-badge"
+                           style="object-fit:cover;padding:0;"
+                           width="32" height="32" />
+                    } @else {
+                      <span class="avatar-badge" [title]="m.nom">
+                        {{ m.initiales }}
+                      </span>
+                    }
                   }
                   @if ((projet.equipe?.length ?? 0) > 3) {
                     <span class="avatar-badge more">+{{ (projet.equipe?.length ?? 0) - 3 }}</span>
@@ -127,12 +130,12 @@
                   <div class="d-flex align-items-center gap-2">
                     <div class="progress flex-grow-1" style="height: 6px;">
                       <div class="progress-bar"
-                        [ngClass]="getProgressClass(projet.progression ?? 0)"
-                        [style.width.%]="projet.progression ?? 0">
+                        [ngClass]="getProgressClass(projet)"
+                        [style.width.%]="calcProgression(projet)">
                       </div>
                     </div>
                     <span style="font-size:12px; min-width:32px; color:#6c757d;">
-                      {{ projet.progression ?? 0 }}%
+                      {{ calcProgression(projet) }}%
                     </span>
                   </div>
                 </td>
@@ -158,7 +161,7 @@
             }
             @if (filteredProjets.length === 0) {
               <tr>
-                <td colspan="9" class="text-center text-muted py-5">
+                <td colspan="7" class="text-center text-muted py-5">
                   <i class="ti ti-inbox" style="font-size:36px; display:block; margin-bottom:10px;"></i>
                   Aucun projet trouvé
                 </td>
@@ -221,25 +224,78 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                  Progression : {{ projetForm.get('progression')?.value }}%
-                </label>
-                <input type="range" class="form-range" min="0" max="100" step="5" formControlName="progression">
+                <label class="form-label fw-semibold">Nombre total de tâches</label>
+                <input type="number" class="form-control" formControlName="totalTaches" min="0" placeholder="Ex: 20">
+                @if (isEditMode && selectedProjet) {
+                  <div class="text-muted small mt-1">
+                    <i class="ti ti-check"></i>
+                    {{ selectedProjet.tachesCompletees ?? 0 }} tâche(s) complétée(s) —
+                    progression auto : <strong>{{ calcProgression(selectedProjet) }}%</strong>
+                  </div>
+                }
               </div>
 
               <div class="col-md-12">
-                <label class="form-label fw-semibold">Membres de l'équipe</label>
-                <div class="membres-list border rounded p-3">
-                  @for (emp of employes; track emp.id) {
-                    <div class="form-check mb-2">
+                <label class="form-label fw-semibold">
+                  Membres de l'équipe
+                  @if (selectedMembres.length > 0) {
+                    <span class="badge bg-primary ms-2">{{ selectedMembres.length }} sélectionné(s)</span>
+                  }
+                </label>
+
+                <!-- Picker toolbar -->
+                <div class="d-flex gap-2 mb-2">
+                  <div class="input-group input-group-sm" style="max-width:220px">
+                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Nom, prénom, poste…"
+                      [(ngModel)]="membreSearch" [ngModelOptions]="{standalone:true}">
+                  </div>
+                  <select class="form-select form-select-sm" style="max-width:160px"
+                    [(ngModel)]="membreDept" [ngModelOptions]="{standalone:true}">
+                    <option value="">Tous les depts</option>
+                    @for (d of departments; track d) {
+                      <option [value]="d">{{ d }}</option>
+                    }
+                  </select>
+                </div>
+
+                <!-- Selected chips -->
+                @if (selectedMembres.length > 0) {
+                  <div class="d-flex flex-wrap gap-1 mb-2">
+                    @for (m of selectedMembres; track m.id) {
+                      <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 px-2 py-1">
+                        {{ m.prenom }} {{ m.nom }}
+                        <i class="ti ti-x" style="cursor:pointer;font-size:10px" (click)="toggleMembre(m)"></i>
+                      </span>
+                    }
+                  </div>
+                }
+
+                <!-- Employee list -->
+                <div class="membres-list border rounded" style="max-height:220px;overflow-y:auto;padding:12px">
+                  @if (filteredEmployesForPicker.length === 0) {
+                    <div class="text-muted text-center small py-3">Aucun employé correspondant</div>
+                  }
+                  @for (emp of filteredEmployesForPicker; track emp.id) {
+                    <div class="form-check mb-2" [class.opacity-50]="isAssignedElsewhere(emp)">
                       <input class="form-check-input" type="checkbox"
                         [id]="'emp-' + emp.id"
                         [checked]="isMembre(emp)"
+                        [disabled]="isAssignedElsewhere(emp)"
                         (change)="toggleMembre(emp)">
-                      <label class="form-check-label d-flex align-items-center gap-2" [for]="'emp-' + emp.id">
+                      <label class="form-check-label d-flex align-items-center gap-2"
+                             [for]="'emp-' + emp.id"
+                             [style.cursor]="isAssignedElsewhere(emp) ? 'not-allowed' : 'pointer'">
                         <span class="avatar-badge">{{ emp.prenom?.charAt(0) }}{{ emp.nom?.charAt(0) }}</span>
-                        {{ emp.prenom }} {{ emp.nom }}
-                        <small class="text-muted">({{ emp.poste }})</small>
+                        <span>
+                          <strong>{{ emp.prenom }} {{ emp.nom }}</strong>
+                          <small class="text-muted d-block" style="font-size:11px">{{ emp.poste }} · {{ emp.departement }}</small>
+                          @if (isAssignedElsewhere(emp)) {
+                            <small class="text-warning d-block" style="font-size:10px">
+                              <i class="ti ti-lock"></i> Affecté à « {{ emp.projetNom }} »
+                            </small>
+                          }
+                        </span>
                       </label>
                     </div>
                   }
@@ -283,9 +339,9 @@
             </div>
             <div class="col-md-4">
               <div class="card bg-light text-center p-3">
-                <h3 class="text-primary mb-1">{{ selectedProjet.progression ?? 0 }}%</h3>
+                <h3 class="text-primary mb-1">{{ calcProgression(selectedProjet) }}%</h3>
                 <div class="progress" style="height: 10px;">
-                  <div class="progress-bar bg-primary" [style.width.%]="selectedProjet.progression ?? 0"></div>
+                  <div class="progress-bar bg-primary" [style.width.%]="calcProgression(selectedProjet)"></div>
                 </div>
                 <small class="text-muted mt-1">Avancement</small>
               </div>

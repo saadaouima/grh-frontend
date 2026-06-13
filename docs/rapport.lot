@@ -1,0 +1,118 @@
+\babel@toc {french}{}\relax 
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Fiche signalétique d'Arabsoft}}{4}{table.caption.11}%
+\contentsline {table}{\numberline {1.2}{\ignorespaces Analyse critique du système existant}}{5}{table.caption.13}%
+\contentsline {table}{\numberline {1.3}{\ignorespaces Benchmarking des SIRH commerciaux par rapport aux besoins d'Arabsoft}}{6}{table.caption.14}%
+\contentsline {table}{\numberline {1.4}{\ignorespaces Périmètre fonctionnel de Synapse par rôle}}{7}{table.caption.16}%
+\contentsline {table}{\numberline {1.5}{\ignorespaces Comparaison des méthodologies de développement~: Agile vs Classique}}{8}{table.caption.17}%
+\contentsline {table}{\numberline {1.6}{\ignorespaces Calendrier des sprints Synapse}}{9}{table.caption.18}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Besoins fonctionnels — Employé}}{11}{table.caption.19}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Besoins fonctionnels — Chef de projet (hérite des fonctionnalités Employé)}}{11}{table.caption.20}%
+\contentsline {table}{\numberline {2.3}{\ignorespaces Besoins fonctionnels — Administrateur RH}}{11}{table.caption.21}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces Besoins fonctionnels — Directeur Général, Comité et Candidat}}{11}{table.caption.22}%
+\contentsline {table}{\numberline {2.5}{\ignorespaces Product Backlog — Release 1~: Infrastructure et gestion des employés (Sprints 1--2)}}{12}{table.caption.23}%
+\contentsline {table}{\numberline {2.6}{\ignorespaces Product Backlog — Release 2~: Demandes RH, Kafka et communication (Sprints 3--5)}}{13}{table.caption.24}%
+\contentsline {table}{\numberline {2.7}{\ignorespaces Product Backlog — Release 3~: Projets, reporting et analytique (Sprints 6--7)}}{14}{table.caption.25}%
+\contentsline {table}{\numberline {2.8}{\ignorespaces Besoins non fonctionnels de Synapse}}{15}{table.caption.26}%
+\contentsline {table}{\numberline {2.9}{\ignorespaces Acteurs du système Synapse}}{16}{table.caption.27}%
+\contentsline {table}{\numberline {2.10}{\ignorespaces Affectation des migrations Flyway aux domaines fonctionnels}}{20}{table.caption.34}%
+\contentsline {table}{\numberline {2.11}{\ignorespaces Environnement matériel}}{21}{table.caption.36}%
+\contentsline {table}{\numberline {2.12}{\ignorespaces Environnements de développement intégrés}}{21}{table.caption.37}%
+\contentsline {table}{\numberline {2.13}{\ignorespaces Outils de test et validation d'API}}{22}{table.caption.38}%
+\contentsline {table}{\numberline {2.14}{\ignorespaces Conteneurisation et infrastructure}}{22}{table.caption.39}%
+\contentsline {table}{\numberline {2.15}{\ignorespaces Administration de base de données}}{22}{table.caption.40}%
+\contentsline {table}{\numberline {2.16}{\ignorespaces Conception et modélisation UML}}{23}{table.caption.41}%
+\contentsline {table}{\numberline {2.17}{\ignorespaces Gestion de version}}{23}{table.caption.42}%
+\contentsline {table}{\numberline {2.18}{\ignorespaces Mesure de couverture de tests}}{23}{table.caption.43}%
+\contentsline {table}{\numberline {2.19}{\ignorespaces Équipe Scrum et rôles}}{24}{table.caption.44}%
+\contentsline {table}{\numberline {2.20}{\ignorespaces Planification des sprints par release et période}}{24}{table.caption.45}%
+\contentsline {table}{\numberline {2.21}{\ignorespaces Comparaison des styles architecturaux}}{26}{table.caption.47}%
+\contentsline {table}{\numberline {2.22}{\ignorespaces Comparaison des frameworks SPA frontend}}{27}{table.caption.48}%
+\contentsline {table}{\numberline {2.23}{\ignorespaces Comparaison des frameworks backend Java}}{28}{table.caption.49}%
+\contentsline {table}{\numberline {2.24}{\ignorespaces Comparaison des SGBD relationnels}}{29}{table.caption.50}%
+\contentsline {table}{\numberline {2.25}{\ignorespaces Comparaison des solutions IAM}}{30}{table.caption.51}%
+\contentsline {table}{\numberline {2.26}{\ignorespaces Comparaison des brokers de messages publish/subscribe}}{31}{table.caption.52}%
+\contentsline {table}{\numberline {2.27}{\ignorespaces Comparaison des mécanismes de communication temps réel}}{33}{table.caption.53}%
+\contentsline {table}{\numberline {2.28}{\ignorespaces Comparaison des solutions d'inférence LLM}}{34}{table.caption.54}%
+\contentsline {table}{\numberline {2.29}{\ignorespaces Comparaison des bibliothèques de génération de rapports}}{35}{table.caption.55}%
+\contentsline {table}{\numberline {2.30}{\ignorespaces Comparaison des outils de migration de schéma}}{36}{table.caption.56}%
+\contentsline {table}{\numberline {2.31}{\ignorespaces Comparaison des solutions de cache applicatif}}{37}{table.caption.57}%
+\contentsline {table}{\numberline {2.32}{\ignorespaces Comparaison des outils de déploiement et d'orchestration}}{38}{table.caption.58}%
+\contentsline {table}{\numberline {2.33}{\ignorespaces Récapitulatif des technologies retenues pour Synapse}}{39}{table.caption.59}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Objectifs du sprint 1}}{41}{table.caption.60}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Description textuelle du cas d’utilisation S’authentifier}}{43}{table.caption.63}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Composants d'infrastructure partagée — Sprint 1}}{43}{table.caption.64}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Composants Angular — Sprint 1}}{44}{table.caption.66}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Sprint 1 review}}{46}{table.caption.69}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Objectifs du sprint 2}}{47}{table.caption.71}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Description textuelle du cas d’utilisation Créer un employé}}{48}{table.caption.74}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Principaux endpoints REST de l'\textit {employe-service}}}{49}{table.caption.76}%
+\contentsline {table}{\numberline {3.9}{\ignorespaces Composants Angular — Sprint 2}}{50}{table.caption.78}%
+\contentsline {table}{\numberline {3.10}{\ignorespaces Sprint 2 review}}{52}{table.caption.81}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Objectifs du sprint 3}}{54}{table.caption.83}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Description textuelle du cas d’utilisation Déposer une demande de congé}}{55}{table.caption.86}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Endpoints REST du \textit {demandes-service} — Sprint 3}}{58}{table.caption.89}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Composants Angular — Sprint 3}}{59}{table.caption.92}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Sprint 3 review}}{61}{table.caption.95}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Objectifs du sprint 4}}{62}{table.caption.100}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Description textuelle du cas d’utilisation Déposer une demande de prêt}}{63}{table.caption.102}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Endpoints REST du \textit {demandes-service} — Sprint 4}}{65}{table.caption.104}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Composants Angular — Sprint 4}}{66}{table.caption.106}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces Sprint 4 review}}{67}{table.caption.108}%
+\contentsline {table}{\numberline {4.11}{\ignorespaces Objectifs du sprint 5}}{68}{table.caption.110}%
+\contentsline {table}{\numberline {4.12}{\ignorespaces Comparaison des approches pour l'assistant conversationnel RH}}{69}{table.caption.111}%
+\contentsline {table}{\numberline {4.13}{\ignorespaces Description textuelle du cas d’utilisation Envoyer un message}}{71}{table.caption.114}%
+\contentsline {table}{\numberline {4.14}{\ignorespaces Endpoints REST et WebSocket du \textit {chat-service} — Sprint 5}}{71}{table.caption.115}%
+\contentsline {table}{\numberline {4.15}{\ignorespaces Domaines couverts par la base de connaissances RH de l’assistant IA}}{72}{table.caption.117}%
+\contentsline {table}{\numberline {4.16}{\ignorespaces Composants Angular — Sprint 5}}{74}{table.caption.121}%
+\contentsline {table}{\numberline {4.17}{\ignorespaces Sprint 5 review}}{74}{table.caption.122}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Objectifs du sprint 6}}{77}{table.caption.124}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Description textuelle du cas d’utilisation Créer un projet}}{79}{table.caption.128}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Description textuelle du cas d'utilisation Évaluer un employé}}{79}{table.caption.129}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Description textuelle du cas d'utilisation Déclencher un recrutement}}{80}{table.caption.131}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Endpoints REST du \textit {projets-service} — Sprint 6}}{81}{table.caption.132}%
+\contentsline {table}{\numberline {5.6}{\ignorespaces Composants Angular — Sprint 6}}{84}{table.caption.138}%
+\contentsline {table}{\numberline {5.7}{\ignorespaces Sprint 6 review}}{85}{table.caption.139}%
+\contentsline {table}{\numberline {5.8}{\ignorespaces Objectifs du sprint 7}}{86}{table.caption.141}%
+\contentsline {table}{\numberline {5.9}{\ignorespaces Comparaison des approches de modélisation de l'attrition}}{87}{table.caption.142}%
+\contentsline {table}{\numberline {5.10}{\ignorespaces Description textuelle du cas d’utilisation Générer un rapport}}{89}{table.caption.145}%
+\contentsline {table}{\numberline {5.11}{\ignorespaces Facteurs de calcul du score d’attrition}}{90}{table.caption.147}%
+\contentsline {table}{\numberline {5.12}{\ignorespaces Endpoints REST de l'\textit {analytics-service} — Sprint 7}}{92}{table.caption.149}%
+\contentsline {table}{\numberline {5.13}{\ignorespaces Composants Angular — Sprint 7}}{95}{table.caption.154}%
+\contentsline {table}{\numberline {5.14}{\ignorespaces Sprint 7 review}}{96}{table.caption.155}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Surfaces d'exposition et mécanismes de sécurité associés}}{98}{table.caption.157}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Claims JWT utilisés dans Synapse}}{99}{table.caption.158}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Configuration keycloak-angular dans Synapse}}{99}{table.caption.159}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Règles de contrôle d’accès du employe-service}}{100}{table.caption.162}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces Paramètres de sécurité HikariCP}}{102}{table.caption.163}%
+\contentsline {table}{\numberline {6.6}{\ignorespaces Couverture OWASP Top 10 dans Synapse}}{104}{table.caption.164}%
+\contentsline {table}{\numberline {6.7}{\ignorespaces Gestion des secrets par service}}{105}{table.caption.165}%
+\contentsline {table}{\numberline {6.8}{\ignorespaces Structure de la table {\ttfamilyFB \hyphenchar \font =45\relax AUDIT\_LOGS}}}{107}{table.caption.166}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.1}{\ignorespaces Outils de test utilisés dans Synapse}}{109}{table.caption.167}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Cas de test de {\ttfamilyFB \hyphenchar \font =45\relax DemandeServiceTest}}}{110}{table.caption.168}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces JWT de test par profil simulé}}{111}{table.caption.169}%
+\contentsline {table}{\numberline {7.4}{\ignorespaces Cas de test de {\ttfamilyFB \hyphenchar \font =45\relax AttritionScoringServiceTest}}}{112}{table.caption.170}%
+\contentsline {table}{\numberline {7.5}{\ignorespaces Cas de test de {\ttfamilyFB \hyphenchar \font =45\relax ProjetsServiceTest}}}{113}{table.caption.172}%
+\contentsline {table}{\numberline {7.6}{\ignorespaces Tests de sécurité automatisés — {\ttfamilyFB \hyphenchar \font =45\relax EmployeeSecurityTest}}}{114}{table.caption.173}%
+\contentsline {table}{\numberline {7.7}{\ignorespaces Tests de démarrage par microservice}}{115}{table.caption.174}%
+\contentsline {table}{\numberline {7.8}{\ignorespaces Scénarios de test API par microservice}}{116}{table.caption.175}%
+\contentsline {table}{\numberline {7.9}{\ignorespaces Étapes du scénario de validation bout-en-bout congé}}{117}{table.caption.176}%
+\contentsline {table}{\numberline {7.10}{\ignorespaces Étapes du scénario de validation d'un prêt avec comité}}{117}{table.caption.177}%
+\contentsline {table}{\numberline {7.11}{\ignorespaces Étapes du scénario de test attrition}}{118}{table.caption.178}%
+\contentsline {table}{\numberline {7.12}{\ignorespaces Étapes du scénario de test WebSocket}}{118}{table.caption.179}%
+\contentsline {table}{\numberline {7.13}{\ignorespaces Bilan des tests de Synapse}}{119}{table.caption.180}%
+\contentsline {table}{\numberline {7.14}{\ignorespaces Métriques JaCoCo sur les classes à logique métier}}{121}{table.caption.183}%
+\contentsline {table}{\numberline {7.15}{\ignorespaces Couverture de test par microservice}}{121}{table.caption.185}%
+\contentsline {table}{\numberline {7.16}{\ignorespaces Axes d'amélioration de la couverture de tests}}{122}{table.caption.186}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {V.1}{\ignorespaces Matrice RBAC de Synapse}}{130}{table.caption.200}%

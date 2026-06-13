@@ -1,0 +1,56 @@
+@startuml activity_validation_demande
+!theme plain
+skinparam activityBackgroundColor #EEF4FF
+skinparam activityBorderColor #3498DB
+skinparam arrowColor #555555
+skinparam activityFontSize 11
+skinparam activityDiamondBackgroundColor #FEF9E7
+skinparam activityDiamondBorderColor #E67E22
+
+title Diagramme d'activité — Workflow de validation d'une demande RH
+
+|Employé|
+start
+:Déposer une demande\n(congé / prêt / formation\n/ document / autorisation);
+:Saisir les informations\nrequises et soumettre;
+
+|Système|
+:Générer l'identifiant\net persister la demande\n(statut : EN_ATTENTE);
+:Publier un événement\nKafka → notification Chef;
+
+|Chef de projet|
+:Recevoir la notification\ntemps réel (WebSocket);
+:Consulter le dossier;
+if (Décision ?) then (Valider)
+  :Valider avec commentaire\n(statut : VALIDE_CHEF);
+else (Rejeter)
+  :Rejeter avec motif\n(statut : REFUSE_CHEF);
+  |Système|
+  :Notifier l'Employé\n(Kafka + WebSocket);
+  |Employé|
+  :Recevoir notification\nde refus;
+  stop
+endif
+
+|Système|
+:Publier un événement\nKafka → notification RH;
+
+|Administrateur RH|
+:Recevoir la notification;
+:Examiner la demande\net les pièces jointes;
+if (Décision finale ?) then (Valider)
+  :Valider définitivement\n(statut : APPROUVE);
+else (Rejeter)
+  :Rejeter avec motif\n(statut : REFUSE_RH);
+endif
+
+|Système|
+:Persister le nouveau statut;
+:Publier un événement\nKafka → notification Employé;
+:Décrémenter le solde\nsi demande de congé;
+
+|Employé|
+:Recevoir la décision\nfinale en temps réel;
+stop
+
+@enduml

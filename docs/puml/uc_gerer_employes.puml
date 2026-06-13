@@ -1,0 +1,46 @@
+﻿@startuml uc_gerer_employes
+title Diagramme de cas d'utilisation - Gestion des employes
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Admin RH" as admin
+actor "Employe"  as emp
+
+rectangle "Synapse - Module Gestion des employes" {
+
+  package "Gestion administrative" {
+    usecase "Creer un dossier employe"    as UC1
+    usecase "Synchroniser avec Keycloak"  as UC2
+    usecase "Envoyer e-mail de bienvenue" as UC3
+    usecase "Modifier un dossier employe" as UC4
+    usecase "Desactiver un compte"        as UC5
+    usecase "Consulter la liste"          as UC6
+    usecase "Exporter la liste (CSV)"     as UC7
+  }
+
+  package "Profil personnel" {
+    usecase "Consulter son profil" as UC8
+    usecase "Modifier son profil"  as UC9
+  }
+}
+
+admin --> UC1
+admin --> UC4
+admin --> UC5
+admin --> UC6
+admin --> UC7
+emp --> UC8
+emp --> UC9
+
+UC1 ..> UC2 : <<include>>
+UC3 ..> UC1 : <<extend>>\n[condition : creation reussie]
+UC7 ..> UC6 : <<extend>>\n[condition : export demande]
+UC5 ..> UC2 : <<include>>
+
+@enduml

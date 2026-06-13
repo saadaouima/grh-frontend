@@ -1,0 +1,48 @@
+﻿@startuml uc_rapport_admin
+title Diagramme de cas d'utilisation - Reporting et Analytique
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Admin RH"       as admin
+actor "Chef de projet" as chef
+
+rectangle "Synapse - Module Reporting et Analytique" {
+
+  package "Generation de rapports" {
+    usecase "Generer un rapport"                 as UC1
+    usecase "Selectionner le type et la periode" as UC2
+    usecase "Filtrer par departement"            as UC3
+    usecase "Extraire les donnees"               as UC4
+    usecase "Compiler le template (.jrxml)"      as UC5
+    usecase "Telecharger en PDF"                 as UC6
+    usecase "Telecharger en Excel"               as UC7
+  }
+
+  package "Tableau de bord analytique" {
+    usecase "Consulter les KPI RH"           as UC8
+    usecase "Consulter le score d'attrition" as UC9
+  }
+}
+
+admin --> UC1
+admin --> UC8
+admin --> UC9
+chef  --> UC1
+chef  --> UC8
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+UC1 ..> UC5 : <<include>>
+
+UC6 ..> UC1 : <<extend>>\n[condition : format = PDF]
+UC7 ..> UC1 : <<extend>>\n[condition : format = XLSX]
+UC9 ..> UC8 : <<extend>>\n[condition : module analytique actif]
+
+@enduml

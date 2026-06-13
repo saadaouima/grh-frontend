@@ -1,7 +1,8 @@
 import {
     SoldeConge,
     DemandeConge,
-    StatistiquesConges
+    StatistiquesConges,
+    TeamAbsence
 } from 'src/app/gerai/models/conge.model';
 
 /* ══════════════════════════════════════════════════════════════
@@ -107,6 +108,25 @@ export let demandes: DemandeConge[] = [
 ];
 
 export let nextDemandeId = 6;
+
+/* ──────────────────────────────────────────────────────────
+   👥 ABSENCES ÉQUIPE (collègues, visibles par tous)
+   ────────────────────────────────────────────────────────── */
+export const TEAM_ABSENCES: TeamAbsence[] = [
+    { employeId: 'emp-002', nom: 'Benali',   prenom: 'Yasmine', type: 'ANNUEL',  dateDebut: '2026-04-22', dateFin: '2026-04-24' },
+    { employeId: 'emp-003', nom: 'Dupont',   prenom: 'Karim',   type: 'ANNUEL',  dateDebut: '2026-04-28', dateFin: '2026-05-02' },
+    { employeId: 'emp-004', nom: 'Martin',   prenom: 'Sophie',  type: 'MALADIE', dateDebut: '2026-05-05', dateFin: '2026-05-07' },
+    { employeId: 'emp-005', nom: 'Petit',    prenom: 'Nicolas', type: 'RTT',     dateDebut: '2026-04-23', dateFin: '2026-04-23' },
+    { employeId: 'emp-006', nom: 'Chabi',    prenom: 'Amina',   type: 'ANNUEL',  dateDebut: '2026-05-11', dateFin: '2026-05-15' },
+    { employeId: 'emp-007', nom: 'Rousseau', prenom: 'Marc',    type: 'RTT',     dateDebut: '2026-05-02', dateFin: '2026-05-02' },
+];
+
+export function getEquipeAbsences(dateDebut?: string, dateFin?: string): TeamAbsence[] {
+    if (!dateDebut || !dateFin) return TEAM_ABSENCES;
+    const d1 = new Date(dateDebut);
+    const d2 = new Date(dateFin);
+    return TEAM_ABSENCES.filter(a => new Date(a.dateDebut) <= d2 && new Date(a.dateFin) >= d1);
+}
 
 /* ══════════════════════════════════════════════════════════════
    🔧 FONCTIONS UTILITAIRES

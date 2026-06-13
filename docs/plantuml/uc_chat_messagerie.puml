@@ -1,0 +1,79 @@
+@startuml uc_chat_messagerie
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FFF0FF
+  BorderColor #8E44AD
+}
+skinparam actor {
+  BackgroundColor #8E44AD
+  FontColor #FFFFFF
+  BorderColor #6C3483
+}
+left to right direction
+
+title Cas d'utilisation — Messagerie interne et assistant IA
+
+actor "Employé\n[employe]"          as Emp
+actor "Chef\n[chef]"                as Chef
+actor "Admin RH\n[admin / admin_rh]" as Admin
+
+note right of Admin
+  Route /chat :
+  roles ['employe', 'chef', 'admin']
+  → tous les acteurs ont accès
+  à l'intégralité du ChatComponent
+end note
+
+rectangle "Messagerie — chat-service :8086" {
+  usecase "Créer une conversation\n(individuelle ou groupe)" as UC_CREATE
+  usecase "Envoyer un message\n(texte ou fichier)" as UC_SEND
+  usecase "Recevoir messages\nen temps réel\n(WebSocket STOMP)" as UC_RECV
+  usecase "Voir l'indicateur\nde frappe (typing...)" as UC_TYPING
+  usecase "Marquer comme lu" as UC_READ
+  usecase "Consulter l'historique\ndes conversations" as UC_HISTORY
+  usecase "Uploader un fichier\n(pièce jointe 20 Mo max)" as UC_UPLOAD
+
+  usecase "Interroger l'assistant IA\n(Groq Llama 3.3 70B)\nPOST /api/chat/ai/message" as UC_AI
+}
+
+' ── Employé — accès complet ──────────────────────────────────
+Emp   --> UC_CREATE
+Emp   --> UC_SEND
+Emp   --> UC_RECV
+Emp   --> UC_TYPING
+Emp   --> UC_READ
+Emp   --> UC_HISTORY
+Emp   --> UC_UPLOAD
+Emp   --> UC_AI
+
+' ── Chef — accès complet ────────────────────────────────────
+Chef  --> UC_CREATE
+Chef  --> UC_SEND
+Chef  --> UC_RECV
+Chef  --> UC_TYPING
+Chef  --> UC_READ
+Chef  --> UC_HISTORY
+Chef  --> UC_UPLOAD
+Chef  --> UC_AI
+
+' ── Admin — accès complet (même composant) ──────────────────
+Admin --> UC_CREATE
+Admin --> UC_SEND
+Admin --> UC_RECV
+Admin --> UC_TYPING
+Admin --> UC_READ
+Admin --> UC_HISTORY
+Admin --> UC_UPLOAD
+Admin --> UC_AI
+
+note right of UC_AI
+  <b>Assistant IA :</b> questions RH courantes
+  (solde congés, procédures, règlement)
+  Propulsé par Groq API
+  Llama 3.3 70B versatile — latence < 1 s
+  <b>Endpoint dédié :</b> POST /api/chat/ai/message
+  (flux REST indépendant du WebSocket)
+end note
+
+@enduml

@@ -1,0 +1,86 @@
+@startuml uc_projets_taches_chef
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F0FFF0
+  BorderColor #27AE60
+}
+skinparam actor {
+  BackgroundColor #27AE60
+  FontColor #FFFFFF
+  BorderColor #1A6B20
+}
+
+title Cas d'utilisation — Gestion des projets et tâches
+
+left to right direction
+
+actor "Chef de projet\n[chef]"           as Chef
+actor "Employé\n[employe]"               as Emp
+actor "Admin RH\n[admin / admin_rh]"     as Admin
+
+note right of Admin
+  Route /admin/projets :
+  roles ['admin', 'admin_rh']
+  Accès en lecture + gestion globale
+end note
+
+rectangle "Projets & Tâches — projets-service :8087 / taches-service :8088" {
+
+  usecase "Créer un projet\n(POST /api/affectation/projets)" as UC_CREATE_PROJ
+  usecase "Affecter des membres\nau projet (membreIds[])" as UC_AFFECT
+  usecase "Consulter l'avancement\ndu projet (progress_pct)" as UC_PROGRESS
+  usecase "Modifier / suspendre\nun projet" as UC_CLOSE
+
+  usecase "Créer une tâche\n(POST /api/affectation/taches)" as UC_CREATE_TASK
+  usecase "Affecter une tâche\nà un employé (assignedTo)" as UC_ASSIGN_TASK
+  usecase "Mettre à jour le statut\nd'une tâche\n(A_FAIRE → EN_COURS → TERMINEE)" as UC_STATUS_TASK
+  usecase "Supprimer une tâche" as UC_DEL_TASK
+
+  usecase "Consulter ses tâches\nassignées" as UC_MY_TASKS
+  usecase "Mettre à jour le statut\nde sa propre tâche" as UC_MY_STATUS
+
+  usecase "Consulter tous\nles projets (vue admin)" as UC_ADMIN_VIEW
+}
+
+' ── Chef ──────────────────────────────────────────────────────
+Chef --> UC_CREATE_PROJ
+Chef --> UC_AFFECT
+Chef --> UC_PROGRESS
+Chef --> UC_CLOSE
+Chef --> UC_CREATE_TASK
+Chef --> UC_ASSIGN_TASK
+Chef --> UC_STATUS_TASK
+Chef --> UC_DEL_TASK
+
+' ── Employé ───────────────────────────────────────────────────
+Emp --> UC_MY_TASKS
+Emp --> UC_MY_STATUS
+Emp --> UC_PROGRESS
+
+' ── Admin RH ──────────────────────────────────────────────────
+Admin --> UC_ADMIN_VIEW
+Admin --> UC_PROGRESS
+Admin --> UC_CREATE_PROJ
+Admin --> UC_AFFECT
+Admin --> UC_CLOSE
+
+' ── Relations entre cas d'utilisation ────────────────────────
+UC_CREATE_PROJ ..> UC_AFFECT    : <<include>>\n(membreIds dans payload)
+UC_STATUS_TASK ..> UC_PROGRESS  : <<triggers>>\n(recalcul progress_pct)
+
+note right of UC_PROGRESS
+  <b>Calcul automatique :</b>
+  progress_pct = (tâches TERMINÉES /
+  total tâches) × 100
+  Mis à jour à chaque PUT /api/affectation/taches/{id}
+end note
+
+note right of UC_ASSIGN_TASK
+  <b>Notification Kafka :</b>
+  taches-service → notification-events
+  → "Nouvelle tâche assignée"
+  Statuts : A_FAIRE | EN_COURS | TERMINEE
+end note
+
+@enduml

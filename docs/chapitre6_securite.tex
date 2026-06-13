@@ -1,0 +1,549 @@
+﻿% !TEX root = ./rapport.tex
+% ══════════════════════════════════════════════════════════════════════
+%  CHAPITRE 6 — SÉCURITÉ DE LA PLATEFORME SYNAPSE
+% ══════════════════════════════════════════════════════════════════════
+
+\chapter{Sécurité de la Plateforme}
+
+\noindent\textbf{Plan}
+\begin{enumerate}
+  \item Introduction
+  \item Architecture de sécurité globale
+  \item Authentification OAuth2/OpenID Connect avec Keycloak
+  \item Contrôle d’accès basé sur les rôles (RBAC)
+  \item Sécurisation des microservices Spring Boot
+  \item Sécurisation du canal WebSocket STOMP
+  \item Prévention des vulnérabilités OWASP
+  \item Gestion des données sensibles
+  \item Traçabilité et journalisation des audits
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+Une plateforme de gestion des ressources humaines concentre par nature des données
+hautement sensibles~: identités, salaires, données médicales (congés longue maladie,
+comité médical), informations contractuelles et dossiers personnels. La sécurité de
+Synapse n’est pas une couche ajoutée \textit{a posteriori}~: elle constitue une
+contrainte transversale intégrée à chaque décision architecturale, depuis la
+conception du schéma Oracle jusqu'à la validation des tokens JWT dans les
+intercepteurs STOMP.
+
+Ce chapitre décrit l’ensemble des mécanismes de sécurité implémentés dans Synapse,
+de l’authentification centralisée Keycloak à la prévention des vulnérabilités OWASP,
+en passant par le contrôle d’accès à granularité fine et la sécurisation des
+communications temps réel.
+
+% ─────────────────────────────────────────────────────────────
+\section{Architecture de sécurité globale}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Périmètre et surface d’attaque}
+
+La plateforme Synapse expose les surfaces suivantes, chacune associée à des contrôles
+de sécurité spécifiques~:
+
+\begin{table}[H]
+\centering
+\caption{Surfaces d'exposition et mécanismes de sécurité associés}
+\label{tab:surfaces_securite}
+\begin{tabularx}{\textwidth}{VlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Surface} & \textbf{Description} & \textbf{Contrôle de sécurité} \\
+\hline
+API REST (HTTP) & Endpoints exposés par les 7 microservices & JWT Keycloak + \texttt{@PreAuthorize} \\
+\hline
+WebSocket (STOMP) & Canal temps réel du chat-service & Validation JWT dans le STOMP interceptor \\
+\hline
+Frontend SPA & Application Angular 21 & Guard de routage + PKCE OAuth2 \\
+\hline
+Base de données & Oracle 23ai (schéma GERAI) & Accès via HikariCP (compte dédié) \\
+\hline
+Keycloak Admin API & Provisioning des utilisateurs & Admin Client credentials (backend uniquement) \\
+\hline
+API Groq (externe) & Appels LLM (chatbot, scoring CV) & Clé API côté serveur uniquement \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Modèle Zero Trust appliqué}
+
+Synapse adopte un modèle \textit{Zero Trust}~: aucun microservice n’est considéré
+comme fiable par défaut, même s’il appartient au réseau interne Docker. Les appels
+inter-services REST réutilisent le JWT de l’utilisateur connecté, transmis en
+en-tête \texttt{Authorization~: Bearer} lors de chaque requête. L’isolation réseau
+est assurée par Docker Compose~: les conteneurs des microservices ne sont pas
+exposés directement sur l’interface publique~; seuls les ports applicatifs nécessaires
+sont mappés sur \texttt{localhost}.
+
+Les contrôles de sécurité s’articulent en trois périmètres concentriques~:
+(1)~le \textbf{périmètre réseau}, où Docker Compose isole les conteneurs sur un
+réseau interne privé~; (2)~le \textbf{périmètre applicatif}, où chaque requête
+HTTP et WebSocket est validée par un JWT Keycloak avant traitement~; (3)~le
+\textbf{périmètre données}, où Oracle applique les contraintes d’intégrité et
+HikariCP filtre les connexions via un compte dédié à droits limités.
+
+% ─────────────────────────────────────────────────────────────
+\section{Authentification OAuth2/OpenID Connect avec Keycloak}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Flux d’authentification PKCE}
+
+Synapse implémente le flux \textbf{Authorization Code avec PKCE}
+(\textit{Proof Key for Code Exchange}), recommandé par l'IETF (RFC 7636) pour les
+applications SPA car il ne stocke jamais de \textit{client secret} dans le code
+JavaScript. Le flux se déroule en dix étapes documentées dans le diagramme de
+séquence du chapitre 3 (figure~\ref{fig:seq_auth}).
+
+\textbf{Paramètres de sécurité du flow PKCE~:}
+\begin{itemize}[leftmargin=*,nosep]
+  \item \texttt{code\_challenge\_method}~: \texttt{S256} (SHA-256)
+  \item \texttt{access\_token\_lifespan}~: 5 minutes (par défaut Keycloak)
+  \item \texttt{refresh\_token\_lifespan}~: 30 minutes
+  \item \texttt{pkce\_enabled}~: \texttt{true} dans la configuration du client Keycloak
+\end{itemize}
+
+\subsection{Structure du JWT émis par Keycloak}
+
+Chaque \textit{access token} JWT émis par Keycloak contient les claims suivants,
+exploités par les microservices Spring Boot~:
+
+\begin{table}[H]
+\centering
+\caption{Claims JWT utilisés dans Synapse}
+\label{tab:jwt_claims}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Claim} & \textbf{Type} & \textbf{Utilisation dans Synapse} \\
+\hline
+\texttt{sub} & UUID & Identifiant Keycloak~; résolu en \texttt{employee\_id} Oracle via \texttt{findByKeycloakSub()} \\
+\hline
+\texttt{realm\_access.roles} & Tableau & Rôles organisationnels~; extraits par \texttt{KeycloakJwtRoleConverter} \\
+\hline
+\texttt{preferred\_username} & String & Nom d'utilisateur affiché dans l’interface \\
+\hline
+\texttt{email} & String & E-mail de l’utilisateur (synchronisé avec Oracle) \\
+\hline
+\texttt{exp} & Timestamp & Date d’expiration~; vérifiée automatiquement par Spring Security \\
+\hline
+\texttt{iss} & URI & Issuer URI Keycloak~; validé contre \texttt{issuer-uri} configuré \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Configuration keycloak-angular côté frontend}
+
+L’intégration Keycloak dans Angular est réalisée via \texttt{keycloak-angular 21}.
+\textit{Note~: les identifiants techniques (\texttt{realm~: gerai}, \texttt{clientId~: gerai-app},
+schéma Oracle \texttt{GERAI}) conservent le nom initial du projet~; la dénomination
+commerciale «~Synapse~» a été adoptée en cours de développement sans renommage des artefacts techniques.}
+La bibliothèque initialise le client OIDC avant le démarrage de l’application,
+injecte automatiquement le Bearer token dans chaque requête HTTP via
+\texttt{HttpClientModule}, et gère le renouvellement silencieux du token via
+\texttt{refresh\_token}.
+
+\begin{table}[H]
+\centering
+\caption{Configuration keycloak-angular dans Synapse}
+\label{tab:kc_angular_config}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Paramètre} & \textbf{Valeur} & \textbf{Rôle} \\
+\hline
+\texttt{realm} & \texttt{gerai} & Realm Keycloak dédié à Synapse \\
+\hline
+\texttt{clientId} & \texttt{gerai-app} & Client OIDC public (PKCE) \\
+\hline
+\texttt{onLoad} & \texttt{login-required} & Force l’authentification avant tout accès \\
+\hline
+\texttt{checkLoginIframe} & \texttt{false} & Désactivé~: la vérification de session par iframe est incompatible avec la politique \texttt{SameSite=Strict} des navigateurs modernes (Chrome, Firefox) \\
+\hline
+\texttt{pkceMethod} & \texttt{S256} & PKCE activé avec SHA-256 \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Contrôle d’accès basé sur les rôles (RBAC)}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Matrice des rôles et permissions}
+
+Synapse définit six rôles Keycloak correspondant aux niveaux hiérarchiques d’Arabsoft~:
+\texttt{EMPLOYE}, \texttt{CHEF}, \texttt{RH}, \texttt{ADMIN\_RH}, \texttt{DG} et
+\texttt{COMITE}. Chaque rôle délimite un périmètre fonctionnel précis~: l’employé
+dépose et suit ses propres demandes~; le chef valide celles de son équipe et pilote
+les projets~; le service RH instruit les dossiers~; l’administrateur RH dispose des
+droits les plus étendus (CRUD employés, rapports, attrition)~; le directeur général
+intervient uniquement sur les décisions de prêt~; le comité de crédit se limite au
+vote. Cette ségrégation garantit qu’aucun utilisateur n’accède à des données ou
+des actions hors de son périmètre organisationnel. La matrice complète des droits
+par fonctionnalité est présentée en Annexe~V (voir tableau~\ref{tab:rbac_matrix}).
+
+\subsection{Implémentation du RBAC côté backend}
+
+Le RBAC backend repose sur deux mécanismes complémentaires~:
+
+\paragraph{1. KeycloakJwtRoleConverter.} Ce composant Spring implémente
+\texttt{Converter<Jwt, Collection<GrantedAuthority>>} et extrait le tableau
+\texttt{realm\_access.roles} du token JWT pour le transformer en une collection
+de \texttt{GrantedAuthority} préfixés \texttt{ROLE\_}. Ce préfixe est requis par
+\texttt{@PreAuthorize("hasRole('X')")} dans Spring Security.
+
+\paragraph{2. SecurityConfig par service.} Chaque microservice définit son propre
+\texttt{SecurityFilterChain} avec des règles \texttt{requestMatchers} granulaires.
+Extrait de la configuration du \textit{employe-service}~:
+
+\begin{table}[H]
+\centering
+\caption{Règles de contrôle d’accès du employe-service}
+\label{tab:employe_acl}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Méthode HTTP} & \textbf{Endpoint} & \textbf{Rôles autorisés} \\
+\hline
+GET & \texttt{/employees/**} & \texttt{ADMIN\_RH, RH, CHEF, EMPLOYE} \\
+\hline
+POST & \texttt{/employees/**} & \texttt{ADMIN\_RH, RH} \\
+\hline
+PUT & \texttt{/employees/**} & \texttt{ADMIN\_RH, RH} \\
+\hline
+DELETE & \texttt{/employees/**} & \texttt{ADMIN\_RH} \\
+\hline
+ANY & \texttt{/admin/keycloak/**} & \texttt{ADMIN\_RH} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Implémentation du RBAC côté frontend}
+
+Côté Angular, le RBAC est implémenté à deux niveaux~:
+
+\begin{enumerate}[leftmargin=*,nosep]
+  \item \textbf{Guard de routage (\texttt{requireRoleGuard})}~: chaque route lazy-loaded
+        déclare dans son champ \texttt{data.roles} le tableau des rôles autorisés.
+        Le guard lit les rôles du token JWT Keycloak et redirige vers \texttt{/access-denied}
+        si le rôle de l’utilisateur n’est pas présent dans la liste.
+  \item \textbf{Guard de redirection (\texttt{roleRedirectGuard})}~: à l'arrivée
+        sur la racine \texttt{/}, ce guard lit le rôle principal du JWT et redirige
+        automatiquement selon la hiérarchie de rôles~: \texttt{comite} →
+        \texttt{/admin/comite-credit}~; \texttt{admin} / \texttt{admin\_rh} /
+        \texttt{directeur\_general} → \texttt{/admin/dashboard}~;
+        \texttt{chef} → \texttt{/chef/dashboard}~;
+        \texttt{employe} → \texttt{/employe/dashboard}.
+        Tout rôle non reconnu est redirigé vers \texttt{/access-denied}.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sécurisation des microservices Spring Boot}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Session stateless (JWT)}
+
+Tous les microservices sont configurés en mode \textbf{STATELESS}~:
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \texttt{SessionCreationPolicy.STATELESS}~: aucune session HTTP serveur
+        n’est créée ni utilisée.
+  \item Chaque requête est auto-suffisante~: le JWT porte toutes les informations
+        d’identité et de rôle nécessaires à l’autorisation.
+  \item Pas de cookie de session~: élimine les attaques CSRF basées sur les
+        sessions (voir section~\ref{sec:csrf}).
+\end{itemize}
+
+\subsection{Validation du JWT}
+
+La validation du JWT est déléguée à Spring Security OAuth2 Resource Server via
+la propriété \texttt{spring.security.oauth2.resourceserver.jwt.jwk-set-uri}.
+Spring Security télécharge et met en cache la clé publique Keycloak depuis
+l'endpoint JWKS (\textit{JSON Web Key Set}), puis vérifie~:
+
+\begin{enumerate}[leftmargin=*,nosep]
+  \item La signature RSA du token (via RS256).
+  \item La valeur du claim \texttt{iss} (issuer) contre \texttt{http://localhost:8080/realms/gerai}.
+  \item La date d’expiration (\texttt{exp}).
+  \item L'audience (\texttt{aud}) si configurée.
+\end{enumerate}
+
+\subsection{Configuration CORS}
+
+Chaque microservice Spring Boot définit une configuration CORS restrictive
+limitant les origines autorisées à l’application Angular~:
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Origines autorisées}~: \texttt{http://localhost:4200} (configurable via \texttt{CORS\_ALLOWED\_ORIGIN})
+  \item \textbf{Méthodes autorisées}~: \texttt{GET, POST, PUT, PATCH, DELETE, OPTIONS}
+  \item \textbf{En-têtes autorisés}~: \texttt{*} (Authorization, Content-Type inclus)
+  \item \textbf{Credentials}~: \texttt{allowCredentials=true} (requis pour les cookies de refresh)
+\end{itemize}
+
+\subsection{Désactivation de CSRF}\label{sec:csrf}
+
+La protection CSRF est explicitement désactivée dans tous les microservices
+(\texttt{csrf.disable()}). Cette décision est justifiée par le modèle
+d’authentification sans cookie~: les requêtes API portent le JWT dans l'en-tête
+\texttt{Authorization: Bearer}, et non dans un cookie de session. Un attaquant
+ne peut pas exploiter le CSRF sans accès au token Bearer, qui n’est jamais envoyé
+automatiquement par le navigateur.
+
+\subsection{HikariCP et isolation de la base de données}
+
+L'accès à Oracle 23ai est exclusivement réalisé via le pool de connexions HikariCP
+configuré avec un compte dédié \texttt{gerai} (isolation du schéma). Les paramètres
+de connexion sont externalisés via des variables d’environnement
+(\texttt{DB\_URL}, \texttt{DB\_USER}, \texttt{DB\_PASSWORD}), jamais codés en dur.
+
+\begin{table}[H]
+\centering
+\caption{Paramètres de sécurité HikariCP}
+\label{tab:hikari_security}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Paramètre} & \textbf{Valeur} & \textbf{Justification sécurité} \\
+\hline
+\texttt{initialization-fail-timeout} & \texttt{-1} & Démarrage sans DB disponible (résilience) \\
+\hline
+\texttt{connection-timeout} & \texttt{5 000 ms} & Évite les blocages sur DB lente \\
+\hline
+\texttt{maximum-pool-size} & \texttt{10} & Limite la charge sur Oracle \\
+\hline
+\texttt{ddl-auto} & \texttt{none} & Protège le schéma en production \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sécurisation du canal WebSocket STOMP}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Défi de sécurité WebSocket}
+
+Le protocole HTTP standard ne s'applique pas à une connexion WebSocket après son
+établissement~: une fois le handshake HTTP effectué, le canal devient TCP bidirectionnel.
+Les en-têtes HTTP (y compris \texttt{Authorization}) ne sont donc plus disponibles pour
+chaque message STOMP. Synapse résout ce problème via un intercepteur STOMP dédié.
+
+\subsection{WebSocketAuthChannelInterceptor}
+
+Le \texttt{WebSocketAuthChannelInterceptor} implémente
+\texttt{ChannelInterceptor} et intercepte chaque frame STOMP de type
+\texttt{CONNECT} pour en extraire et valider le JWT~:
+
+\begin{enumerate}[leftmargin=*,nosep]
+  \item Le client Angular envoie le JWT dans l'en-tête STOMP \texttt{Authorization}
+        lors de la frame \texttt{CONNECT}.
+  \item L'intercepteur extrait le token, supprime le préfixe \texttt{Bearer~} et
+        appelle le \texttt{JwtDecoder} Spring pour valider la signature et l'expiration.
+  \item Si valide, l’authentification Spring Security est propagée via
+        \texttt{SecurityContextHolder}~; sinon, la connexion STOMP est rejetée.
+\end{enumerate}
+
+\subsection{Isolation des conversations}
+
+Chaque conversation du chat est identifiée par un UUID stocké en base Oracle.
+Les topics STOMP suivent le schéma \texttt{/topic/conversation/\{id\}}~: un
+utilisateur qui tenterait de s'abonner à un topic dont il n’est pas participant
+ne recevrait aucun message (la logique d'envoi côté serveur filtre les destinataires
+par \texttt{participant\_id} avant toute publication).
+
+% ─────────────────────────────────────────────────────────────
+\section{Prévention des vulnérabilités OWASP}
+% ─────────────────────────────────────────────────────────────
+
+Le tableau~\ref{tab:owasp} ci-dessous détaille la couverture de Synapse vis-à-vis
+des dix principales vulnérabilités OWASP Top 10 (édition 2021).
+
+\begin{table}[H]
+\centering
+\caption{Couverture OWASP Top 10 dans Synapse}
+\label{tab:owasp}
+\begin{tabularx}{\textwidth}{VlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Vulnérabilité OWASP} & \textbf{Risque} & \textbf{Mesure implémentée dans Synapse} \\
+\hline
+A01 — Broken Access Control & Accès non autorisé aux données & RBAC via \texttt{@PreAuthorize} + JWT, guard Angular \\
+\hline
+A02 — Cryptographic Failures & Exposition de données sensibles & JWT signé RS256~; mots de passe jamais stockés (Keycloak) \\
+\hline
+A03 — Injection SQL & Destruction/vol de données & JPA/Hibernate (requêtes paramétrées)~; la requête native de l'analytics-service utilise des paramètres nommés \texttt{:param}, jamais de concaténation \\
+\hline
+A04 — Insecure Design & Architecture vulnérable & Session stateless~; PKCE~; Zero Trust inter-services \\
+\hline
+A05 — Security Misconfiguration & Exposition des configs & Variables d’environnement~; pas de credentials en dur \\
+\hline
+A06 — Vulnerable Components & Dépendances obsolètes & Spring Boot 3.5 (CVE patchés)~; Keycloak 26 \\
+\hline
+A07 — Auth Failures & Brute force, sessions volées & Keycloak gère les tentatives~; JWT court (5 min) + refresh \\
+\hline
+A08 — Data Integrity Failures & Tampering des données & JWT signé~; Oracle constraints CHECK \\
+\hline
+A09 — Security Logging & Absence de traçabilité & Table \texttt{AUDIT\_LOGS} Oracle~: chaque action (CREATE / UPDATE / DELETE / LOGIN / EXPORT) est journalisée avec l'identité Keycloak, l'adresse IP, le module et les valeurs avant/après \\
+\hline
+A10 — Server-Side Request Forgery & Proxy malveillant & Appels Groq côté serveur uniquement~; URLs fixes \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Protection contre l'injection SQL}
+
+Synapse utilise exclusivement Spring Data JPA avec des requêtes JPQL paramétrées
+et des méthodes de repository dérivées. Les requêtes natives présentes dans
+l'\textit{analytics-service} (pour la vue \texttt{V\_ATTRITION\_DATA}) sont
+construites avec des paramètres nommés \texttt{:param}, jamais par concaténation de
+chaînes. Les contraintes CHECK d'Oracle sur les valeurs de statut constituent une
+deuxième ligne de défense contre les insertions de valeurs invalides.
+
+\subsection{Protection contre le XSS}
+
+Angular 21 protège nativement contre les attaques XSS par un mécanisme de
+\textit{sanitization} automatique~: toutes les interpolations de templates
+(\texttt{{{ }}}), les bindings \texttt{[innerHTML]} et les attributs sont
+sanitisés avant rendu DOM via le \texttt{DomSanitizer}. Aucune donnée utilisateur
+n’est injectée dans le DOM via \texttt{innerHTML} non sanitisé.
+
+\subsection{Protection contre les attaques de type Broken Object Level Authorization}
+
+Pour chaque endpoint sensible, Synapse vérifie que l’utilisateur est bien le
+propriétaire de la ressource demandée~: le \texttt{sub} du JWT est résolu en
+\texttt{employee\_id} Oracle via la méthode \texttt{findByKeycloakSub()}, et cet
+identifiant est comparé à l'\texttt{employee\_id} de la ressource avant tout accès.
+Un employé ne peut pas consulter les demandes d’un autre employé, même en devinant
+l'identifiant.
+
+% ─────────────────────────────────────────────────────────────
+\section{Gestion des données sensibles}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Externalisation des secrets}
+
+Tous les secrets (mots de passe, clés API, credentials SMTP) sont externalisés
+via des variables d’environnement et des valeurs par défaut de développement.
+Aucun secret n’est présent dans le code source versionné~:
+
+\begin{table}[H]
+\centering
+\caption{Gestion des secrets par service}
+\label{tab:secrets}
+\begin{tabularx}{\textwidth}{VlVLVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Secret} & \textbf{Variable d’environnement} & \textbf{Service(s) concerné(s)} \\
+\hline
+Mot de passe Oracle & \texttt{DB\_PASSWORD} & Tous les services \\
+\hline
+Mot de passe admin Keycloak & \texttt{KEYCLOAK\_ADMIN\_PASSWORD} & employe-service \\
+\hline
+Clé API Groq & \texttt{GROQ\_API\_KEY} & chat-service, projets-service \\
+\hline
+Credentials SMTP & \texttt{SMTP\_USER}, \texttt{SMTP\_PASS} & notification-service \\
+\hline
+Password Oracle master & \texttt{ORACLE\_PASSWORD} & Docker Compose \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Données personnelles et RGPD}
+
+Synapse stocke des données personnelles (nom, prénom, date de naissance, numéro CIN,
+adresse, données médicales pour les congés longue maladie). Les mesures suivantes
+réduisent le risque d'exposition~:
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Accès segmenté par rôle}~: les données médicales (champs
+        \texttt{MED\_APPROVED}, \texttt{MED\_COMMENT}) ne sont accessibles qu'aux
+        gestionnaires et administrateurs RH (\texttt{RH}, \texttt{ADMIN\_RH}).
+  \item \textbf{Pas de journalisation des données sensibles}~: les logs Spring Boot
+        sont configurés sans affichage des valeurs de paramètres JPA (\texttt{show-sql=false}
+        en production).
+  \item \textbf{Chiffrement en transit}~: les API REST et les connexions WebSocket
+        sont destinées à être servies via HTTPS en environnement de production.
+  \item \textbf{Durée de conservation}~: les données de notifications et d'historique
+        sont conservées sans purge automatique dans la version actuelle~; l'ajout
+        d'un job Oracle de purge périodique (ex.~: notifications de plus de 6 mois)
+        constitue une évolution prévue.
+  \item \textbf{Droit à l'effacement~:} la désactivation d'un employé (\texttt{statut = INACTIF})
+        révoque son accès Keycloak et masque ses données dans les interfaces~; la
+        suppression physique des données personnelles (droit RGPD à l'effacement)
+        n'est pas automatisée dans la version actuelle et constitue un axe d'amélioration.
+\end{itemize}
+
+\subsection{Gestion sécurisée des fichiers uploadés}
+
+Les pièces jointes (justificatifs de congés, CV candidats, documents administratifs)
+sont stockées sur le système de fichiers local (configurable via \texttt{FILE\_UPLOAD\_DIR})
+et non dans Oracle. En environnement de production, \texttt{FILE\_UPLOAD\_DIR} doit
+pointer vers un volume persistant (montage Docker ou stockage réseau) pour garantir
+la survie des fichiers en cas de redémarrage du conteneur. Le \texttt{FileStorageService} valide~:
+\begin{itemize}[leftmargin=*,nosep]
+  \item La taille du fichier (limite~: 20 Mo par requête).
+  \item Le type MIME via l'extension (les extensions non whitelistées sont rejetées).
+  \item Lábsence de \textit{path traversal} dans le nom du fichier (nettoyage du
+        nom original via \texttt{StringUtils.cleanPath()}).
+\end{itemize}
+
+\subsection{Traçabilité et journalisation des audits}
+
+Synapse maintient une table \texttt{AUDIT\_LOGS} dans Oracle~23ai qui constitue
+le registre central de toutes les actions effectuées sur la plateforme.
+Chaque enregistrement capture l'identité Keycloak de l'auteur (\texttt{user\_id}),
+l'action réalisée (\texttt{CREATE}, \texttt{UPDATE}, \texttt{DELETE}, \texttt{READ},
+\texttt{LOGIN}, \texttt{LOGOUT}, \texttt{EXPORT}), le type et l'identifiant de
+l'entité concernée, ainsi que l'état complet avant et après la modification
+(\texttt{old\_values} et \texttt{new\_values} en JSON CLOB), l'adresse IP et le
+\textit{user-agent} du client.
+
+\begin{table}[H]
+\centering
+\caption{Structure de la table \texttt{AUDIT\_LOGS}}
+\label{tab:audit_logs}
+\begin{tabularx}{\textwidth}{VlVlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Colonne} & \textbf{Type} & \textbf{Utilité} \\
+\hline
+\texttt{user\_id} & UUID & Identifiant Keycloak de l'auteur de l'action \\
+\hline
+\texttt{action} & VARCHAR & Type d'opération~: \texttt{CREATE / UPDATE / DELETE / READ / LOGIN / EXPORT} \\
+\hline
+\texttt{entity\_type} & VARCHAR & Entité touchée~: \texttt{EMPLOYEE}, \texttt{DEMANDE}, \texttt{CONTRAT}, \texttt{PROJET}… \\
+\hline
+\texttt{old\_values} & JSON CLOB & État complet de l'entité avant modification \\
+\hline
+\texttt{new\_values} & JSON CLOB & État complet de l'entité après modification \\
+\hline
+\texttt{ip\_address} & VARCHAR & Adresse IP du client ayant émis la requête \\
+\hline
+\texttt{module} & VARCHAR & Microservice à l'origine de l'entrée \\
+\hline
+\texttt{created\_at} & TIMESTAMP & Date et heure précise de l'action \\
+\hline
+\end{tabularx}
+\end{table}
+
+Cette traçabilité répond à trois exigences complémentaires~: la conformité RGPD
+(identifier qui a accédé ou exporté des données personnelles), la sécurité
+forensique (reconstituer le fil des événements après un incident), et
+l'auditabilité métier (prouver qu'une décision RH a bien été prise par la
+bonne personne au bon moment). Les colonnes JSON \texttt{old\_values} et
+\texttt{new\_values} permettent de rejouer ou d'inverser n'importe quelle
+modification de manière programmatique.
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+Ce chapitre a présenté l’architecture de sécurité multicouche de Synapse~:
+authentification déléguée à Keycloak, contrôle d’accès déclaratif à six rôles
+cohérent entre frontend et backend, sessions stateless JWT, canal WebSocket
+sécurisé et journalisation forensique via \texttt{AUDIT\_LOGS}. L’ensemble
+garantit la traçabilité des actions et la conformité RGPD de la plateforme.
+Le chapitre suivant présente la stratégie de tests et la validation des
+fonctionnalités livrées par les sept sprints.

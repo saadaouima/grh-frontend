@@ -1,0 +1,285 @@
+﻿% !TEX root = ./rapport.tex
+\chapter{Cadre général du projet}
+
+\noindent\textbf{Plan}
+\begin{enumerate}
+  \item Introduction
+  \item Présentation de l'organisme d'accueil
+  \item Étude de l'existant
+  \item Problématique
+  \item Solution proposée~: la plateforme Synapse
+  \item Méthodologie de développement~: Scrum
+  \item Conclusion
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+Ce premier chapitre pose le cadre général du projet. L'organisme d'accueil Arabsoft
+est présenté, le système existant et ses limites sont analysés, la problématique
+est formulée, puis la solution proposée et la méthodologie Scrum retenue pour
+conduire le développement sont décrites.
+
+% ─────────────────────────────────────────────────────────────
+\section{Présentation de l'organisme d'accueil}
+
+Fondée en \textbf{1985} par \textbf{Mohamed TRIKI}, \textbf{Arabsoft} est une société tunisienne spécialisée dans l'étude, le développement et la distribution de solutions de gestion, notamment pour le secteur public. Forte de plus de trente ans d'expérience dans l'édition de solutions standards et spécifiques, elle intervient dans des secteurs vitaux tels que l'énergie, l'eau, la fiscalité, les finances, l'industrie chimique et l'hôtellerie. Certifiée \textbf{ISO~9001 version 2008}, Arabsoft accompagne ses clients dans toutes les étapes de leurs projets selon une méthodologie éprouvée, formalisée par des Plans Qualité Projet (PQP) adaptés aux exigences de chaque contexte.
+
+La table~\ref{tab:fiche_arabsoft} ci-dessous présente la fiche signalétique de
+la société.
+
+\begin{table}[H]
+\centering
+\caption{Fiche signalétique d'Arabsoft}
+\label{tab:fiche_arabsoft}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Champ} & \textbf{Information} \\
+\hline
+Raison sociale       & Arabsoft \\
+\hline
+Fondateur            & Mohamed TRIKI \\
+\hline
+Date de création     & 1985 \\
+\hline
+Siège social         & Tunis, Tunisie \\
+\hline
+Secteur d'activité   & Développement de logiciels — solutions de gestion (secteur public et privé) \\
+\hline
+Effectif             & 51--200 employés (175 membres associés) \\
+\hline
+Certification        & ISO 9001 version 2008 \\
+\hline
+Téléphone            & +216 71 951 248 \\
+\hline
+Site web             & \url{www.arabsoft.com.tn} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.20\textwidth]{images/arabsoft_logo.png}
+  \caption{Logo de la société Arabsoft~--- Source~: \url{www.arabsoft.com.tn}}
+  \label{fig:logo_arabsoft}
+\end{figure}
+
+\section{Étude de l'existant}
+
+\subsection{Description du système actuel}
+
+Avant Synapse, la gestion RH d'Arabsoft reposait sur des outils bureautiques non intégrés~: tableurs Excel pour les congés, e-mails pour les autorisations et dossiers papier pour les contrats. Cette fragmentation entraînait une absence de traçabilité des décisions, des délais non maîtrisés et l'impossibilité de produire des indicateurs RH fiables. Disposant d'une équipe technique interne et d'une infrastructure existante, Arabsoft a opté pour un développement sur mesure, économiquement plus adapté que les licences récurrentes des progiciels commerciaux.
+
+\subsection{Critique de l'existant}
+
+\begin{table}[H]
+\centering
+\caption{Analyse critique du système existant}
+\label{tab:critique_existant}
+\begin{tabularx}{\textwidth}{VlVlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Domaine} & \textbf{Catégorie} & \textbf{Problème identifié} & \textbf{Impact} \\
+\hline
+Demandes de congés & Opérationnel & Traitement par e-mail, aucune traçabilité & Délais non respectés, litiges \\
+\hline
+Formations & Économique & Inscription manuelle, pas de suivi budgétaire & Dépenses non contrôlées \\
+\hline
+Prêts au personnel & Opérationnel & Circuit de validation informel & Décisions non documentées \\
+\hline
+Projets et tâches & Technique & Aucun outil dédié & Avancement non mesurable \\
+\hline
+Reporting RH & Technique & Export manuel, ponctuel & Indicateurs obsolètes \\
+\hline
+\end{tabularx}
+\end{table}
+
+Le tableau~\ref{tab:critique_existant} illustre les principales défaillances du
+système actuel. L'absence de circuit de validation formalisé expose Arabsoft à des
+pertes d'information et à des litiges~: une demande traitée par e-mail peut être
+ignorée ou validée sans horodatage opposable. L'inexistence d'un outil de pilotage
+prive la direction d'indicateurs fiables. L'absence de suivi budgétaire des formations
+crée un risque de dépassement non détecté. Ces dysfonctionnements partagent une
+cause commune~: l'absence d'un système d'information RH centralisé.
+
+\subsection{Étude comparative des solutions du marché}
+
+Face aux limites identifiées, trois SIRH commerciaux ont été évalués~: SAP
+SuccessFactors, Oracle HCM Cloud et Sage RH. Le tableau~\ref{tab:benchmark_sirh}
+ci-dessous les compare selon les critères directement liés aux besoins d'Arabsoft.
+
+\begin{table}[H]
+\centering
+\caption{Benchmarking des SIRH commerciaux par rapport aux besoins d'Arabsoft}
+\label{tab:benchmark_sirh}
+\begin{tabularx}{\textwidth}{VLVCVCVCVCV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{SAP SF} & \textbf{Oracle HCM} & \textbf{Sage RH} & \textbf{Synapse} \\
+\hline
+Workflows RH configurables & Oui & Oui & Partiel & \textbf{Oui} \\
+\hline
+Prédiction d'attrition & Payant & Payant & Non & \textbf{Intégré} \\
+\hline
+Gestion de projets intégrée & Non & Non & Non & \textbf{Oui} \\
+\hline
+Déploiement on-premise & Non & Non & Partiel & \textbf{Oui} \\
+\hline
+Adaptation aux règles tunisiennes & Limitée & Limitée & Limitée & \textbf{Native} \\
+\hline
+Coût pour 85 utilisateurs & Élevé & Très élevé & Moyen & \textbf{Faible} \\
+\hline
+\end{tabularx}
+\end{table}
+
+Cette analyse comparative confirme que les SIRH commerciaux, bien que fonctionnellement
+complets, présentent trois obstacles cumulatifs dans le contexte d'Arabsoft~:
+leur rigidité empêche l'adaptation aux spécificités du droit du travail tunisien
+et aux circuits de validation internes~; leur architecture cloud est incompatible
+avec les exigences de confidentialité des données RH~; enfin, aucun d'entre eux
+n'intègre nativement la gestion de projets et des équipes dans une même plateforme.
+Ces constats orientent le choix vers un développement sur mesure.
+
+\section{Problématique}
+
+Cette double contrainte (défaillance de l'existant et inadéquation des
+solutions commerciales) conduit à la problématique centrale du projet~:
+
+\begin{mdframed}[backgroundcolor=blue!5, linecolor=headerblue, linewidth=1.5pt,
+                 frametitle={\textbf{Problématique}},
+                 frametitlebackgroundcolor=headerblue!80,
+                 frametitlefont=\color{white}\bfseries]
+Comment concevoir et développer, pour Arabsoft, une plateforme GRH centralisée
+sur mesure qui automatise les workflows de demandes RH, pilote la gestion
+collaborative des projets et des équipes, et fournit des indicateurs analytiques
+et prédictifs fiables, tout en répondant aux exigences de sécurité et de
+contrôle d'accès d'un environnement multi-rôles~?
+\end{mdframed}
+
+\section{Solution proposée~: la plateforme Synapse}
+
+\subsection{Vision générale}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.30\textwidth]{images/logo_synapse.png}
+  \caption{Logo de la plateforme Synapse}
+  \label{fig:logo_synapse}
+\end{figure}
+
+\textbf{Synapse} est une solution de gestion des ressources humaines développée sur mesure pour Arabsoft, reposant sur une architecture microservices à sept services Spring Boot interconnectés, sécurisés par Keycloak et exposés à un frontend Angular~21. La plateforme adresse huit domaines fonctionnels~: gestion des employés, traitement des demandes RH (congés, prêts, formations, autorisations), messagerie interne temps réel, recrutement assisté par intelligence artificielle, évaluation des performances, pilotage de projets et de tâches, reporting et analytique décisionnelle avec prédiction de l'attrition.
+
+
+\subsection{Périmètre fonctionnel}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre fonctionnel de Synapse par rôle}
+\label{tab:perimetre_fonctionnel}
+\begin{tabularx}{\textwidth}{VlVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Rôle} & \textbf{Fonctionnalités accessibles} \\
+\hline
+ADMIN\_RH / RH & Gestion des employés, validation des demandes, reporting, analytics, attrition \\
+\hline
+CHEF & Tableau de bord équipe, validation des demandes, projets, tâches, évaluations, recrutement \\
+\hline
+EMPLOYE & Dépôt de demandes, suivi des tâches, messagerie, profil \\
+\hline
+DIRECTEUR\_GENERAL & Approbation des prêts et crédits (circuit DG) \\
+\hline
+COMITE & Vote sur les demandes de crédit \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Méthodologie de gestion de projet}
+
+\subsection{L'approche Agile}
+
+Le périmètre fonctionnel de Synapse a évolué tout au long du projet~: de nouvelles
+exigences ont émergé à chaque validation avec les parties prenantes d'Arabsoft. Une
+approche séquentielle (Cycle en V) aurait rendu coûteuse toute modification de
+périmètre après la phase d'analyse. L'approche \textbf{Agile}, fondée sur des
+livraisons incrémentales et des ajustements continus, s'est imposée comme le choix
+naturel. Le tableau~\ref{tab:agile_vs_classique} ci-dessous détaille cette comparaison.
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des méthodologies de développement~: Agile vs Classique}
+\label{tab:agile_vs_classique}
+\begin{tabularx}{\textwidth}{VlVLVLV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Critère} & \textbf{Agile} & \textbf{Classique (Cycle en V)} \\
+\hline
+Processus & Itératif et incrémental & Linéaire et séquentiel \\
+\hline
+Flexibilité & Changements acceptés à chaque itération & Changements coûteux après la phase d'analyse \\
+\hline
+Livraisons & Régulières et incrémentales & Unique, en fin de projet \\
+\hline
+Implication client & Continue, à chaque livraison & Concentrée en début et en fin de projet \\
+\hline
+Gestion des risques & Détectés et corrigés tôt & Détectés tardivement lors des tests \\
+\hline
+Adaptabilité & Forte~; périmètre ajustable à chaque revue & Faible~; périmètre figé dès la conception \\
+\hline
+Convient à & Projets évolutifs, exigences incertaines & Projets stables, exigences figées \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Le cadre Scrum}
+
+Parmi les cadres Agile existants, \textbf{Scrum}\textsuperscript{[1,2]} a été retenu pour le développement
+de Synapse. Scrum structure le projet en \textit{sprints}, des itérations de durée
+fixe rythmées par quatre cérémonies~: le \textit{sprint planning} (planification),
+le \textit{daily standup} (synchronisation quotidienne), la \textit{sprint review}
+(démonstration au client) et la \textit{rétrospective} (amélioration continue).
+Le \textit{product backlog} centralise l'ensemble des user stories, ordonnées par
+priorité métier et découpées en sprints successifs.
+
+Le développement de Synapse a été organisé en sept sprints de deux semaines sur
+quatre mois. Les cérémonies Scrum ont été adaptées au contexte d'une équipe de deux
+développeuses~: le \textit{daily standup} a pris la forme d'un point quotidien de
+synchronisation, et les \textit{sprint reviews} ont servi de jalons de validation
+fonctionnelle avec les parties prenantes.
+
+Le tableau~\ref{tab:sprint_calendar} ci-dessous présente le calendrier des sprints
+de Synapse.
+
+\begin{table}[H]
+\centering
+\caption{Calendrier des sprints Synapse}
+\label{tab:sprint_calendar}
+\begin{tabularx}{\textwidth}{VCVLVlVlV}
+\rowcolor{headerblue!55}
+\hline
+\textbf{Sprint} & \textbf{Objectif principal} & \textbf{Période} & \textbf{Durée} \\
+\hline
+Sprint 1 & Infrastructure, Keycloak, Oracle, Angular & 02--15 fév. 2026 & 2 semaines \\
+\hline
+Sprint 2 & Employe-service, matricules, sync Oracle-Keycloak & 16 fév.--01 mars 2026 & 2 semaines \\
+\hline
+Sprint 3 & Demandes RH (congés, formations, documents) & 02--15 mars 2026 & 2 semaines \\
+\hline
+Sprint 4 & Prêts/crédits, circuit DG/comité, Kafka notifications & 16--29 mars 2026 & 2 semaines \\
+\hline
+Sprint 5 & Chat WebSocket, assistant IA Groq & 30 mars--12 avr. 2026 & 2 semaines \\
+\hline
+Sprint 6 & Projets, tâches, évaluation des performances, recrutement IA & 13--26 avr. 2026 & 2 semaines \\
+\hline
+Sprint 7 & JasperReports, analytics, prédiction attrition & 27 avr.--10 mai 2026 & 2 semaines \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+Ce chapitre a posé le contexte de Synapse~: analyse de l'existant, problématique et solution retenue. Le projet livre sept microservices Spring Boot, un frontend Angular~21, des migrations Flyway V1--V11 et un environnement Docker Compose reproductible, développés en sept sprints Scrum sur quatre mois. Le chapitre suivant détaille l'analyse des besoins et les choix technologiques.

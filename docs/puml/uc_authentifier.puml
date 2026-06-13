@@ -1,0 +1,33 @@
+﻿@startuml uc_authentifier
+title Diagramme de cas d'utilisation - Authentification (OAuth2/OIDC avec PKCE)
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam nodesep 60
+skinparam ranksep 50
+
+top to bottom direction
+
+actor "Utilisateur" as user
+
+rectangle "Synapse - Module Authentification" {
+
+  usecase "S'authentifier"               as UC1
+  usecase "Saisir ses identifiants"      as UC2
+  usecase "Echanger le code PKCE"        as UC3
+  usecase "Lire les roles du jeton JWT"  as UC4
+  usecase "Rafraichir le jeton"          as UC5
+  usecase "Afficher un message d'erreur" as UC6
+}
+
+user --> UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>\n[condition : jeton expire]
+UC6 ..> UC1 : <<extend>>\n[condition : identifiants invalides]
+
+@enduml

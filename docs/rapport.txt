@@ -1,0 +1,351 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ══════════════════════════════════════════════════════════
+% COMPILATION SÉLECTIVE (décommenter pendant la rédaction)
+% ══════════════════════════════════════════════════════════
+% \includeonly{chapitre1}
+% \includeonly{chapitre2}
+% \includeonly{chapitre3}
+% \includeonly{chapitre4}
+% \includeonly{chapitre5}
+
+% ══════════════════════════════════════════════════════════
+% 1. ENCODAGE & LANGUE
+% ══════════════════════════════════════════════════════════
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+
+% ══════════════════════════════════════════════════════════
+% 2. MISE EN PAGE & POLICES
+% ══════════════════════════════════════════════════════════
+\usepackage{lmodern}
+\usepackage[a4paper,
+            top=2.5cm,
+            bottom=2.5cm,
+            left=3cm,
+            right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{pdfpages}
+
+% ══════════════════════════════════════════════════════════
+% 3. MATHS & SYMBOLES
+% ══════════════════════════════════════════════════════════
+\usepackage{amsmath,amssymb}
+\usepackage{pifont}
+
+% ══════════════════════════════════════════════════════════
+% 4. COULEURS & TABLEAUX
+% ══════════════════════════════════════════════════════════
+\usepackage[table]{xcolor}
+\definecolor{headerblue}{RGB}{52,152,219}
+\definecolor{rowgray}{gray}{0.95}
+
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{longtable}
+% ─── PACKAGES REQUIS POUR VOS TABLEAUX ─────────────────────────────────
+\usepackage{xltabular}      % Permet de créer des tableaux longs avec colonnes X
+\usepackage{array}          % Nécessaire pour le formatage des colonnes (>{\raggedright...})
+\usepackage[table]{xcolor}  % INDISPENSABLE pour \rowcolor (les lignes grises/bleues)
+\usepackage{enumitem}       % CRUCIAL pour les options [leftmargin=*, nosep] de vos listes
+% Colonnes personnalisées
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+% ══════════════════════════════════════════════════════════
+% 5. BOÎTES — tcolorbox (skins uniquement, léger)
+% ══════════════════════════════════════════════════════════
+\usepackage[skins]{tcolorbox}
+
+% OPTIMISATION : wasysym remplace fontawesome5 (compilation ~3x plus rapide)
+\usepackage{wasysym}
+% Alias \faCheckCircle pour compatibilité avec les chapitres
+\newcommand{\faCheckCircle}{\checkmark}
+
+% ══════════════════════════════════════════════════════════
+% 6. IMAGES & TIKZ
+% ══════════════════════════════════════════════════════════
+\usepackage{graphicx}
+\graphicspath{{images/}}
+
+% OPTIMISATION : décommenter la ligne suivante pendant la rédaction
+% pour remplacer les images par des boîtes vides → gain de temps majeur
+% \setkeys{Gin}{draft}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta}
+
+% ══════════════════════════════════════════════════════════
+% 7. LISTES, FLOTTANTS & URLS
+% ══════════════════════════════════════════════════════════
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{xurl}
+
+% ══════════════════════════════════════════════════════════
+% 8. EN-TÊTES & PIEDS DE PAGE
+% ══════════════════════════════════════════════════════════
+\usepackage{fancyhdr}
+\setlength{\headheight}{16pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Style plain pour les premières pages de chapitre
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[R]{\thepage}
+    \renewcommand{\headrulewidth}{0.4pt}
+}
+
+% ══════════════════════════════════════════════════════════
+% 9. TITRES DES CHAPITRES
+% ══════════════════════════════════════════════════════════
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+    {\normalfont\Large\bfseries\centering}
+    {Chapitre \thechapter}
+    {10pt}
+    {\Huge}
+\titlespacing*{\chapter}{0pt}{30pt}{20pt}
+
+% ══════════════════════════════════════════════════════════
+% 10. TABLE DES MATIÈRES
+% OPTIMISATION : minitoc supprimé → gain 30-40% compilation
+% ══════════════════════════════════════════════════════════
+\usepackage{tocloft}
+\setlength{\cftbeforechapskip}{6pt}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+
+% ══════════════════════════════════════════════════════════
+% 11. HYPERREF & HYPCAP — toujours en dernier
+% ══════════════════════════════════════════════════════════
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks      = true,
+    linkcolor       = black,
+    urlcolor        = blue,
+    citecolor       = blue,
+    bookmarksnumbered = true,
+    pdfstartview    = {FitH},
+    pageanchor      = true,
+    pdftitle        = {Plateforme Synapse — Rapport de Projet},
+    pdfauthor       = {},
+    pdflang         = {fr}
+}
+\usepackage[all]{hypcap}
+
+% ══════════════════════════════════════════════════════════
+% DÉBUT DU DOCUMENT
+% ══════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Page de garde ────────────────────────────────────────
+\pagenumbering{gobble}
+% \includepdf[pages=1]{page_garde.pdf}   % décommenter quand page_garde.pdf est uploadé
+% \clearpage
+
+% ── Numérotation arabe dès la TDM ───────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ── Table des matières ──────────────────────────────────
+% Compiler DEUX FOIS pour que les numéros de page soient corrects.
+\tableofcontents
+\cleardoublepage
+
+% ── Introduction générale ───────────────────────────────
+\phantomsection
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+\markboth{Introduction Générale}{Introduction Générale}
+
+La gestion des ressources humaines dans une organisation de taille moyenne génère,
+par sa nature même, un flux continu de données hétérogènes~: demandes de congés,
+inscriptions à des formations, prêts au personnel, documents administratifs,
+affectations à des projets, cycles d'évaluation. Traiter ce flux par des outils
+génériques~--- tableurs, échanges de courriels, circuits de validation informels~---
+n'est viable que pour les plus petites structures. Au-delà d'un certain seuil
+d'effectifs, cette approche engendre des incohérences de données, des délais de
+traitement non maîtrisés et une incapacité pratique à produire des indicateurs
+fiables pour piloter les décisions RH.
+
+Les systèmes d'information RH commerciaux~--- SAP SuccessFactors, Oracle HCM Cloud,
+Sage RH~--- apportent une réponse fonctionnelle reconnue, mais se heurtent dans les
+contextes organisationnels spécifiques à trois contraintes cumulatives~: un coût
+de licence récurrent disproportionné pour des structures de taille intermédiaire,
+une rigidité des \textit{workflows} qui complique l'adaptation aux règles de
+validation internes et aux obligations légales propres au droit du travail tunisien,
+et une architecture fermée qui limite l'exploitation analytique des données
+accumulées au fil des années. Ces limitations justifient le recours au développement
+sur mesure lorsque l'organisation dispose des compétences techniques pour le mener.
+
+Le projet \textbf{Synapse} prend sa source dans ce constat. L'objectif n'était pas
+de reproduire un SIRH généraliste, mais de concevoir une plateforme couvrant les
+processus RH d'Arabsoft~: gestion du cycle de vie des employés, automatisation des
+demandes et de leurs workflows de validation hiérarchique, communication interne
+temps réel, pilotage collaboratif des projets et des tâches, et aide à la décision
+par l'analyse prédictive. La maîtrise complète de l'architecture et des données
+constitue, dans ce cadre, un avantage autant qu'une responsabilité.
+
+Combinant les apports de l'intelligence artificielle à ceux du développement
+\textit{full-stack}, la plateforme repose sur une architecture microservices
+articulée autour d'un frontend \textbf{Angular~21} en composants standalone
+(détection de changement \textit{OnPush}, chargement différé des routes),
+d'un backend \textbf{Spring~Boot}, d'une base de données \textbf{Oracle~23ai}
+et de \textbf{Keycloak} comme serveur d'identité centralisé. Elle implémente
+un contrôle d'accès basé sur les rôles (RBAC) à six rôles Keycloak organisationnels~:
+deux rôles RH (\texttt{ADMIN\_RH} pour l'administrateur RH et \texttt{RH} pour le
+gestionnaire RH), deux rôles opérationnels (\texttt{CHEF} de projet et
+\texttt{EMPLOYE}), et deux rôles transversaux (\texttt{DIRECTEUR\_GENERAL} pour
+l'approbation des prêts et \texttt{COMITE} pour les votes du comité de crédit).
+Elle automatise les \textit{workflows}
+de demandes RH via un circuit de validation multi-niveaux, et fluidifie la
+communication interne grâce à \textbf{Apache~Kafka} pour la messagerie
+asynchrone et \textbf{WebSocket (STOMP/SockJS)} pour la messagerie temps réel.
+Au-delà de l'opérationnel, elle exploite l'API \textbf{Groq} (compatible OpenAI)
+à deux niveaux~: un assistant conversationnel RH répondant aux questions courantes
+des employés, et un module de scoring de CV automatisant la présélection des
+candidats dans le pipeline de recrutement. Elle produit également des rapports
+exportables en PDF et Excel via
+\textbf{JasperReports}, ainsi qu'un module d'analyse prédictive exploitant les
+données RH pour identifier les risques d'\textit{attrition} et appuyer les
+décisions stratégiques.
+
+Ce rapport documente le cycle de développement complet de Synapse, de l'analyse
+des besoins au déploiement. Le \textbf{premier chapitre} présente l'entreprise
+partenaire Arabsoft, dresse un état des lieux de l'existant et formule la
+problématique. Le \textbf{deuxième chapitre} couvre l'analyse des besoins, les
+choix technologiques justifiés par comparaison d'alternatives, la modélisation
+UML et la planification Scrum. Le \textbf{troisième chapitre} retrace les
+sprints~1 et~2~: mise en place de l'infrastructure technique (Keycloak, RBAC,
+Oracle via Flyway) et module de gestion du cycle de vie des employés. Le
+\textbf{quatrième chapitre} décrit les sprints~3 à~5~: workflows de demandes
+RH, notifications Kafka, messagerie WebSocket et assistant IA Groq. Le
+\textbf{cinquième chapitre} clôt les sprints~6 et~7~: gestion des projets et
+tâches avec scoring de CV, puis reporting JasperReports, tableaux de bord
+analytiques et module de prédiction d'\textit{attrition}.
+
+\clearpage
+
+% ── Chapitres ───────────────────────────────────────────
+\include{chapitre1}
+\include{chapitre2}
+\include{chapitre3}
+\include{chapitre4}
+\include{chapitre5}
+
+% ══════════════════════════════════════════════════════════
+%  CONCLUSION GÉNÉRALE
+% ══════════════════════════════════════════════════════════
+\phantomsection
+\chapter*{Conclusion Générale}
+\addcontentsline{toc}{chapter}{Conclusion Générale}
+\markboth{Conclusion Générale}{Conclusion Générale}
+
+Ce projet a conduit à la conception et au développement complet de la plateforme
+\textbf{Synapse}, une solution de gestion des ressources humaines sur mesure,
+répondant aux limites des outils standards du marché et aux besoins spécifiques
+d'une organisation moderne. À travers sept sprints de deux semaines chacun, menés
+sur quatre mois selon la méthodologie \textit{Scrum}, l'ensemble des modules
+fonctionnels a été progressivement implémenté et validé~--- du frontend
+\textbf{Angular~21} en composants standalone jusqu'aux microservices
+\textbf{Spring~Boot} exposés derrière une API REST sécurisée.
+
+Les deux premiers sprints ont établi le socle technique et organisationnel.
+Le \textbf{sprint~1} a posé l'infrastructure~: architecture microservices,
+déploiement de \textbf{Keycloak~26}, RBAC à six rôles (\texttt{ADMIN\_RH},
+\texttt{RH}, \texttt{CHEF}, \texttt{EMPLOYE}, \texttt{DIRECTEUR\_GENERAL},
+\texttt{COMITE}), initialisation du schéma \textbf{Oracle~23ai} via \textbf{Flyway}
+et intégration Keycloak dans le projet \textbf{Angular~21}.
+Le \textbf{sprint~2} a construit l'\textit{employe-service}~: synchronisation
+bidirectionnelle Oracle--Keycloak à la création et à la désactivation d'un employé,
+génération automatique des matricules au format \texttt{EMP-XXXX}, et
+notifications e-mail.
+
+Les sprints suivants ont développé le cœur métier de la plateforme. Le
+\textbf{sprint~3} a implémenté le workflow de demandes RH courantes (congés,
+formations, documents administratifs) dans le \textit{demandes-service}, avec un
+circuit de validation à trois niveaux~: Employé~→~Chef~→~RH. Le
+\textbf{sprint~4} a étendu ce même service aux demandes financières~--- prêts et
+crédits avec vote du comité et décision DG~--- et y a greffé le
+\textit{notification-service} piloté par \textbf{Apache~Kafka} pour la diffusion
+asynchrone des alertes. Le \textbf{sprint~5}, centré sur le \textit{chat-service},
+a livré la messagerie interne temps réel via \textbf{WebSocket (STOMP/SockJS)}
+sécurisée par validation JWT dans l'intercepteur de canal STOMP, ainsi que
+l'assistant conversationnel RH propulsé par l'API \textbf{Groq}.
+
+La dernière phase a couvert les dimensions collaborative et décisionnelle.
+Le \textbf{sprint~6} a produit le \textit{projets-service} et le
+\textit{taches-service}~: affectation des membres, calcul automatique de
+l'avancement par agrégation des statuts de tâches, et scoring de CV par IA
+intégré au pipeline de recrutement. Le \textbf{sprint~7} a clôturé le
+développement avec l'\textit{analytics-service}~: génération de rapports
+exportables en PDF et Excel via \textbf{JasperReports} sur templates \texttt{.jrxml},
+tableaux de bord multi-rôles invalidés par événements Kafka et mis en cache par
+\textbf{Caffeine}, et module de prédiction de l'\textit{attrition} calculant pour
+chaque employé un score de risque de départ (0--100) à partir de quatre facteurs
+mesurables~: ancienneté, volume d'absences approuvées, taux de rejet des demandes
+et degré d'engagement dans les projets actifs.
+
+L'architecture retenue --- frontend \textbf{Angular~21} standalone communicant avec
+un backend \textbf{Spring~Boot} via une API REST sécurisée par \textbf{Keycloak},
+une base \textbf{Oracle~23ai} versionnée par Flyway et un bus de messagerie
+\textbf{Apache~Kafka} --- a permis d'atteindre les objectifs de robustesse, de
+sécurité et d'évolutivité définis en début de projet. Chaque microservice est
+déployable et scalable indépendamment, ce qui constitue un atout majeur pour les
+montées en charge futures. La combinaison de \textbf{JasperReports} pour la
+génération documentaire, de \textbf{WebSocket (STOMP/SockJS)} pour la messagerie
+temps réel, d'un assistant conversationnel RH et d'un module de scoring de CV~---
+les deux propulsés par \textbf{Groq}~--- complètent l'offre fonctionnelle de
+la plateforme en proposant une expérience utilisateur fluide, réactive et adaptée
+à chaque rôle.
+
+% ──────────────────────────────────────────────────────────
+\section*{Perspectives d'évolution}
+\addcontentsline{toc}{section}{Perspectives d'évolution}
+% ──────────────────────────────────────────────────────────
+
+Plusieurs axes d'enrichissement ont été identifiés à l'issue du développement.
+
+\paragraph{Tableaux de bord décisionnels (Power BI).}
+L'intégration de \textbf{Power BI} connecté à la base Oracle, prévue dans la
+planification initiale mais non finalisée par contrainte de temps, représente la
+première priorité d'évolution. Elle permettrait de proposer aux décideurs des
+tableaux de bord interactifs et visuels — taux d'absentéisme, répartition des
+effectifs, suivi de la masse salariale, avancement des projets — directement accessibles
+depuis l'interface \textbf{Synapse}, sans export manuel.
+
+\paragraph{Déploiement en production.}
+La conteneurisation complète de la plateforme via \textbf{Docker Compose} est
+partiellement réalisée. Une évolution naturelle consisterait à orchestrer les
+microservices avec \textbf{Kubernetes}, d'y associer un pipeline CI/CD
+(GitHub Actions) et de déployer \textbf{Synapse} en environnement cloud pour
+assurer une disponibilité continue et une montée en charge automatique.
+
+\paragraph{Intelligence artificielle avancée.}
+Le module de prédiction de l'\textit{attrition}, accessible depuis le tableau de
+bord administrateur, constitue une première brique d'intelligence décisionnelle
+opérationnelle. À court terme, ce module pourrait être enrichi par des algorithmes
+d'apprentissage automatique plus élaborés (forêts aléatoires, \textit{gradient
+boosting}) entraînés sur l'historique complet des départs, et complété par des
+recommandations de formations personnalisées fondées sur le profil et les
+évaluations de performance de chaque employé.
+
+\bigskip
+
+\noindent \textbf{Synapse} établit qu'une plateforme GRH à couverture fonctionnelle
+large~--- workflows métier, communication temps réel, IA et analyse prédictive~---
+peut être conçue et livrée en quatre mois sur une base technologique open-source,
+sans dépendance à des licences propriétaires, et avec une architecture suffisamment
+modulaire pour évoluer indépendamment service par service.
+\end{document}

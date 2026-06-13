@@ -1,20 +1,14 @@
 import { Component, OnInit, output, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import Keycloak from 'keycloak-js';
 
 import { environment } from 'src/environments/environment';
-import { NavigationItem, NAV_CHEF, NAV_EMPLOYE } from '../navigation';
+import { NavigationItem, NAV_ADMIN, NAV_CHEF, NAV_EMPLOYE } from '../navigation';
 import { NavCollapseComponent } from './nav-collapse/nav-collapse.component';
 import { NavGroupComponent } from './nav-group/nav-group.component';
 import { NavItemComponent } from './nav-item/nav-item.component';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
-
-const ROLES_SYSTEME = [
-  'offline_access', 'uma_authorization', 'manage-account',
-  'manage-account-links', 'view-profile', 'default-roles-gerai',
-  'default-roles-master', 'create-realm', 'broker'
-];
+import { AuthService } from 'src/app/gerai/services/auth.service';
 
 @Component({
   selector: 'app-nav-content',
@@ -25,7 +19,7 @@ const ROLES_SYSTEME = [
 export class NavContentComponent implements OnInit {
 
   private location = inject(Location);
-  private keycloak = inject(Keycloak);
+  private auth     = inject(AuthService);
 
   NavCollapsedMob = output();
   SubmenuCollapse = output();
@@ -39,27 +33,14 @@ export class NavContentComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadNavigationByRole();
+    const map = { admin: NAV_ADMIN, chef: NAV_CHEF, employe: NAV_EMPLOYE };
+    this.navigations = map[this.auth.role];
 
     if (this.windowWidth < 1025) {
       setTimeout(() => {
         (document.querySelector('.coded-navbar') as HTMLDivElement)
           ?.classList.add('menupos-static');
       }, 500);
-    }
-  }
-
-  private loadNavigationByRole(): void {
-    const realmRoles = this.keycloak.tokenParsed?.realm_access?.roles ?? [];
-    const allRoles = [...realmRoles];
-    const metaRoles = allRoles.filter(r => !ROLES_SYSTEME.includes(r));
-
-    if (metaRoles.includes('chef') || metaRoles.includes('CHEF')) {
-      this.navigations = NAV_CHEF;
-      console.log('🏢 Menu CHEF chargé');
-    } else {
-      this.navigations = NAV_EMPLOYE;
-      console.log('👤 Menu EMPLOYÉ chargé');
     }
   }
 

@@ -1,0 +1,70 @@
+\babel@toc {french}{}\relax 
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Logo de la société Arabsoft~--- Source~: \url {www.arabsoft.com.tn}}}{4}{figure.caption.12}%
+\contentsline {figure}{\numberline {1.2}{\ignorespaces Logo de la plateforme Synapse}}{7}{figure.caption.15}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Diagramme de cas d’utilisation global de Synapse}}{16}{figure.caption.28}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Diagramme de cas d’utilisation~: gestion des demandes RH}}{17}{figure.caption.29}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Diagramme de cas d’utilisation~: gestion des employés}}{17}{figure.caption.30}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Diagramme de cas d’utilisation~: gestion des projets et tâches}}{17}{figure.caption.31}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Diagramme de déploiement~: architecture microservices et conteneurs Docker Compose}}{18}{figure.caption.32}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Diagramme de classes des entités principales de Synapse}}{19}{figure.caption.33}%
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Schéma entité-association Oracle 23ai (extrait~: tables RH et projets)}}{20}{figure.caption.35}%
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Feuille de route du projet Synapse~: jalons et sprints (février--mai~2026)}}{25}{figure.caption.46}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Diagramme de cas d’utilisation raffiné~: S’authentifier}}{41}{figure.caption.61}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Diagramme de séquence~: flux d’authentification OAuth2/OIDC avec PKCE}}{42}{figure.caption.62}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Table {\ttfamilyFB \hyphenchar \font =45\relax flyway\_schema\_history}~: schéma fondateur V1 à V4 (core RH, projets, demandes, communication)}}{44}{figure.caption.65}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Page de connexion de la plateforme Synapse}}{45}{figure.caption.67}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Console d’administration Keycloak~: realm Synapse et rôles organisationnels}}{45}{figure.caption.68}%
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Diagramme de cas d’utilisation raffiné~: gérer les employés}}{47}{figure.caption.72}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Diagramme de séquence~: création d’un employé avec synchronisation Oracle--Keycloak}}{48}{figure.caption.73}%
+\contentsline {figure}{\numberline {3.8}{\ignorespaces APIs REST de l'\textit {employe-service}~: endpoints CRUD}}{50}{figure.caption.77}%
+\contentsline {figure}{\numberline {3.9}{\ignorespaces Liste des employés~: filtrage par département, statut et actions rapides}}{51}{figure.caption.79}%
+\contentsline {figure}{\numberline {3.10}{\ignorespaces Fiche de profil d’un employé~: informations, documents et historique}}{51}{figure.caption.80}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Diagramme de cas d’utilisation raffiné~: dépôt et validation d’une demande RH}}{54}{figure.caption.84}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Diagramme de séquence~: dépôt et validation d’une demande de congé}}{55}{figure.caption.85}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Diagramme de classes~: domaine des demandes RH (Sprint 3)}}{56}{figure.caption.87}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Diagramme d'activité~: workflow de validation d'une demande RH (Employé → Chef → RH)}}{57}{figure.caption.88}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Formulaire de dépôt d’une demande de congé~: vue employé}}{60}{figure.caption.93}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Liste des demandes en attente de validation~: vue chef de projet}}{60}{figure.caption.94}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Diagramme de cas d’utilisation raffiné~: demande de prêt et circuit DG/comité}}{63}{figure.caption.101}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Diagramme de séquence~: circuit de validation d'un prêt (Employé → Chef → RH → Comité → DG)}}{64}{figure.caption.103}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Topologie Apache Kafka~: topics, producteurs et consommateurs dans Synapse}}{65}{figure.caption.105}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Centre de notifications~: alertes en temps réel transmises via Kafka et WebSocket}}{66}{figure.caption.107}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Diagramme de cas d’utilisation raffiné~: messagerie interne temps réel}}{70}{figure.caption.112}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Diagramme de séquence~: messagerie WebSocket et assistant IA Groq}}{70}{figure.caption.113}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Extrait {\ttfamilyFB \hyphenchar \font =45\relax AiChatService.java}~: construction du prompt et appel à l'API Groq}}{72}{figure.caption.118}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Fenêtre de conversation temps réel~: messages bidirectionnels et horodatage}}{73}{figure.caption.119}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces Assistant conversationnel RH~: widget flottant propulsé par l'API Groq}}{73}{figure.caption.120}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Diagramme de cas d’utilisation raffiné~: gestion des projets et des tâches}}{77}{figure.caption.125}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Diagramme de séquence~: création d’un projet et affectation des membres}}{78}{figure.caption.126}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Diagramme de classes~: domaine projets, tâches, évaluations et recrutement (Sprint 6)}}{78}{figure.caption.127}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Interface d'évaluation des performances~: campagnes et fiches d'évaluation}}{82}{figure.caption.133}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Tableau de bord chef~: liste des projets avec barres de progression}}{82}{figure.caption.134}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Gestion des tâches~: statuts (À FAIRE / EN COURS / TERMINÉ) et priorités}}{83}{figure.caption.135}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Interface de gestion des offres d'emploi~: publication et paramétrage des questions de présélection}}{83}{figure.caption.136}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Interface candidats~: scores IA, shortlisting et gestion du pipeline de recrutement}}{83}{figure.caption.137}%
+\contentsline {figure}{\numberline {5.9}{\ignorespaces Diagramme de cas d’utilisation raffiné~: génération de rapports JasperReports}}{88}{figure.caption.143}%
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Diagramme de séquence~: génération d’un rapport JasperReports (PDF/Excel)}}{88}{figure.caption.144}%
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Diagramme de classes~: domaine analytique, reporting et attrition (Sprint 7)}}{90}{figure.caption.146}%
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Diagramme d'activité~: algorithme de prédiction d'attrition (cache → Oracle → scoring → classification)}}{91}{figure.caption.148}%
+\contentsline {figure}{\numberline {5.13}{\ignorespaces Tableau de bord analytique~: KPIs globaux, graphiques de tendance et top absences}}{93}{figure.caption.150}%
+\contentsline {figure}{\numberline {5.14}{\ignorespaces Interface de génération de rapports~: sélection du type, du département et du format}}{93}{figure.caption.151}%
+\contentsline {figure}{\numberline {5.15}{\ignorespaces Exemple de rapport PDF généré par JasperReports~: liste des congés par département}}{93}{figure.caption.152}%
+\contentsline {figure}{\numberline {5.16}{\ignorespaces Détail d'un profil à risque élevé~: gauge de score, facteurs et recommandations RH}}{94}{figure.caption.153}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Sortie {\ttfamilyFB \hyphenchar \font =45\relax mvn test} — \textit {analytics-service}, \textit {projets-service} et \textit {demandes-service}~: BUILD SUCCESS}}{120}{figure.caption.181}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Rapport JaCoCo — couverture de la couche service du \textit {analytics-service}~: 62\,\% instructions, 63\,\% branches}}{120}{figure.caption.182}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {I.1}{\ignorespaces Formulaire de création d'un employé~: données personnelles, département et poste}}{128}{figure.caption.196}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {II.1}{\ignorespaces Tableau de bord employé~: suivi des demandes et indicateurs de statut}}{128}{figure.caption.197}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {III.1}{\ignorespaces Interface d'entretiens~: planification}}{129}{figure.caption.198}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {IV.1}{\ignorespaces Vue de prédiction d'attrition~: KPI globaux et liste des employés par score de risque}}{129}{figure.caption.199}%
+\addvspace {10\p@ }

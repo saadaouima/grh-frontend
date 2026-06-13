@@ -1,0 +1,93 @@
+\relax 
+\providecommand\zref@newlabel[2]{}
+\providecommand\hyper@newdestlabel[2]{}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Sécurité de la Plateforme}{97}{chapter.6}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Introduction}{97}{section.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Architecture de sécurité globale}{97}{section.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2.1}Périmètre et surface d’attaque}{97}{subsection.6.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Surfaces d'exposition et mécanismes de sécurité associés}}{98}{table.caption.157}\protected@file@percent }
+\newlabel{tab:surfaces_securite}{{6.1}{98}{Surfaces d'exposition et mécanismes de sécurité associés}{table.caption.157}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2.2}Modèle Zero Trust appliqué}{98}{subsection.6.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.3}Authentification OAuth2/OpenID Connect avec Keycloak}{98}{section.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.1}Flux d’authentification PKCE}{98}{subsection.6.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.2}Structure du JWT émis par Keycloak}{99}{subsection.6.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Claims JWT utilisés dans Synapse}}{99}{table.caption.158}\protected@file@percent }
+\newlabel{tab:jwt_claims}{{6.2}{99}{Claims JWT utilisés dans Synapse}{table.caption.158}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.3}Configuration keycloak-angular côté frontend}{99}{subsection.6.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Configuration keycloak-angular dans Synapse}}{99}{table.caption.159}\protected@file@percent }
+\newlabel{tab:kc_angular_config}{{6.3}{99}{Configuration keycloak-angular dans Synapse}{table.caption.159}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.4}Contrôle d’accès basé sur les rôles (RBAC)}{100}{section.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4.1}Matrice des rôles et permissions}{100}{subsection.6.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4.2}Implémentation du RBAC côté backend}{100}{subsection.6.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{1. KeycloakJwtRoleConverter.}{100}{paragraph*.160}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2. SecurityConfig par service.}{100}{paragraph*.161}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Règles de contrôle d’accès du employe-service}}{100}{table.caption.162}\protected@file@percent }
+\newlabel{tab:employe_acl}{{6.4}{100}{Règles de contrôle d’accès du employe-service}{table.caption.162}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4.3}Implémentation du RBAC côté frontend}{100}{subsection.6.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.5}Sécurisation des microservices Spring Boot}{101}{section.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5.1}Session stateless (JWT)}{101}{subsection.6.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5.2}Validation du JWT}{101}{subsection.6.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5.3}Configuration CORS}{101}{subsection.6.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5.4}Désactivation de CSRF}{102}{subsection.6.5.4}\protected@file@percent }
+\newlabel{sec:csrf}{{6.5.4}{102}{Désactivation de CSRF}{subsection.6.5.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5.5}HikariCP et isolation de la base de données}{102}{subsection.6.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.5}{\ignorespaces Paramètres de sécurité HikariCP}}{102}{table.caption.163}\protected@file@percent }
+\newlabel{tab:hikari_security}{{6.5}{102}{Paramètres de sécurité HikariCP}{table.caption.163}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.6}Sécurisation du canal WebSocket STOMP}{102}{section.6.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6.1}Défi de sécurité WebSocket}{102}{subsection.6.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6.2}WebSocketAuthChannelInterceptor}{102}{subsection.6.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6.3}Isolation des conversations}{103}{subsection.6.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.7}Prévention des vulnérabilités OWASP}{103}{section.6.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.6}{\ignorespaces Couverture OWASP Top 10 dans Synapse}}{104}{table.caption.164}\protected@file@percent }
+\newlabel{tab:owasp}{{6.6}{104}{Couverture OWASP Top 10 dans Synapse}{table.caption.164}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7.1}Protection contre l'injection SQL}{104}{subsection.6.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7.2}Protection contre le XSS}{105}{subsection.6.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7.3}Protection contre les attaques de type Broken Object Level Authorization}{105}{subsection.6.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.8}Gestion des données sensibles}{105}{section.6.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8.1}Externalisation des secrets}{105}{subsection.6.8.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.7}{\ignorespaces Gestion des secrets par service}}{105}{table.caption.165}\protected@file@percent }
+\newlabel{tab:secrets}{{6.7}{105}{Gestion des secrets par service}{table.caption.165}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8.2}Données personnelles et RGPD}{105}{subsection.6.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8.3}Gestion sécurisée des fichiers uploadés}{106}{subsection.6.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8.4}Traçabilité et journalisation des audits}{106}{subsection.6.8.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.8}{\ignorespaces Structure de la table {\ttfamilyFB  \hyphenchar \font =45\relax AUDIT\_LOGS}}}{107}{table.caption.166}\protected@file@percent }
+\newlabel{tab:audit_logs}{{6.8}{107}{Structure de la table \texttt {AUDIT\_LOGS}}{table.caption.166}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.9}Conclusion}{107}{section.6.9}\protected@file@percent }
+\@setckpt{chapitre6_securite}{
+\setcounter{page}{108}
+\setcounter{equation}{0}
+\setcounter{enumi}{3}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{6}
+\setcounter{section}{9}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{0}
+\setcounter{table}{8}
+\setcounter{parentequation}{0}
+\setcounter{AM@survey}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{mdf@globalstyle@cnt}{0}
+\setcounter{mdfcountframes}{0}
+\setcounter{mdf@env@i}{0}
+\setcounter{mdf@env@ii}{0}
+\setcounter{mdf@zref@counter}{0}
+\setcounter{FancyVerbLine}{0}
+\setcounter{float@type}{4}
+\setcounter{lofdepth}{1}
+\setcounter{lotdepth}{1}
+\setcounter{section@level}{0}
+\setcounter{Item}{89}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{157}
+}

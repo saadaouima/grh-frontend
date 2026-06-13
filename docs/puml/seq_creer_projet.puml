@@ -1,0 +1,54 @@
+﻿@startuml seq_creer_projet
+title Diagramme de séquence  -  Création d'un projet et affectation des membres
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Chef de projet" as chef
+participant "Angular\n(Frontend)" as view
+participant "ProjetController" as ctrl
+participant "ProjetService" as svc
+database "Oracle\n(PROJECTS, PROJECT_MEMBERS, TASKS)" as db
+participant "Kafka" as kafka
+participant "NotificationService" as notifSvc
+
+== Création du projet ==
+chef -> view : Saisit nom, description, dates, priorité
+view -> ctrl : POST /api/projets
+ctrl -> svc : createProject(dto)
+svc -> db : INSERT INTO PROJECTS (nom, description, date_debut, date_fin, statut = EN_COURS, chef_id)
+db -> svc : Project {id}
+ctrl -> view : 201 Created {id, nom}
+view -> chef : Projet créé
+
+== Affectation des membres ==
+chef -> view : Sélectionne les membres de l'équipe
+view -> ctrl : POST /api/projets/{id}/membres {memberIds[]}
+ctrl -> svc : addMembers(projectId, memberIds)
+svc -> db : SELECT * FROM EMPLOYEES WHERE id IN (memberIds)  -  vérification
+svc -> db : INSERT INTO PROJECT_MEMBERS (project_id, employe_id, role_projet) pour chaque membre
+db -> svc : OK
+svc -> kafka : Publie PROJET_MEMBRE_AFFECTE pour chaque membre (async)
+kafka --> notifSvc : Consomme
+notifSvc -> db : INSERT INTO NOTIFICATIONS (employe_id, type = AFFECTATION_PROJET, lu = false)
+ctrl -> view : 200 OK
+view -> chef : Membres affectés, tableau de bord mis à jour
+
+== Création d'une tâche ==
+chef -> view : Ajoute une tâche au projet
+view -> ctrl : POST /api/taches {titre, description, assigneeId, echeance, priorite}
+ctrl -> svc : createTask(dto)
+svc -> db : SELECT * FROM PROJECT_MEMBERS WHERE project_id = ? AND employe_id = assigneeId  -  vérification membre
+svc -> db : INSERT INTO TASKS (project_id, titre, description, assignee_id, echeance, statut = A_FAIRE, priorite)
+db -> svc : Task {id}
+svc -> kafka : Publie TACHE_AFFECTEE (async)
+kafka --> notifSvc : Consomme
+notifSvc -> db : INSERT INTO NOTIFICATIONS (employe_id = assigneeId, type = TACHE_ASSIGNEE, lu = false)
+ctrl -> view : 201 Created {id, titre}
+view -> chef : Tâche créée et assignée
+
+@enduml

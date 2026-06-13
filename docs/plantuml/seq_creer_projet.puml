@@ -1,0 +1,67 @@
+@startuml seq_creer_projet
+!theme plain
+skinparam sequenceArrowColor #2C3E50
+skinparam sequenceParticipantBackgroundColor #EEF4FF
+skinparam sequenceParticipantBorderColor #3498DB
+skinparam noteBackgroundColor #FFFAF0
+skinparam noteBorderColor #E67E22
+
+title Diagramme de séquence — Création d'un projet et affectation de tâches
+
+actor "Chef\n(Angular)" as Chef
+participant "projets-service\n:8087" as ProjSvc
+participant "Oracle 23ai\n(PROJECTS\nPROJECT_MEMBERS)" as DB
+participant "Apache Kafka\n(notification-events)" as Kafka
+participant "notification-service\n:8084" as NotSvc
+participant "taches-service\n:8088" as TachSvc
+
+== Phase 1 : Création du projet avec membres ==
+
+Chef -> ProjSvc : POST /api/affectation/projets\n{nom, description, priority,\ndateDebut, dateFin,\nmembreIds: [10, 11]}
+note right of ProjSvc : JWT validé\ncreated_by = employee_id du chef\n(ProjetService.ts → API_URL='/api/affectation')
+
+ProjSvc -> DB : INSERT INTO PROJECTS\n(nom, created_by, status=EN_COURS,\npriority, progress_pct=0)
+DB --> ProjSvc : project_id = 42
+
+ProjSvc -> DB : INSERT INTO PROJECT_MEMBERS\n(project_id=42, employee_id=10, role=MEMBRE)\nINSERT INTO PROJECT_MEMBERS\n(project_id=42, employee_id=11, role=MEMBRE)
+note right of DB : Les membres sont inclus\ndans le payload de création\nvia membreIds[] (CreateProjetPayload)
+
+DB --> ProjSvc : 2 rows inserted
+
+ProjSvc -> Kafka : produce(notification-events)\nNotificationEvent{recipientId=emp10,\ntitle="Nouveau projet", message="Vous êtes membre du projet PRJ-042"}
+ProjSvc -> Kafka : produce(notification-events)\nNotificationEvent{recipientId=emp11, ...}
+
+ProjSvc --> Chef : 201 Created {projectId:42, code:"PRJ-042"}
+
+== Phase 2 : Notifications aux membres ==
+
+NotSvc -> Kafka : consume(notification-events)
+Kafka --> NotSvc : NotificationEvent x2
+NotSvc -> DB : INSERT INTO NOTIFICATIONS x2
+NotSvc --> Chef : (WebSocket : confirmation)
+
+== Phase 3 : Création et affectation de tâches ==
+
+Chef -> TachSvc : POST /api/affectation/taches\n{projectId:42, titre:"Analyse des besoins",\nassignedTo:10, prioritize:"HAUTE",\necheance:"2026-07-01"}
+note right of TachSvc : JWT validé\n(TacheService.ts → API_URL='/api/affectation')
+
+TachSvc -> DB : INSERT INTO TASKS\n(project_id=42, titre, assigned_to=10,\nstatut=A_FAIRE, priorite=HAUTE)
+DB --> TachSvc : task_id = 101
+
+TachSvc -> Kafka : produce(notification-events)\nNotificationEvent{recipientId=emp10,\ntitle="Nouvelle tâche assignée"}
+
+TachSvc --> Chef : 201 Created {taskId:101}
+
+== Phase 4 : Mise à jour du statut d'une tâche (recalcul progression) ==
+
+Chef -> TachSvc : PUT /api/affectation/taches/101\n{statut: 'TERMINEE', titre:"Analyse des besoins"}
+note right of TachSvc : Statuts disponibles :\nA_FAIRE | EN_COURS | TERMINEE\n(tache.model.ts)
+
+TachSvc -> DB : UPDATE TASKS\nSET statut='TERMINEE'\nWHERE task_id=101
+
+TachSvc -> DB : UPDATE PROJECTS\nSET progress_pct = (SELECT COUNT(*)\nFROM TASKS WHERE statut='TERMINEE'\nAND project_id=42) * 100 / total
+DB --> TachSvc : progress_pct = 33 (1/3 tâches terminées)
+
+TachSvc --> Chef : 200 OK {statut:'TERMINEE', progressPct:33}
+
+@enduml

@@ -1,0 +1,97 @@
+@startuml uc_global_synapse
+title Diagramme de cas d'utilisation global - Plateforme Synapse
+
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam packageBorderColor #2C5F8A
+skinparam nodesep 15
+skinparam ranksep 40
+
+left to right direction
+
+' ── Acteurs (gauche)
+actor "Employe"           as emp
+actor "Chef de projet"    as chef
+actor "Admin RH"          as admin
+actor "Comite"            as comite
+actor "Directeur General" as dg
+actor "Candidat\n(non authentifie)" as candidat
+
+rectangle "Synapse - Plateforme GRH" {
+
+  package "Authentification" {
+    usecase "S'authentifier (OAuth2/OIDC)" as UC_AUTH
+  }
+
+  package "Gestion des employes" {
+    usecase "Gerer les employes"   as UC_EMP
+    usecase "Consulter son profil" as UC_PROFIL
+  }
+
+  package "Demandes RH" {
+    usecase "Deposer une demande RH" as UC_DEM
+    usecase "Valider une demande"    as UC_VAL
+  }
+
+  package "Prets et Credits" {
+    usecase "Deposer une demande de pret" as UC_PRET
+    usecase "Voter sur un dossier"        as UC_VOTE
+    usecase "Approuver un pret"           as UC_APP
+  }
+
+  package "Projets et Taches" {
+    usecase "Gerer un projet"  as UC_PROJ
+    usecase "Gerer ses taches" as UC_TACHE
+  }
+
+  package "Communication et IA" {
+    usecase "Envoyer un message"       as UC_MSG
+    usecase "Consulter l'assistant IA" as UC_AI
+  }
+
+  package "Rapports et Analytique" {
+    usecase "Generer un rapport" as UC_RPT
+    usecase "Consulter les KPI"  as UC_KPI
+  }
+
+  package "Recrutement (public)" {
+    usecase "Consulter les offres"    as UC_OFFRE
+    usecase "Deposer une candidature" as UC_CAND
+  }
+}
+
+' ── Employe
+emp --> UC_AUTH
+emp --> UC_PROFIL
+emp --> UC_DEM
+emp --> UC_PRET
+emp --> UC_TACHE
+emp --> UC_MSG
+emp --> UC_AI
+
+' ── Chef de projet
+chef --> UC_AUTH
+chef --> UC_VAL
+chef --> UC_PROJ
+chef --> UC_MSG
+chef --> UC_KPI
+
+' ── Admin RH
+admin --> UC_AUTH
+admin --> UC_EMP
+admin --> UC_VAL
+admin --> UC_RPT
+
+' ── Comite
+comite --> UC_VOTE
+
+' ── Directeur General
+dg --> UC_APP
+dg --> UC_KPI
+
+' ── Candidat
+candidat --> UC_OFFRE
+candidat --> UC_CAND
+
+@enduml

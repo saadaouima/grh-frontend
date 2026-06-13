@@ -1,0 +1,124 @@
+@startuml uc_global_synapse
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor #3498DB
+  ArrowColor #2C3E50
+  FontSize 11
+}
+skinparam actor {
+  BackgroundColor #2C3E50
+  FontColor #FFFFFF
+  BorderColor #2C3E50
+}
+
+title Diagramme de cas d'utilisation global — Plateforme Synapse
+
+' ─── Acteurs ────────────────────────────────────────────────
+actor "Employé\n[employe]"                    as Emp      #2980B9
+actor "Chef de projet\n[chef]"                as Chef     #27AE60
+actor "Admin RH\n[admin / admin_rh]"          as Admin    #8E44AD
+actor "Directeur Général\n[directeur_general]" as DG       #C0392B
+actor "Comité Crédit\n[comite]"               as Comite   #16A085
+
+note right of DG
+  Le rôle <b>directeur_general</b>
+  est inclus dans ROLE_ADMIN
+  (auth.guard.ts) → accès complet
+  au tableau de bord admin
+end note
+
+' ─── Système Synapse ────────────────────────────────────────
+rectangle "**Plateforme Synapse**" {
+
+  ' Authentification
+  usecase "S'authentifier\n(Keycloak PKCE)" as UC_AUTH
+
+  ' Module Employés
+  usecase "Gérer les employés\n(CRUD + Keycloak)" as UC_EMP
+  usecase "Consulter profil" as UC_PROFIL
+
+  ' Module Demandes RH
+  usecase "Déposer une demande RH\n(congé, formation, prêt\ndocument, autorisation)" as UC_DEPOT
+  usecase "Valider demande\n(niveau Chef)" as UC_VAL_CHEF
+  usecase "Valider demande\n(niveau RH)" as UC_VAL_RH
+  usecase "Approuver prêt (DG)" as UC_DG
+  usecase "Voter comité crédit" as UC_VOTE
+
+  ' Module Projets & Tâches
+  usecase "Gérer projets\net membres" as UC_PROJETS
+  usecase "Gérer tâches\net statuts" as UC_TACHES
+  usecase "Consulter\nses tâches" as UC_TACHES_EMP
+
+  ' Module Communication
+  usecase "Envoyer/recevoir\nmessages instantanés" as UC_CHAT
+  usecase "Interroger\nl'assistant IA" as UC_AI
+
+  ' Module RH / Admin
+  usecase "Gérer les formations\ndes équipes" as UC_FORM
+  usecase "Gérer les évaluations" as UC_EVAL
+  usecase "Gérer le recrutement\n(jobs, candidats, scoring CV)" as UC_RECR
+  usecase "Planifier les congés\n(vue calendrier)" as UC_PLANNING
+
+  ' Module Analytics & Reporting
+  usecase "Générer rapports PDF/Excel\n(JasperReports)" as UC_RAPPORTS
+  usecase "Consulter tableaux\nde bord analytiques" as UC_DASH
+  usecase "Analyser prédiction\nd'attrition" as UC_ATTRITION
+
+  ' Module Notifications
+  usecase "Recevoir notifications\n(temps réel)" as UC_NOTIF
+}
+
+' ─── Associations Employé ────────────────────────────────────
+Emp  --> UC_AUTH
+Emp  --> UC_PROFIL
+Emp  --> UC_DEPOT
+Emp  --> UC_TACHES_EMP
+Emp  --> UC_CHAT
+Emp  --> UC_AI
+Emp  --> UC_NOTIF
+
+' ─── Associations Chef ───────────────────────────────────────
+Chef --> UC_AUTH
+Chef --> UC_VAL_CHEF
+Chef --> UC_PROJETS
+Chef --> UC_TACHES
+Chef --> UC_FORM
+Chef --> UC_EVAL
+Chef --> UC_RECR
+Chef --> UC_RAPPORTS
+Chef --> UC_NOTIF
+Chef --> UC_CHAT
+Chef --> UC_AI
+Chef --> UC_PLANNING
+
+' ─── Associations Admin RH ───────────────────────────────────
+Admin --> UC_AUTH
+Admin --> UC_EMP
+Admin --> UC_VAL_RH
+Admin --> UC_RECR
+Admin --> UC_RAPPORTS
+Admin --> UC_DASH
+Admin --> UC_ATTRITION
+Admin --> UC_NOTIF
+Admin --> UC_CHAT
+Admin --> UC_AI
+
+' ─── Associations Directeur Général ─────────────────────────
+' DG est dans ROLE_ADMIN → accès identique à Admin + approbation prêt DG
+DG --> UC_AUTH
+DG --> UC_EMP
+DG --> UC_DG
+DG --> UC_VAL_RH
+DG --> UC_RECR
+DG --> UC_RAPPORTS
+DG --> UC_DASH
+DG --> UC_ATTRITION
+DG --> UC_NOTIF
+
+' ─── Associations Comité Crédit ──────────────────────────────
+Comite --> UC_AUTH
+Comite --> UC_VOTE
+
+@enduml

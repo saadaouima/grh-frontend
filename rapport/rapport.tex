@@ -1,0 +1,299 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ── Encodage & langue ──────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+
+% ── Mise en page ──────────────────────────────────────────
+\usepackage{newtxtext,newtxmath}
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{pdfpages}
+\usepackage[font={footnotesize,it},labelfont={footnotesize,it},labelsep=space]{caption}
+
+% ── Maths & symboles ──────────────────────────────────────
+\usepackage{amsmath,amssymb}
+\usepackage{wasysym}
+\newcommand{\faCheckCircle}{\checkmark}
+\newcommand{\faTimes}{\ding{55}}
+\usepackage{pifont}
+
+% ── Couleurs & tableaux ───────────────────────────────────
+\usepackage[table]{xcolor}
+\definecolor{headerblue}{RGB}{52,152,219}
+\definecolor{rowgray}{gray}{0.95}
+\definecolor{umlblue}{RGB}{173,214,235}
+\definecolor{umlgray}{RGB}{240,240,240}
+\usepackage{booktabs,array,multirow,colortbl,tabularx,longtable,xltabular}
+\usepackage{enumitem}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+% ── Boîtes ────────────────────────────────────────────────
+\usepackage[skins]{tcolorbox}
+
+% ── TikZ — bibliothèque UML maison ────────────────────────
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,
+                fit,backgrounds,automata,calc,shadows}
+
+% Styles UML réutilisables dans tous les chapitres
+\tikzset{
+  % Acteur (bonhomme fil de fer)
+  umlactor/.style={
+    minimum width=1cm, minimum height=2.2cm,
+    append after command={
+      \pgfextra{
+        \draw[thick] (\tikzlastnode.north) circle(0.28cm);
+        \draw[thick] (\tikzlastnode.north) ++(0,-0.28) -- ++(0,-0.7)
+              node[coordinate](waist){};
+        \draw[thick] (waist) ++(0,0.1) -- ++(-0.4,-0.35)
+              (waist) ++(0,0.1) -- ++(0.4,-0.35);
+        \draw[thick] (waist) -- ++(-0.3,-0.55)
+              (waist) -- ++(0.3,-0.55);
+      }
+    },
+    font=\small
+  },
+  % Cas d'utilisation
+  umluc/.style={
+    draw, ellipse, minimum width=3.2cm, minimum height=0.9cm,
+    fill=umlblue!40, font=\small, align=center, inner sep=2pt
+  },
+  % Frontière système
+  umlborder/.style={
+    draw, dashed, rounded corners=6pt, fill=umlgray,
+    fill opacity=0.2, inner sep=10pt
+  },
+  % Ligne de vie (séquence)
+  lifeline/.style={
+    draw, rectangle, minimum width=2cm, minimum height=0.7cm,
+    fill=umlblue!30, font=\footnotesize, align=center, rounded corners=3pt
+  },
+  % Activation (séquence)
+  activation/.style={
+    draw, rectangle, fill=umlblue!60, minimum width=0.22cm
+  },
+  % Message (séquence)
+  seqmsg/.style={->, >=stealth, font=\scriptsize},
+  seqret/.style={->, >=stealth, dashed, font=\scriptsize},
+  % État (machine à états)
+  umlstate/.style={
+    draw, rounded corners=5pt, minimum width=2.6cm, minimum height=0.75cm,
+    fill=umlblue!30, font=\footnotesize, align=center
+  },
+  umlstate_init/.style={
+    circle, fill=black, minimum size=0.3cm
+  },
+  umlstate_final/.style={
+    circle, draw, fill=black, minimum size=0.2cm,
+    double, double distance=2pt
+  },
+  trans/.style={->, >=stealth, font=\scriptsize},
+  % Composant (architecture)
+  component/.style={
+    draw, rounded corners=4pt, minimum width=2.8cm, minimum height=0.8cm,
+    fill=blue!8, font=\footnotesize\ttfamily, align=center
+  },
+  infra/.style={
+    draw, rounded corners=4pt, minimum width=2.8cm, minimum height=0.8cm,
+    fill=orange!20, font=\footnotesize\ttfamily, align=center
+  },
+  compArr/.style={->, >=stealth, thick, gray!60}
+}
+
+% ── Images & code ─────────────────────────────────────────
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{verbatim}
+\usepackage{listings}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{umlgray}
+}
+
+% ── Divers ────────────────────────────────────────────────
+\usepackage{float,placeins,xurl}
+
+% ── En-têtes & pieds ──────────────────────────────────────
+\usepackage{fancyhdr}
+\setlength{\headheight}{16pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{
+  \fancyhf{}\fancyhead[R]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+}
+
+% ── Titres ────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{20}{24}\selectfont\itshape\centering}
+  {\normalfont\fontsize{14}{17}\selectfont\bfseries Chapitre \thechapter}
+  {12pt}{}
+  [\vspace{4pt}{\color{headerblue}\rule{\textwidth}{1.5pt}}]
+\titlespacing*{\chapter}{0pt}{-10pt}{25pt}
+\titleformat{\section}
+  {\normalfont\fontsize{17}{20}\selectfont\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{15}{18}\selectfont\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{13}{16}\selectfont\bfseries}{\thesubsubsection}{0.6em}{}
+
+% ── TDM ───────────────────────────────────────────────────
+\usepackage{tocloft}
+\setlength{\cftbeforechapskip}{6pt}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+
+% ── Hyperref ──────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=blue,
+  bookmarksnumbered=true,pdfstartview={FitH},pageanchor=true,
+  pdftitle={Synapse — Plateforme GRH microservices — Rapport PFE},
+  pdfauthor={Mariem Saadaoui},pdflang={fr}
+}
+\usepackage[all]{hypcap}
+
+% ══════════════════════════════════════════════════════════
+\begin{document}
+% ══════════════════════════════════════════════════════════
+
+\pagenumbering{gobble}
+% \includepdf[pages=1]{page_garde.pdf}
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ── Résumé ────────────────────────────────────────────────
+\phantomsection
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+
+\textbf{Synapse} est une plateforme de gestion des ressources humaines développée
+sur mesure pour la société \textbf{Arabsoft}. Elle répond à l'impossibilité
+pratique de piloter les processus RH de l'entreprise~--- demandes de congés,
+prêts, formations, projets, évaluation des risques de départ~--- sans système
+centralisé ni traçabilité formelle. La solution est construite sur une
+architecture à sept microservices \textbf{Spring Boot 3.x}, un frontend
+\textbf{Angular} en composants \textit{standalone} avec détection de changement
+\textit{OnPush}, une base \textbf{Oracle 23ai} administrée par migrations
+\textbf{Flyway}, et un serveur d'identité \textbf{Keycloak 26} gérant le RBAC
+via OAuth2/OIDC. Le circuit de validation des demandes RH est à double niveau
+hiérarchique~; le workflow des prêts intègre une commission de crédit avec vote
+\textit{FAVORABLE/DÉFAVORABLE} paramétré selon l'indicateur \texttt{NEEDS\_COMMISSION}.
+Les transitions de statut déclenchent des événements \textbf{Apache Kafka}
+consommés par un service de notification qui pousse les alertes par WebSocket
+et par e-mail. Un assistant conversationnel propulsé par l'API \textbf{Groq}
+(\textit{llama-3.3-70b-versatile}) répond aux questions RH courantes et évalue
+automatiquement les CV des candidats. La génération de rapports s'appuie sur
+\textbf{JasperReports}~; l'analytique décisionnelle exploite un module de
+prédiction de l'\textit{attrition} calculant un score de risque de départ
+sur quatre facteurs comportementaux mesurés directement en Oracle.
+
+\bigskip
+\noindent\textbf{Mots-clés~:} GRH, microservices, Spring Boot, Angular, Keycloak,
+Kafka, WebSocket, Groq, JasperReports, Oracle 23ai, Flyway, Scrum, Attrition.
+
+\cleardoublepage
+
+\tableofcontents\cleardoublepage
+\listoffigures\addcontentsline{toc}{chapter}{Liste des figures}\cleardoublepage
+\listoftables\addcontentsline{toc}{chapter}{Liste des tableaux}\cleardoublepage
+
+% ── Introduction générale ─────────────────────────────────
+\phantomsection
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+\markboth{Introduction Générale}{Introduction Générale}
+
+Arabsoft gère ses ressources humaines sans système d'information centralisé~:
+les demandes de congés transitent par e-mail, les prêts suivent un circuit
+informel dont les décisions ne sont pas documentées, et l'avancement des projets
+n'est mesurable qu'à travers des réunions ad hoc. Cette fragmentation génère
+trois types de risques opérationnels documentés~: des demandes perdues ou non
+tracées, des données de congés incohérentes entre interlocuteurs, et une
+incapacité structurelle à produire des indicateurs RH fiables sans extraction
+manuelle fastidieuse. Les SIRH du marché apportent une réponse fonctionnelle
+mais à un coût de licence récurrent incompatible avec la taille d'Arabsoft et
+avec une rigidité de configuration qui ne correspond pas aux règles de validation
+internes de l'entreprise.
+
+\textbf{Synapse} est la réponse à ce constat. Sa conception repose sur un
+principe simple~: chaque domaine fonctionnel RH constitue un service autonome,
+déployable indépendamment, évoluant sans affecter les autres. Sept microservices
+Spring Boot matérialisent ce découpage~: gestion des employés, circuit des
+demandes, chat temps réel, notifications, analytique, projets et tâches. Chacun
+est sécurisé par le même token JWT émis par Keycloak, persiste ses données en
+Oracle 23ai et communique ses événements via Kafka.
+
+Le \textbf{chapitre~1} pose le contexte d'Arabsoft et formule la problématique.
+Le \textbf{chapitre~2} détaille l'architecture, la modélisation et les choix
+technologiques comparés. Les \textbf{chapitres~3, 4 et~5} documentent les sept
+sprints~: infrastructure et employés~; demandes RH, prêts, Kafka et IA~;
+projets, reporting et attrition.
+
+\clearpage
+\include{chapitre1}
+\include{chapitre2}
+\include{chapitre3}
+\include{chapitre4}
+\include{chapitre5}
+
+% ── Bibliographie ─────────────────────────────────────────
+\phantomsection
+\chapter*{Bibliographie}
+\addcontentsline{toc}{chapter}{Bibliographie}
+\markboth{Bibliographie}{Bibliographie}
+\begin{enumerate}[label={[\arabic*]},leftmargin=*]
+  \item Craig Walls. \textit{Spring Boot in Action}. Manning, 2016.
+  \item Sam Newman. \textit{Building Microservices}, 2\textsuperscript{e}~éd. O'Reilly, 2021.
+  \item Documentation officielle Spring Framework 6.x.
+        \url{https://docs.spring.io/spring-framework/reference/}
+  \item Documentation officielle Angular.
+        \url{https://angular.dev/}
+  \item Documentation Keycloak 26.
+        \url{https://www.keycloak.org/documentation.html}
+  \item Documentation Apache Kafka 3.x.
+        \url{https://kafka.apache.org/documentation/}
+  \item Documentation Flyway.
+        \url{https://documentation.red-gate.com/flyway}
+  \item Documentation JasperReports.
+        \url{https://community.jaspersoft.com/documentation/}
+  \item Groq API Reference.
+        \url{https://console.groq.com/docs/openai}
+  \item Oracle Database 23ai — SQL Language Reference.
+        \url{https://docs.oracle.com/en/database/oracle/oracle-database/23/}
+\end{enumerate}
+
+% ── Conclusion générale ───────────────────────────────────
+\phantomsection
+\chapter*{Conclusion Générale}
+\addcontentsline{toc}{chapter}{Conclusion Générale}
+\markboth{Conclusion Générale}{Conclusion Générale}
+
+Synapse démontre qu'une architecture microservices construite exclusivement sur
+des technologies \textit{open-source} peut couvrir l'intégralité du périmètre
+fonctionnel d'un SIRH commercial~--- cycle de vie des employés, circuits de
+validation paramétrables, communication temps réel, analytique prédictive~---
+et être livrée en quatre mois par une équipe réduite. Les sept services sont
+déployables indépendamment, le schéma Oracle est versionné et reproductible,
+et l'ensemble de l'infrastructure se lance en une commande Docker Compose.
+
+Trois perspectives d'évolution ont été identifiées. L'orchestration par
+\textbf{Kubernetes} avec pipeline CI/CD GitHub Actions transformerait le
+déploiement local en environnement de production à haute disponibilité. Le
+module d'attrition, actuellement fondé sur des règles déterministes, gagnerait
+à intégrer un modèle d'apprentissage supervisé entraîné sur l'historique des
+départs. Enfin, l'intégration de \textbf{Power~BI} directement connecté à Oracle
+offrirait aux décideurs des tableaux de bord interactifs sans export manuel.
+
+\end{document}

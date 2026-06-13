@@ -31,22 +31,17 @@
           <ng-scrollbar style="height: 320px" visibility="hover">
             <div class="notif-list">
               @for (notif of notifications; track notif.id) {
-                <a class="notif-item" [class.unread]="!notif.read"
+                <a class="notif-item" [class.unread]="!notif.lue"
                   href="javascript:" (click)="markAsRead(notif.id)">
                   <div class="notif-icon-wrap" [ngClass]="getNotifIconClass(notif.type)">
-                    <i class="ti {{ notif.icon }}"></i>
+                    <i [class]="notif.icone"></i>
                   </div>
                   <div class="notif-body">
                     <div class="notif-top">
                       <span class="notif-title">{{ notif.titre }}</span>
-                      <span class="notif-time">{{ getTimeAgo(notif.date) }}</span>
+                      <span class="notif-time">{{ tempsRelatif(notif.heure) }}</span>
                     </div>
-                    <p class="notif-desc">{{ notif.description }}</p>
-                    @if (notif.badge) {
-                      <span class="badge rounded-pill" [ngClass]="getBadgeClass(notif.badge)">
-                        {{ notif.badge }}
-                      </span>
-                    }
+                    <p class="notif-desc">{{ notif.message }}</p>
                   </div>
                 </a>
               }
@@ -74,7 +69,7 @@
     <li>
       <div class="dropdown pc-h-item" ngbDropdown>
         <a class="nav-avatar-btn" href="javascript:" ngbDropdownToggle>
-          <div class="avatar-initiales">{{ getInitiales() }}</div>
+          <div class="avatar-initiales">{{ auth.initials }}</div>
           <span class="settings-badge"><i class="ti ti-settings"></i></span>
         </a>
 
@@ -82,12 +77,12 @@
 
           <!-- Header profil -->
           <div class="profile-dropdown-header">
-            <div class="profile-avatar-lg">{{ getInitiales() }}</div>
+            <div class="profile-avatar-lg">{{ auth.initials }}</div>
             <div class="profile-info">
-              <h6>Bonjour, <strong>{{ getFullName() }}</strong></h6>
-              <p class="profile-poste">{{ userProfile.poste }}</p>
-              @if (userProfile.email) {
-                <p class="profile-email">{{ userProfile.email }}</p>
+              <h6>Bonjour, <strong>{{ auth.fullName }}</strong></h6>
+              <p class="profile-poste">{{ auth.postLabel }}</p>
+              @if (auth.email) {
+                <p class="profile-email">{{ auth.email }}</p>
               }
             </div>
           </div>
@@ -107,9 +102,11 @@
 
             <!-- Badge rôle -->
             <div class="role-badge-wrap">
-              <span class="role-badge" [class.role-chef]="userRole === 'chef'">
-                <i [class]="userRole === 'chef' ? 'ti ti-crown' : 'ti ti-user'"></i>
-                {{ userRole === 'chef' ? 'Chef de Projet' : 'Employé' }}
+              <span class="role-badge"
+                    [class.role-admin]="userRole === 'admin'"
+                    [class.role-chef]="userRole === 'chef'">
+                <i [class]="roleIcon"></i>
+                {{ roleLabel }}
               </span>
             </div>
 

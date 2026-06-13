@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
 import { CongesService } from 'src/app/gerai/services/conge.service';
+import { ToastService } from 'src/app/gerai/services/toast.service';
 import {
     SoldeConge,
     DemandeConge,
@@ -29,6 +30,7 @@ export class MesCongesComponent implements OnInit {
        💉 SERVICES INJECTÉS
        ────────────────────────────────────────────────────────── */
     private congesService = inject(CongesService);
+    private toast         = inject(ToastService);
     private cdr = inject(ChangeDetectorRef);
 
     /* ──────────────────────────────────────────────────────────
@@ -40,12 +42,14 @@ export class MesCongesComponent implements OnInit {
     demandes: DemandeConge[] = [];
     statistiques!: StatistiquesConges;
 
+    cancelTarget: DemandeConge | null = null;
+    cancelError = '';
+
     /* ══════════════════════════════════════════════════════════════
        🔄 LIFECYCLE
        ══════════════════════════════════════════════════════════════ */
 
     ngOnInit(): void {
-        console.log('🏖️ [MesConges] Initialisation...');
         this.loadData();
     }
 
@@ -62,7 +66,6 @@ export class MesCongesComponent implements OnInit {
         // ✅ Une seule requête pour tout charger
         this.congesService.getCongesComplet().subscribe({
             next: (data) => {
-                console.log('✅ [MesConges] Données chargées', data);
 
                 this.solde = data.solde;
                 this.demandes = data.demandes;
@@ -72,7 +75,6 @@ export class MesCongesComponent implements OnInit {
                 this.cdr.detectChanges();
             },
             error: (err) => {
-                console.error('❌ [MesConges] Erreur chargement:', err);
                 this.isLoading = false;
                 this.cdr.detectChanges();
             }
@@ -96,28 +98,15 @@ export class MesCongesComponent implements OnInit {
         return icons[type] || 'ti ti-calendar';
     }
 
-    /**
-     * Retourne le label du statut
-     */
-    getStatutLabel(statut: DemandeConge['statut']): string {
-        const labels = {
-            'EN_ATTENTE': 'En attente',
-            'APPROUVE': 'Approuvé',
-            'REJETE': 'Rejeté'
-        };
-        return labels[statut] || statut;
-    }
+    private static readonly CHIP_MAP: Record<string, {cls: string; icon: string; label: string}> = {
+        'EN_ATTENTE': { cls: 'sc-pending',   icon: 'ti ti-clock',        label: 'En attente' },
+        'APPROUVE'  : { cls: 'sc-approved',  icon: 'ti ti-checks',       label: 'Approuvé'   },
+        'REJETE'    : { cls: 'sc-rejected',  icon: 'ti ti-circle-x',     label: 'Rejeté'     },
+    };
 
-    /**
-     * Retourne la classe CSS du statut
-     */
-    getStatutClass(statut: DemandeConge['statut']): string {
-        const classes = {
-            'EN_ATTENTE': 'badge-warning',
-            'APPROUVE': 'badge-success',
-            'REJETE': 'badge-danger'
-        };
-        return classes[statut] || '';
+    statutChip(statut: DemandeConge['statut']) {
+        return MesCongesComponent.CHIP_MAP[statut]
+            ?? { cls: 'sc-cancelled', icon: 'ti ti-dots', label: statut };
     }
 
     /**
@@ -144,25 +133,35 @@ export class MesCongesComponent implements OnInit {
     /**
      * Annule une demande
      */
-    annulerDemande(demande: DemandeConge): void {
-        if (!confirm(`Voulez-vous vraiment annuler cette demande de ${this.getTypeLabel(demande.type)} ?`)) {
-            return;
-        }
+    openCancelModal(demande: DemandeConge): void {
+        this.cancelTarget = demande;
+        this.cancelError  = '';
+    }
 
-        console.log('🗑️ [MesConges] Annulation demande:', demande.id);
+    closeCancelModal(): void {
+        this.cancelTarget = null;
+        this.cancelError  = '';
+    }
 
-        this.congesService.annulerDemande(demande.id).subscribe({
+    confirmAnnuler(): void {
+        if (!this.cancelTarget) return;
+        const target = this.cancelTarget;
+        this.closeCancelModal();
+        this.congesService.annulerDemande(target.id).subscribe({
             next: () => {
-                // Retirer de la liste
-                this.demandes = this.demandes.filter(d => d.id !== demande.id);
-                console.log('✅ [MesConges] Demande annulée');
+                this.demandes = this.demandes.filter(d => d.id !== target.id);
+                this.toast.success('Demande annulée avec succès.');
                 this.cdr.detectChanges();
             },
-            error: (err) => {
-                console.error('❌ [MesConges] Erreur annulation:', err);
-                alert('Erreur lors de l\'annulation de la demande');
+            error: () => {
+                this.cancelError = 'Impossible d\'annuler cette demande. Veuillez réessayer.';
+                this.cdr.detectChanges();
             }
         });
+    }
+
+    annulerDemande(demande: DemandeConge): void {
+        this.openCancelModal(demande);
     }
 
     /**

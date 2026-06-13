@@ -1,0 +1,86 @@
+﻿@startuml seq_demande
+title Diagramme de séquence  -  Circuit de validation d'un prêt
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #2C5F8A
+skinparam participantBackgroundColor #EAF2FB
+skinparam actorBorderColor #1A3A5C
+skinparam noteBorderColor #F0AD4E
+skinparam noteBackgroundColor #FFF3CD
+
+actor "Employé" as emp
+actor "Chef"    as chef
+actor "Admin RH" as admin
+actor "Comité"  as comite
+actor "DG"      as dg
+participant "Angular\n(Frontend)" as view
+participant "LoanController" as ctrl
+participant "LoanRequestService" as svc
+database "Oracle\n(LOAN_REQUESTS, LOAN_VOTES)" as db
+participant "Kafka" as kafka
+participant "NotificationService" as notifSvc
+
+== 1. Dépôt ==
+emp -> view : Saisit montant, durée, motif
+view -> ctrl : POST /api/demandes/prets
+ctrl -> svc : createLoanRequest(dto)
+svc -> db : INSERT INTO LOAN_REQUESTS (statut = EN_ATTENTE)
+db -> svc : LoanRequest {id}
+svc -> kafka : Publie PRET_DEPOSE → notifie chef (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+ctrl -> view : 201 Created {id}
+view -> emp : Demande déposée  -  en attente de validation
+
+== 2. Validation Chef ==
+chef -> view : Ouvre la demande et approuve
+view -> ctrl : PUT /api/demandes/prets/{id}/valider-chef
+ctrl -> svc : validateByChef(id)
+svc -> db : UPDATE LOAN_REQUESTS SET statut = VALIDE_CHEF
+svc -> kafka : Publie PRET_VALIDE_CHEF → notifie RH (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+
+== 3. Instruction RH ==
+admin -> view : Instruit le dossier
+view -> ctrl : PUT /api/demandes/prets/{id}/instruire
+
+alt Passage en commission
+  ctrl -> svc : submitToCommittee(id)
+  svc -> db : UPDATE LOAN_REQUESTS SET statut = EN_ETUDE_COMITE
+  svc -> kafka : Publie PRET_EN_COMITE → notifie comité (async)
+  kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+
+  == 4. Vote du Comité ==
+  comite -> view : Soumet les votes des membres
+  view -> ctrl : POST /api/demandes/prets/{id}/votes
+  ctrl -> svc : recordVotes(id, votes)
+  svc -> db : INSERT INTO LOAN_VOTES (membre_id, decision, commentaire)
+  svc -> db : UPDATE LOAN_REQUESTS SET resultat_comite = consolidé
+  svc -> kafka : Publie COMITE_VOTE → notifie DG (async)
+  kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+
+else Sans commission
+  ctrl -> svc : forwardToDG(id)
+  svc -> db : UPDATE LOAN_REQUESTS SET statut = EN_ATTENTE_DG
+  svc -> kafka : Publie PRET_EN_DG → notifie DG (async)
+  kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+end
+
+== 5. Décision DG ==
+dg -> view : Approuve le montant et la durée
+view -> ctrl : PUT /api/demandes/prets/{id}/approuver-dg
+ctrl -> svc : approveByDG(id, montantAccorde, duree)
+svc -> db : UPDATE LOAN_REQUESTS SET statut = APPROUVE_DG, montant_accorde
+svc -> kafka : Publie PRET_APPROUVE_DG → notifie RH (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+
+== 6. Finalisation RH ==
+admin -> view : Finalise la demande
+view -> ctrl : PUT /api/demandes/prets/{id}/finaliser
+ctrl -> svc : finalize(id)
+svc -> db : UPDATE LOAN_REQUESTS SET statut = APPROUVE
+svc -> kafka : Publie PRET_FINALISE → notifie employé (async)
+kafka --> notifSvc : Consomme → persiste dans NOTIFICATIONS
+ctrl -> view : 200 OK
+view -> admin : Prêt finalisé  -  employé notifié
+
+@enduml

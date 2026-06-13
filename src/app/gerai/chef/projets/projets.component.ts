@@ -1,18 +1,16 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe }    from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import Keycloak from 'keycloak-js';
-import { forkJoin } from 'rxjs';
-
+import { catchError, forkJoin, of } from 'rxjs';
 // Project imports
 import { SharedModule }        from 'src/app/theme/shared/shared.module';
 import { CardComponent }       from 'src/app/theme/shared/components/card/card.component';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumbs/breadcrumbs.component';
 import { Employe }             from 'src/app/theme/shared/interfaces/employe';
-import { ProjetService }       from '../../services/projet-chef.service';
+import { ProjetService } from '../../services/projet-chef.service';
+import { ProfilEmployeService } from '../../services/employe-profile.service';
 import { Projet }              from '../../models/projet.model';
 import { StatutProjet }        from '../../models/projet.model';
-import { ChangeDetectorRef }   from '@angular/core';
 
 @Component({
   selector   : 'app-projets',
@@ -27,15 +25,16 @@ import { ChangeDetectorRef }   from '@angular/core';
     BreadcrumbComponent
   ],
   templateUrl: './projets.component.html',
-  styleUrls  : ['./projets.component.scss']
+  styleUrls  : ['./projets.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProjetsComponent implements OnInit {
 
   constructor(private cd: ChangeDetectorRef) {}
 
-  private keycloak = inject(Keycloak);
-  private fb = inject(FormBuilder);
-  private projetService = inject(ProjetService);
+  private fb             = inject(FormBuilder);
+  private projetService  = inject(ProjetService);
+  private profilService  = inject(ProfilEmployeService);
 
   // ── Stats ──────────────────────────────────────────────
   totalProjets    = 0;
@@ -63,11 +62,37 @@ export class ProjetsComponent implements OnInit {
   isEditMode      = false;
   isSaving        = false;
 
+  // ── Member picker filters ───────────────────────────────
+  membreSearch = '';
+  membreDept   = '';
+
+  get departments(): string[] {
+    return [...new Set(this.employes.map(e => e.departement ?? '').filter(Boolean))].sort();
+  }
+
+  get filteredEmployesForPicker(): Employe[] {
+    let list = this.employes.filter(e =>
+      !(e.poste ?? '').toLowerCase().includes('chef')
+    );
+    if (this.membreSearch) {
+      const q = this.membreSearch.toLowerCase();
+      list = list.filter(e =>
+        e.nom.toLowerCase().includes(q) ||
+        e.prenom.toLowerCase().includes(q) ||
+        (e.poste ?? '').toLowerCase().includes(q)
+      );
+    }
+    if (this.membreDept) {
+      list = list.filter(e => e.departement === this.membreDept);
+    }
+    return list;
+  }
+
   projetForm!: FormGroup;
 
-  managerNomComplet: string = '';
+  currentUserDbId = 0;
 
-  
+
 
   // ── Lifecycle ──────────────────────────────────────────
   ngOnInit(): void {
@@ -78,62 +103,42 @@ export class ProjetsComponent implements OnInit {
   // ── Form ───────────────────────────────────────────────
   initForm(): void {
     this.projetForm = this.fb.group({
-      nom        : ['', Validators.required],
-      description: [''],
-      dateDebut  : ['', Validators.required],
-      dateFin    : [''],
-      statut     : [StatutProjet.EN_PAUSE],
-      progression: [0]
+      nom         : ['', Validators.required],
+      description : [''],
+      dateDebut   : ['', Validators.required],
+      dateFin     : [''],
+      statut      : [StatutProjet.EN_PAUSE],
+      totalTaches : [0, [Validators.required, Validators.min(0)]]
     });
   }
 
-  // ── Load data from service (MSW handlers will respond) ─
+  // ── Progression calculée depuis les tâches ─────────────
+  calcProgression(p: Projet): number {
+    if (!p.totalTaches || p.totalTaches === 0) return p.progression ?? 0;
+    return Math.round((p.tachesCompletees / p.totalTaches) * 100);
+  }
+
+  // ── Load data ──────────────────────────────────────────
   loadData(): void {
-      forkJoin({
-      projets: this.projetService.getProjets(),
-      employes: this.projetService.getEmployes()
-    }).subscribe(({ projets, employes }) => {
-      this.employes = employes;
-      this.projets = projets;
-       console.log('Raw projets from service:', projets);
-
-      const managerFullName = this.getManagerFullName();
-      console.log('Manager full name:', managerFullName);
-
-      
-
-      this.projets = projets.map(p => ({
-        ...p,
-        chefProjet: managerFullName, // ✅ inject full name here
-        membres: employes.filter(e => p.membres?.some(m => m.id === e.id)),
-        dateFin: p.dateFin
-      }));
-
+    forkJoin({
+      projets : this.projetService.getProjets().pipe(catchError(() => of([]))),
+      employes: this.projetService.getEmployes().pipe(catchError(() => of([]))),
+      profil  : this.profilService.getDbProfile()
+    }).subscribe(({ projets, employes, profil }) => {
+      this.currentUserDbId = profil.dbId;
+      this.projets         = projets.map(p => this._stripChef(p));
+      this.employes        = employes;
       this.filteredProjets = [...this.projets];
-
-      console.log('Filtered projets after mapping:', this.filteredProjets);
-
       this.computeStats();
-      this.cd.detectChanges();
+      this.cd.markForCheck();
     });
   }
 
-
-  private getManagerFullName(): string {
-    const token = this.keycloak.tokenParsed;
-    console.log('Token parsed:', token);
-    if (!token) return '—';
-
-    const prenom = token?.['given_name'] || '';
-    const nom = token?.['family_name'] || '';
-
-    if (prenom && nom) {
-      return `${prenom} ${nom}`; // ✅ full name
-    }
-
-    // fallback if only "name" or "preferred_username" exists
-    return token?.['name'] || token?.['preferred_username'] || '—';
+  private _stripChef(p: Projet): Projet {
+    return { ...p, equipe: (p.equipe ?? []).filter(m => m.id !== this.currentUserDbId) };
   }
+
+
 
   // ── Stats ──────────────────────────────────────────────
  computeStats(): void {
@@ -167,8 +172,10 @@ export class ProjetsComponent implements OnInit {
 
   // ── Modal helpers ──────────────────────────────────────
   openCreateModal(): void {
-    this.isEditMode     = false;
+    this.isEditMode      = false;
     this.selectedMembres = [];
+    this.membreSearch    = '';
+    this.membreDept      = '';
     this.projetForm.reset({ statut: StatutProjet.EN_PAUSE, progression: 0 });
     this.showModal = true;
   }
@@ -177,13 +184,15 @@ export class ProjetsComponent implements OnInit {
     this.isEditMode      = true;
     this.selectedProjet  = projet;
     this.selectedMembres = [...(projet.membres ?? [])];
+    this.membreSearch    = '';
+    this.membreDept      = '';
     this.projetForm.patchValue({
       nom        : projet.nom,
       description: projet.description ?? '',
       dateDebut  : projet.dateDebut,
       dateFin    : projet.dateFin ?? '',
       statut     : projet.statut,
-      progression: projet.progression ?? 0
+      totalTaches: projet.totalTaches ?? 0
     });
     this.showModal = true;
   }
@@ -212,7 +221,15 @@ export class ProjetsComponent implements OnInit {
     return this.selectedMembres.some(m => m.id === emp.id);
   }
 
+  /** True when the employee is already assigned to a DIFFERENT project */
+  isAssignedElsewhere(emp: Employe): boolean {
+    if (!emp.projetId) return false;
+    const currentId = this.selectedProjet?.id;
+    return emp.projetId !== currentId;
+  }
+
   toggleMembre(emp: Employe): void {
+    if (this.isAssignedElsewhere(emp)) return;
     const idx = this.selectedMembres.findIndex(m => m.id === emp.id);
     if (idx === -1) {
       this.selectedMembres.push(emp);
@@ -230,23 +247,47 @@ export class ProjetsComponent implements OnInit {
     const formVal = this.projetForm.value;
 
     if (this.isEditMode && this.selectedProjet) {
+      const tachesCompletees = this.selectedProjet.tachesCompletees ?? 0;
+      const totalTaches      = formVal.totalTaches ?? 0;
+      const progression      = totalTaches > 0 ? Math.round((tachesCompletees / totalTaches) * 100) : 0;
+
       this.projetService.updateProjet(this.selectedProjet.id, {
-        ...this.selectedProjet,
-        ...formVal,
-        membres: this.selectedMembres
-      }).subscribe(updated => {
-        const idx = this.projets.findIndex(p => p.id === updated.id);
-        this.projets[idx] = updated;
-        this.refreshAfterSave();
+        nom:         formVal.nom,
+        description: formVal.description,
+        dateDebut:   formVal.dateDebut,
+        dateFin:     formVal.dateFin || undefined,
+        statut:      formVal.statut,
+        progression,
+        membreIds:   this.selectedMembres.map(m => m.id)
+      }).subscribe({
+        next: updated => {
+          const idx = this.projets.findIndex(p => p.id === updated.id);
+          if (idx >= 0) this.projets[idx] = this._stripChef({ ...updated, progression });
+          this.refreshAfterSave();
+        },
+        error: err => {
+          console.error('Erreur mise à jour projet:', err);
+          this.isSaving = false;
+        }
       });
     } else {
       this.projetService.createProjet({
-        chefProjet: 'Ahmed Mansour',
-        membres: this.selectedMembres,
-        ...formVal
-      }).subscribe(created => {
-        this.projets.push(created);
-        this.refreshAfterSave();
+        nom:         formVal.nom,
+        description: formVal.description,
+        dateDebut:   formVal.dateDebut,
+        dateFin:     formVal.dateFin || undefined,
+        statut:      formVal.statut,
+        progression: 0,
+        membreIds:   this.selectedMembres.map(m => m.id)
+      }).subscribe({
+        next: created => {
+          this.projets.push(this._stripChef(created));
+          this.refreshAfterSave();
+        },
+        error: err => {
+          console.error('Erreur création projet:', err);
+          this.isSaving = false;
+        }
       });
     }
   }
@@ -256,6 +297,7 @@ export class ProjetsComponent implements OnInit {
     this.computeStats();
     this.isSaving = false;
     this.closeModal();
+    this.cd.markForCheck();
   }
 
   deleteProjet(projet: Projet): void {
@@ -264,6 +306,7 @@ export class ProjetsComponent implements OnInit {
       this.projets = this.projets.filter(p => p.id !== projet.id);
       this.filteredProjets = [...this.projets];
       this.computeStats();
+      this.cd.markForCheck();
     });
   }
 
@@ -289,10 +332,11 @@ getStatusLabel(statut: StatutProjet): string {
 }
 
 
-  getProgressClass(progression: number): string {
-    if (progression >= 80) return 'bg-success';
-    if (progression >= 50) return 'bg-primary';
-    if (progression >= 25) return 'bg-warning';
+  getProgressClass(p: Projet): string {
+    const prog = this.calcProgression(p);
+    if (prog >= 80) return 'bg-success';
+    if (prog >= 50) return 'bg-primary';
+    if (prog >= 25) return 'bg-warning';
     return 'bg-danger';
   }
 }

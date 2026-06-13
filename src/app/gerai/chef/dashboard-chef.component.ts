@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { DemandeService } from 'src/app/gerai/services/demande.service';
 import { TacheService } from 'src/app/gerai/services/tache-chef.service';
@@ -11,9 +12,7 @@ import { Demande } from 'src/app/gerai/models/demande.model';
 import { Tache } from 'src/app/gerai/models/tache.model';
 import { Projet, StatutProjet } from 'src/app/gerai/models/projet.model';
 import { MembreEquipe } from 'src/app/gerai/models/equipe.model';
-import { PerformanceChef } from 'src/app/gerai/models/chef.model';
-import { RapportService } from 'src/app/gerai/services/rapport-chef.service';
-import Keycloak from 'keycloak-js';
+import { AuthService } from 'src/app/gerai/services/auth.service';
 
 export interface ChargeItem {
   nom: string;
@@ -21,12 +20,6 @@ export interface ChargeItem {
   tachesActives: number;
   tachesEnRetard: number;
 }
-
-const ROLES_SYSTEME_KEYCLOAK = [
-  'offline_access', 'uma_authorization', 'manage-account',
-  'manage-account-links', 'view-profile', 'default-roles-gerai',
-  'default-roles-master', 'create-realm', 'broker'
-];
 
 @Component({
   selector: 'app-dashboard-chef',
@@ -37,18 +30,16 @@ const ROLES_SYSTEME_KEYCLOAK = [
 })
 export class DashboardChefComponent implements OnInit {
 
-  private keycloak    = inject(Keycloak);
+  private auth        = inject(AuthService);
   private router      = inject(Router);
   private cdr         = inject(ChangeDetectorRef);
   private demandeService = inject(DemandeService);
   private tacheService   = inject(TacheService);
   private projetService  = inject(ProjetService);
   private equipeService  = inject(EquipeApiService);
-  private rapportService = inject(RapportService);
-
   // ── Auth ────────────────────────────────────────────
-  userName  = '';
-  userEmail = '';
+  get userName()  { return this.auth.fullName; }
+  get userEmail() { return this.auth.email;    }
 
   // ── KPIs ────────────────────────────────────────────
   demandesEnAttente   = 0;
@@ -56,8 +47,8 @@ export class DashboardChefComponent implements OnInit {
   absencesAujourdhui  = 0;
   projetsARisqueCount = 0;
 
-  // ── Performance ──────────────────────────────────────
-  performance: PerformanceChef | null = null;
+  // ── HR indicators (computed from loaded data) ────────
+  demandesTraiteesCount = 0;
 
   // ── Widget data ──────────────────────────────────────
   demandesAValider: Demande[]    = [];
@@ -71,35 +62,21 @@ export class DashboardChefComponent implements OnInit {
   private readonly today7 = new Date(Date.now() + 7 * 86_400_000);
 
   // ── Lifecycle ────────────────────────────────────────
-  async ngOnInit(): Promise<void> {
-    await this._loadUserProfile();
+  ngOnInit(): void {
     this._loadData();
   }
 
-  // ── Auth ─────────────────────────────────────────────
-  private async _loadUserProfile(): Promise<void> {
-    try {
-      if (!this.keycloak.authenticated) { await this.keycloak.login(); return; }
-      const token = this.keycloak.tokenParsed;
-      this.userName  = token?.['name'] || token?.['preferred_username'] || 'Chef';
-      this.userEmail = token?.['email'] || '';
-    } catch {
-      this.userName = 'Chef';
-    }
-  }
 
   // ── Data loading ─────────────────────────────────────
   private _loadData(): void {
     forkJoin({
-      demandes   : this.demandeService.getDemandes(),
-      taches     : this.tacheService.getTaches(),
-      projets    : this.projetService.getProjets(),
-      membres    : this.equipeService.getMembres(),
-      performance: this.rapportService.getPerformanceChef()
+      demandes   : this.demandeService.getDemandes().pipe(catchError(() => of([]))),
+      taches     : this.tacheService.getTaches().pipe(catchError(() => of([]))),
+      projets    : this.projetService.getProjets().pipe(catchError(() => of([]))),
+      membres : this.equipeService.getMembres().pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ demandes, taches, projets, membres, performance }) => {
+      next: ({ demandes, taches, projets, membres }) => {
         this._computeAll(demandes, taches, projets, membres);
-        this.performance = performance;
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -118,8 +95,9 @@ export class DashboardChefComponent implements OnInit {
   ): void {
     // KPI 1 — Demandes en attente
     const enAttente = demandes.filter(d => d.statut === 'EN_ATTENTE');
-    this.demandesEnAttente = enAttente.length;
-    this.demandesAValider  = enAttente.slice(0, 5);
+    this.demandesEnAttente    = enAttente.length;
+    this.demandesAValider     = enAttente.slice(0, 5);
+    this.demandesTraiteesCount = demandes.filter(d => d.statut !== 'EN_ATTENTE').length;
 
     // KPI 2 — Tâches en retard
     const retard = taches.filter(t =>
@@ -176,6 +154,19 @@ export class DashboardChefComponent implements OnInit {
     return this.membres.length - this.absencesAujourdhui;
   }
 
+  get tauxPresenceEquipe(): number {
+    if (!this.membres.length) return 0;
+    return Math.round((this.membresPresents / this.membres.length) * 100);
+  }
+
+  get totalDemandes(): number {
+    return this.demandesEnAttente + this.demandesTraiteesCount;
+  }
+
+  get tauxTraitementDemandes(): number {
+    return this.totalDemandes > 0 ? Math.round((this.demandesTraiteesCount / this.totalDemandes) * 100) : 0;
+  }
+
   // ── Navigation ───────────────────────────────────────
   naviguerVers(route: string) { this.router.navigate([route]); }
 
@@ -183,5 +174,5 @@ export class DashboardChefComponent implements OnInit {
     this.router.navigate(['/chef/demandes'], { queryParams: { statut: 'EN_ATTENTE' } });
   }
 
-  logout() { this.keycloak.logout({ redirectUri: window.location.origin }); }
+  logout() { this.auth.logout(); }
 }

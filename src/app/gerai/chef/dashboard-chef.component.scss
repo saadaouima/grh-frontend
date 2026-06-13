@@ -575,6 +575,32 @@
   .perf-fill { height: 100% !important; border-radius: 100px !important; transition: width 0.8s cubic-bezier(0.4,0,0.2,1) !important; }
   .perf-sub  { font-size: 11px !important; color: #94A3B8 !important; font-weight: 500 !important; }
 
+  // ── KPI background variants ───────────────────────
+  .kpi-amber  { background: linear-gradient(135deg, #B45309 0%, #D97706 100%) !important; }
+  .kpi-red    { background: linear-gradient(135deg, #991B1B 0%, #DC2626 100%) !important; }
+  .kpi-navy   { background: linear-gradient(135deg, #0F4C8A 0%, #1565C0 100%) !important; }
+  .kpi-violet { background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%) !important; }
+
+  // ── Performance icon color variants ──────────────
+  .pi-indigo { background: #EEF2FF !important; color: #6366F1 !important; }
+  .pi-green  { background: #ECFDF5 !important; color: #059669 !important; }
+  .pi-sky    { background: #F0F9FF !important; color: #0284C7 !important; }
+  .pi-amber  { background: #FFFBEB !important; color: #D97706 !important; }
+  .pi-red    { background: #FEF2F2 !important; color: #EF4444 !important; }
+
+  // ── Performance fill color variants ──────────────
+  .pf-indigo { background: #6366F1 !important; }
+  .pf-green  { background: #059669 !important; }
+  .pf-sky    { background: #0284C7 !important; }
+  .pf-amber  { background: #D97706 !important; }
+  .pf-red    { background: #EF4444 !important; }
+
+  // ── Pending count danger variant ──────────────────
+  .pending-count--danger { background: #FEE2E2 !important; color: #DC2626 !important; }
+
+  // ── Icon accent utilities ─────────────────────────
+  .icon-indigo { color: #6366F1 !important; }
+
   .count-badge {
     font-size: 11px !important; font-weight: 600 !important;
     color: #6366F1 !important; background: #EEF2FF !important;

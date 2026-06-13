@@ -1,0 +1,332 @@
+\chapter{Sprints 6 et 7~: Projets, Reporting et Analyse Prédictive}
+
+\noindent\textbf{Plan du chapitre}
+\begin{enumerate}[nosep]
+  \item Sprint 6~: Gestion des projets, tâches et scoring de CV
+  \item Sprint 7~: JasperReports, tableaux de bord et module d'attrition
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────
+
+La troisième release ajoute deux dimensions à Synapse~: une dimension
+\textit{collaborative} avec la gestion des projets et des tâches, qui dote les
+chefs d'une visibilité en temps réel sur l'avancement sans saisie manuelle
+d'indicateurs~; et une dimension \textit{décisionnelle} avec le reporting
+JasperReports et le module de prédiction de l'attrition, qui transforme les
+données accumulées en signaux exploitables par la direction RH.
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 6~: Projets, tâches et scoring de CV}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre du sprint 6}
+\label{tab:s6}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Résultat attendu} \\\hline
+\rowcolor{rowgray}
+\textit{projets-service}~(:8087) & CRUD projets, affectation multi-membres, calcul
+  automatique du pourcentage d'avancement, dates jalons \\\hline
+\textit{taches-service}~(:8088) & CRUD tâches avec statuts À\_FAIRE / EN\_COURS /
+  TERMINEE / EN\_RETARD, affectation à un membre, filtre par statut \\\hline
+\rowcolor{rowgray}
+Kanban Angular & Colonnes dynamiques par statut, drag-and-drop simulé par boutons
+  de transition, indicateurs de délai dépassé \\\hline
+Recrutement + scoring CV & Formulaire d'offre, dépôt de CV, score automatique
+  calculé par Groq sur 100 avec justification structurée \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Diagramme de cas d'utilisation~: projets et tâches}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+
+  % Acteur Chef
+  \draw[thick] (-2,5.5) circle(0.28cm);
+  \draw[thick] (-2,5.22) -- (-2,4.5) coordinate(wC);
+  \draw[thick] (wC)++(0,0.1)--++(-0.35,-0.3) (wC)++(0,0.1)--++(0.35,-0.3);
+  \draw[thick] (wC)--++(-0.25,-0.5) (wC)--++(0.25,-0.5);
+  \node[font=\small] at (-2,3.7) {Chef};
+
+  % Acteur Employé
+  \draw[thick] (12,3.5) circle(0.28cm);
+  \draw[thick] (12,3.22) -- (12,2.5) coordinate(wE);
+  \draw[thick] (wE)++(0,0.1)--++(-0.35,-0.3) (wE)++(0,0.1)--++(0.35,-0.3);
+  \draw[thick] (wE)--++(-0.25,-0.5) (wE)--++(0.25,-0.5);
+  \node[font=\small] at (12,1.7) {Employé};
+
+  % Frontière
+  \begin{scope}[on background layer]
+    \filldraw[umlborder] (0,0) rectangle (10,7.5);
+    \node[font=\bfseries\small] at (5,7.2) {projets-service / taches-service};
+  \end{scope}
+
+  % UCs
+  \draw (4,6.5) ellipse(2.4cm and 0.45cm); \node[font=\scriptsize,align=center] at (4,6.5) {Créer un projet};
+  \draw (7.5,6.5) ellipse(2cm and 0.45cm); \node[font=\scriptsize,align=center] at (7.5,6.5) {Affecter des membres};
+  \draw (4,5.1) ellipse(2.4cm and 0.45cm); \node[font=\scriptsize,align=center] at (4,5.1) {Suivre l'avancement (\%)};
+  \draw (4,3.7) ellipse(2.4cm and 0.45cm); \node[font=\scriptsize,align=center] at (4,3.7) {Créer une tâche};
+  \draw (7.5,3.7) ellipse(2cm and 0.45cm); \node[font=\scriptsize,align=center] at (7.5,3.7) {Assigner une tâche};
+  \draw (4,2.3) ellipse(2.4cm and 0.45cm); \node[font=\scriptsize,align=center] at (4,2.3) {Mettre à jour le statut};
+  \draw (4,0.9) ellipse(2.4cm and 0.45cm); \node[font=\scriptsize,align=center] at (4,0.9) {Consulter les retards};
+
+  % Relations
+  \draw[->,dashed,>=stealth] (6.4,6.5) -- (5.5,6.5) node[midway,above,font=\scriptsize]{<<include>>};
+  \draw[->,dashed,>=stealth] (5.5,3.7) -- (5.4,3.7) node[midway,above,font=\scriptsize]{<<include>>};
+
+  % Associations acteurs
+  \draw[->] (-1.65,5.5) -- (1.6,6.5);
+  \draw[->] (-1.65,5.3) -- (1.6,5.1);
+  \draw[->] (-1.65,5.0) -- (1.6,3.7);
+  \draw[->] (-1.65,4.7) -- (1.6,0.9);
+  \draw[->] (11.65,3.5) -- (6.4,2.3);
+  \draw[->] (11.65,3.2) -- (6.4,0.9);
+
+\end{tikzpicture}
+\caption{Diagramme de cas d'utilisation~: gestion des projets et tâches}
+\label{fig:uc_proj}
+\end{figure}
+
+\subsection{Réalisation~: calcul d'avancement}
+
+L'avancement d'un projet est recalculé dans \textit{projets-service} à chaque
+mise à jour de statut d'une tâche~:
+
+\begin{lstlisting}[language=Java,caption={Calcul de l'avancement dans ProjetService}]
+double avancement = taskRepo
+    .countByProjetIdAndStatut(projetId, "TERMINEE")
+    * 100.0
+    / taskRepo.countByProjetId(projetId);
+projet.setAvancement(Math.round(avancement));
+projetRepo.save(projet);
+\end{lstlisting}
+
+\subsection{Réalisation~: scoring de CV par Groq}
+
+Pour chaque candidature déposée, le \textit{chat-service} construit un prompt
+intégrant le descriptif du poste et le texte extrait du CV~; il appelle
+\texttt{llama-3.3-70b-versatile} avec \texttt{temperature=0.1} (résultat
+déterministe) et demande un objet JSON \texttt{\{score: int, forces: [...],
+faiblesses: [...], recommandation: string\}}. Le score entier (0--100) et la
+recommandation sont persistés dans la table \texttt{CANDIDATURES}.
+
+\subsection{Résultats du sprint 6}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{images/sprint6_kanban.png}
+  \caption{Tableau Kanban d'un projet~: colonnes À\_FAIRE / EN\_COURS / TERMINÉE / EN\_RETARD}
+  \label{fig:s6_kanban}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────
+\section{Sprint 7~: JasperReports, tableaux de bord et attrition}
+% ─────────────────────────────────────────────────────────────
+
+\subsection{Objectifs}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre du sprint 7}
+\label{tab:s7}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\rowcolor{headerblue!25}\textbf{Tâche} & \textbf{Résultat attendu} \\\hline
+\rowcolor{rowgray}
+JasperReports PDF & Rapports congés, formations et absences exportables en PDF
+  avec en-tête Synapse et filtre par département/période \\\hline
+JasperReports Excel & Export XLSX des mêmes données pour usage tableur \\\hline
+\rowcolor{rowgray}
+Cache Caffeine & TTL 10 min sur les KPIs analytiques~; invalidation sur
+  \texttt{NotificationEvent} Kafka ou appel \texttt{POST /api/admin/attrition/refresh} \\\hline
+Module d'attrition & Score de risque (0--100) calculé en Oracle pour chaque
+  employé actif~; niveaux FAIBLE/MOYEN/ÉLEVÉ \\\hline
+\rowcolor{rowgray}
+Tableaux de bord & KPIs multi-rôles~: taux d'absentéisme, répartition des
+  demandes, top absents, évolution mensuelle \\\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Conception~: pipeline analytique}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+
+  \node[infra]     (ora) at (0,3)   {Oracle 23ai\\(requêtes analytiques)};
+  \node[component] (rep) at (4.5,5) {ReportService\\JasperFillManager};
+  \node[component] (att) at (4.5,1) {AttritionService\\scoring SQL};
+  \node[component] (sts) at (9,3)   {StatsService\\cache Caffeine};
+  \node[infra]     (kaf) at (9,0.5) {Kafka\\(invalidation)};
+  \node[component] (api) at (13,3)  {REST API\\/api/analytics\\:8083};
+
+  \draw[compArr] (ora)  -- (rep);
+  \draw[compArr] (ora)  -- (att);
+  \draw[compArr] (ora)  -- (sts);
+  \draw[compArr] (rep)  -- (api) node[midway,above,font=\scriptsize]{PDF/XLSX};
+  \draw[compArr] (att)  -- (api) node[midway,below,font=\scriptsize]{AttritionDTO};
+  \draw[compArr] (sts)  -- (api) node[midway,above,font=\scriptsize]{KPIs};
+  \draw[compArr,dashed] (kaf) to[bend left=15]
+    node[midway,right,font=\scriptsize]{evict cache} (sts);
+
+\end{tikzpicture}
+\caption{Pipeline analytique de l'\textit{analytics-service}~: sources, caches et API}
+\label{fig:analytics}
+\end{figure}
+
+\subsection{Module d'attrition~: modélisation}
+
+\subsubsection*{Facteurs et barème}
+
+\begin{table}[H]
+\centering
+\caption{Facteurs du score d'attrition et seuils Oracle}
+\label{tab:attrition}
+\begin{tabularx}{\textwidth}{|l|L|C|}
+\hline
+\rowcolor{headerblue!25}\textbf{Facteur} & \textbf{Seuil de risque élevé (requête Oracle)} & \textbf{Points max} \\\hline
+\rowcolor{rowgray}
+Ancienneté & \texttt{MONTHS\_BETWEEN(SYSDATE, HIRE\_DATE) < 6} & 25 \\\hline
+Volume d'absences & $\geq 30$ jours de congés approuvés sur les 12 derniers mois & 25 \\\hline
+\rowcolor{rowgray}
+Taux de rejet & $\geq 50\,\%$ des demandes avec statut \texttt{REJETEE} sur 12 mois & 25 \\\hline
+Engagement projets & Aucun enregistrement dans \texttt{PROJECT\_MEMBERS} actif & 25 \\\hline
+\end{tabularx}
+\end{table}
+
+\subsubsection*{Formule et niveaux de risque}
+
+\begin{equation}
+  S_{\text{attrition}} =
+  \text{pts}_{\text{ancienneté}} + \text{pts}_{\text{absences}}
+  + \text{pts}_{\text{rejets}} + \text{pts}_{\text{engagement}}
+  \label{eq:attrition}
+\end{equation}
+
+\begin{equation}
+  \text{Niveau} =
+  \begin{cases}
+    \text{ÉLEVÉ}  & \text{si } S \geq 70 \\
+    \text{MOYEN}  & \text{si } 40 \leq S < 70 \\
+    \text{FAIBLE} & \text{si } S < 40
+  \end{cases}
+\end{equation}
+
+\subsubsection*{Implémentation~: requête Oracle agrégée}
+
+L'ensemble des quatre facteurs est calculé en une seule passe par une requête
+\texttt{WITH} à sous-requêtes \texttt{LEFT JOIN} agrégées, exécutée par
+\texttt{AttritionRepository}~. Les résultats sont mis en cache par Caffeine
+(TTL 10 min) et invalidés sur appel de
+\texttt{POST /api/admin/attrition/refresh} ou sur réception d'un
+\texttt{NotificationEvent} de type \texttt{VALIDEE\_RH} dans le flux Kafka.
+
+\begin{lstlisting}[language=SQL,caption={Extrait de la requête d'attrition Oracle}]
+WITH anciennete AS (
+  SELECT EMPLOYEE_ID,
+    CASE WHEN MONTHS_BETWEEN(SYSDATE, HIRE_DATE) < 6 THEN 25 ELSE 0 END pts
+  FROM EMPLOYEES WHERE STATUS = 'ACTIF'
+),
+absences AS (
+  SELECT EMPLOYEE_ID,
+    CASE WHEN SUM(DAYS_COUNT) >= 30 THEN 25 ELSE 0 END pts
+  FROM LEAVE_REQUESTS
+  WHERE STATUS = 'APPROUVE'
+    AND CREATED_AT > ADD_MONTHS(SYSDATE, -12)
+  GROUP BY EMPLOYEE_ID
+),
+...
+SELECT e.EMPLOYEE_ID,
+  NVL(a.pts,0) + NVL(ab.pts,0) + NVL(r.pts,0) + NVL(pr.pts,0) AS SCORE
+FROM EMPLOYEES e
+LEFT JOIN anciennete a  ON a.EMPLOYEE_ID = e.EMPLOYEE_ID
+...
+\end{lstlisting}
+
+\subsection{Génération de rapports JasperReports}
+
+Les templates \texttt{.jrxml} sont chargés au démarrage depuis
+\texttt{classpath:reports/}. La méthode \texttt{ReportService.generate()} reçoit
+le type, la période et l'identifiant département, remplit le rapport via
+\texttt{JasperFillManager.fillReport(template, params, connection)} et exporte~:
+
+\begin{lstlisting}[language=Java,caption={Export dual PDF/Excel dans ReportService}]
+if ("PDF".equals(format)) {
+    JasperExportManager.exportReportToPdfStream(print, outputStream);
+} else {
+    JRXlsxExporter exporter = new JRXlsxExporter();
+    exporter.setExporterInput(new SimpleExporterInput(print));
+    exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+    exporter.exportReport();
+}
+\end{lstlisting}
+
+Les rapports sont filtrés par rôle~: un chef accède uniquement aux données de
+son département~; l'administrateur RH accède à l'ensemble des données.
+
+\subsection{Résultats du sprint 7}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{images/sprint7_attrition.png}
+  \caption{Vue attrition~: KPIs globaux et liste des employés triés par score de risque}
+  \label{fig:s7_attrition}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.80\textwidth]{images/sprint7_rapport_pdf.png}
+  \caption{Rapport de congés généré au format PDF via JasperReports}
+  \label{fig:s7_pdf}
+\end{figure}
+
+\subsection{Bilan des livrables}
+
+\begin{table}[H]
+\centering
+\caption{Fonctionnalités livrées à l'issue des sept sprints}
+\label{tab:bilan}
+\begin{tabularx}{\textwidth}{|L|C|}
+\hline
+\rowcolor{headerblue!25}\textbf{Fonctionnalité} & \textbf{État} \\\hline
+\rowcolor{rowgray}
+Infrastructure~: Keycloak, Oracle 23ai, Flyway, Docker Compose & \faCheckCircle \\\hline
+Gestion des employés + sync bidirectionnelle Oracle--Keycloak & \faCheckCircle \\\hline
+\rowcolor{rowgray}
+Workflows demandes RH (5 types, circuit Chef → RH) & \faCheckCircle \\\hline
+Workflow prêt avec commission FAVORABLE/DÉFAVORABLE & \faCheckCircle \\\hline
+\rowcolor{rowgray}
+Notifications asynchrones Kafka + e-mail MailHog & \faCheckCircle \\\hline
+Messagerie temps réel WebSocket STOMP/SockJS & \faCheckCircle \\\hline
+\rowcolor{rowgray}
+Assistant IA conversationnel Groq (\textit{llama-3.3-70b-versatile}) & \faCheckCircle \\\hline
+Gestion projets, tâches, Kanban & \faCheckCircle \\\hline
+\rowcolor{rowgray}
+Recrutement + scoring automatique de CV & \faCheckCircle \\\hline
+Rapports JasperReports PDF et Excel & \faCheckCircle \\\hline
+\rowcolor{rowgray}
+Tableaux de bord analytiques (cache Caffeine, invalidation Kafka) & \faCheckCircle \\\hline
+Module de prédiction d'attrition (4 facteurs Oracle) & \faCheckCircle \\\hline
+\end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────
+
+La troisième release complète le périmètre fonctionnel de Synapse~: la gestion
+des projets et tâches fournit une mesure objective de l'avancement~; le scoring
+Groq automatise la présélection des candidats~; JasperReports produit des documents
+exportables adaptés au rôle~; et le module d'attrition calcule directement en Oracle
+des indicateurs de risque de départ que les SIRH commerciaux n'auraient pas pu
+produire sans développements spécifiques coûteux. Ensemble, ces sept sprints
+démontrent qu'une couverture GRH complète est atteignable sur base
+exclusivement \textit{open-source} en quatre mois.

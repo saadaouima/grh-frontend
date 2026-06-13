@@ -1,0 +1,122 @@
+@startuml uc_gerer_employes
+' ============================================================
+'  Diagramme de cas d'utilisation raffiné — Gérer les employés
+'  Synapse – Plateforme GRH
+' ============================================================
+
+scale 1.4
+skinparam dpi 150
+
+skinparam defaultFontName  "Times New Roman"
+skinparam defaultFontSize  12
+skinparam backgroundColor  #FFFFFF
+
+skinparam actor {
+  BackgroundColor #D6EAF8
+  BorderColor     #2980B9
+  FontColor       #1A252F
+  FontSize        12
+}
+
+skinparam usecase {
+  BackgroundColor #EBF5FB
+  BorderColor     #2980B9
+  FontColor       #1A252F
+  FontSize        11
+  BorderThickness 1.5
+}
+
+skinparam rectangle {
+  BackgroundColor #F8FBFD
+  BorderColor     #2980B9
+  BorderThickness 1.5
+  FontColor       #1B4F72
+  FontSize        13
+  FontStyle       bold
+}
+
+skinparam arrow {
+  Color      #2980B9
+  FontSize   10
+  FontColor  #1A252F
+}
+
+skinparam note {
+  BackgroundColor #FEF9E7
+  BorderColor     #F39C12
+  FontSize        10
+}
+
+' ── Acteur unique ────────────────────────────────────────────
+' En production, les rôles Keycloak "admin" et "admin_rh" ont
+' des droits identiques sur la gestion des employés.
+' (app-routing.module.ts : data.roles = ['admin', 'admin_rh'])
+actor "Administrateur RH\n[admin / admin_rh]"  as ADMIN
+
+' ── Frontière du système ─────────────────────────────────────
+rectangle "Synapse" {
+
+  usecase "Créer un employé"               as UC_CREATE
+  usecase "Modifier un employé"            as UC_UPDATE
+  usecase "Désactiver un employé"          as UC_DISABLE
+  usecase "Consulter la liste\ndes employés" as UC_LIST
+  usecase "Consulter la fiche\nd'un employé" as UC_VIEW
+  usecase "Rechercher un employé"          as UC_SEARCH
+
+  usecase "Générer le matricule\n(EMP-XXXX)"       as UC_MATRICULE
+  usecase "Provisionner le compte\nKeycloak"        as UC_KEYCLOAK
+  usecase "Envoyer l'e-mail\nde bienvenue"          as UC_EMAIL
+  usecase "Désactiver le compte\nKeycloak"          as UC_KC_DISABLE
+  usecase "Attribuer / révoquer\nles rôles Keycloak" as UC_ROLES
+
+}
+
+' ── Scénarios alternatifs ─────────────────────────────────────
+usecase "E-mail déjà utilisé"            as EXT_MAIL
+usecase "Keycloak indisponible"          as EXT_KC
+
+' ── Associations ─────────────────────────────────────────────
+ADMIN --> UC_CREATE
+ADMIN --> UC_UPDATE
+ADMIN --> UC_DISABLE
+ADMIN --> UC_LIST
+ADMIN --> UC_VIEW
+ADMIN --> UC_SEARCH
+ADMIN --> UC_ROLES
+
+' ── Relations include ─────────────────────────────────────────
+UC_CREATE  ..> UC_MATRICULE  : <<include>>
+UC_CREATE  ..> UC_KEYCLOAK   : <<include>>
+UC_CREATE  ..> UC_EMAIL      : <<include>>
+UC_DISABLE ..> UC_KC_DISABLE : <<include>>
+
+' ── Relations extend ──────────────────────────────────────────
+EXT_MAIL ..> UC_CREATE   : <<extend>>
+EXT_KC   ..> UC_KEYCLOAK : <<extend>>
+
+' ── Notes ─────────────────────────────────────────────────────
+note right of UC_MATRICULE
+  Format : EMP-XXXX
+  Généré automatiquement
+  à la création
+end note
+
+note right of EXT_MAIL
+  <b>Condition :</b> adresse e-mail
+  déjà présente dans Oracle
+  → création bloquée (409 Conflict)
+end note
+
+note right of EXT_KC
+  <b>Condition :</b> Keycloak
+  injoignable → rollback Oracle,
+  message d'erreur à l'admin
+end note
+
+note bottom of UC_KC_DISABLE
+  Synchronisation
+  bidirectionnelle
+  Oracle ↔ Keycloak
+end note
+
+@enduml

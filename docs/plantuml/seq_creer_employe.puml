@@ -1,0 +1,100 @@
+@startuml sequence_creer_employe
+title Diagramme de séquence — Créer un employé
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 6
+skinparam sequenceParticipantBackgroundColor #EEF4FF
+skinparam sequenceParticipantBorderColor #4A6FBF
+skinparam sequenceActorBackgroundColor #FAFAFA
+skinparam sequenceActorBorderColor #4A6FBF
+skinparam noteBorderColor #CCAA00
+skinparam noteBackgroundColor #FFFDE7
+
+actor "Administrateur" as Admin
+participant "FormEmployeAdminComponent" as Form <<Angular Component>>
+participant "EmployeService" as Service <<Angular Service>>
+participant "API Backend\n/api/employes" as API <<REST API>>
+participant "Keycloak" as KC <<Auth Server>>
+database "Base de données" as DB
+
+== Ouverture du formulaire ==
+
+Admin -> Form : naviguer vers /admin/employes/nouveau
+activate Form
+
+Form -> Service : getDepartements()
+activate Service
+Service -> API : GET /api/employes/departements
+API --> Service : Liste des départements
+Service --> Form : departements[]
+deactivate Service
+
+Form -> Service : getPostes()
+activate Service
+Service -> API : GET /api/employes/postes
+API --> Service : Liste des postes
+Service --> Form : postes[]
+deactivate Service
+
+Form --> Admin : Afficher le formulaire de création
+
+== Saisie des informations ==
+
+Admin -> Form : Saisir nom, prénom, email
+Admin -> Form : Saisir téléphone, adresse (optionnel)
+Admin -> Form : Sélectionner genre, date de naissance (optionnel)
+Admin -> Form : Sélectionner date d'embauche
+Admin -> Form : Sélectionner département
+Admin -> Form : Sélectionner poste
+
+== Soumission du formulaire ==
+
+Admin -> Form : Cliquer sur « Enregistrer »
+activate Form
+
+Form -> Form : Valider le formulaire (Reactive Form)
+
+alt Formulaire invalide
+    Form --> Admin : Afficher les messages d'erreur de validation
+else Formulaire valide
+
+    Form -> Form : Générer username automatiquement\n(prénom.nom)
+    Form -> Form : Construire createPayload :\n{ username, firstName, lastName,\n  email, phone?, address?, gender?,\n  birthDate?, hireDate, deptId,\n  positionId, roles: ['employe'] }
+
+    Form -> API : POST /api/employes\n(createPayload)
+    activate API
+
+    API -> DB : Vérifier unicité email / username
+    activate DB
+
+    alt Email ou username déjà existant
+        DB --> API : Contrainte d'unicité violée
+        deactivate DB
+        API --> Form : 409 Conflict
+        Form --> Admin : Afficher message d'erreur\n« Email ou identifiant déjà utilisé »
+    else Données valides
+        DB --> API : OK
+        deactivate DB
+
+        API -> KC : Créer compte utilisateur Keycloak\n(username, email, rôle employe)
+        activate KC
+        KC --> API : keycloakUserId + mot de passe temporaire
+        deactivate KC
+
+        API -> DB : Persister l'employé\n(profil + keycloakUserId)
+        activate DB
+        DB --> API : Employé persisté (id généré)
+        deactivate DB
+
+        API --> Form : 201 Created\n{ employe, username,\n  temporaryPassword, keycloakUserId }
+        deactivate API
+
+        Form --> Admin : Afficher message de succès\n« Employé créé avec succès »
+        Form --> Admin : Afficher les identifiants provisoires\n(username + mot de passe temporaire)
+        Form -> Form : Réinitialiser / rediriger\nvers la liste des employés
+    end
+end
+
+deactivate Form
+
+@enduml

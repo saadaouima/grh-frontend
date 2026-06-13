@@ -1,28 +1,37 @@
 export interface MessageDTO {
-    id: number;
-    conversationId: number;
-    expediteurId: string;
-    expediteurNom: string;
-    contenu: string;
-    dateEnvoi: string;
-    typeMessage: 'TEXTE' | 'IMAGE' | 'FICHIER';
-    fileUrl?: string;
-    fileName?: string;
-    statut?: string;
+  messageId: number;
+  conversationId: number;
+  senderId: number;
+  senderNom: string;
+  content: string;
+  type: 'TEXTE' | 'IMAGE' | 'FICHIER' | 'SYSTEME';
+  attachmentUrl?: string;
+  replyToId?: number;
+  isDeleted?: boolean;
+  sentAt: string;
+  luParMoi?: boolean;
 }
 
 export interface ConversationDTO {
-    id: number;
-    participant1Id: string;
-    participant2Id: string;
-    participant1Nom: string;
-    participant2Nom: string;
-    dernierMessage?: string;
-    dateDernierMessage?: string;
+  conversationId: number;
+  type: string;
+  name: string;
+  participants: ParticipantDTO[];
+  dernierMessage?: string;
+  lastMessageAt?: string;
+  nombreNonLus: number;
+  currentEmployeeId: number;
+}
+
+export interface ParticipantDTO {
+  employeeId: number;
+  nomComplet: string;
+  role: string;
+  enLigne: boolean;
 }
 
 export interface TypingResponse {
-    expediteurId: string;
-    conversationId: number;
-    typing: boolean;
+  senderId: number;
+  conversationId: number;
+  typing: boolean;
 }
